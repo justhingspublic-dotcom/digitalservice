@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>問卷詳情 - 數位轉型問卷系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <!-- 主內容區 -->
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題與操作按鈕 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h4 class="mb-1">問卷詳情</h4>
+            <small class="text-muted">問卷編號：<span id="surveyId">-</span></small>
+          </div>
+          <div>
+            <button class="btn btn-outline-primary" onclick="window.history.back()">
+              ← 返回列表
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+              列印
+            </button>
+          </div>
+        </div>
+
+        <!-- 基本資料 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">一、企業基本資料</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="text-muted small">企業名稱</label>
+                <p class="mb-0 fw-bold" id="companyName">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">統一編號</label>
+                <p class="mb-0" id="taxId">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">填寫日期</label>
+                <p class="mb-0" id="submitDate">-</p>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label class="text-muted small">縣市</label>
+                <p class="mb-0" id="city">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">鄉鎮市區</label>
+                <p class="mb-0" id="district">-</p>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">地址</label>
+                <p class="mb-0" id="address">-</p>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="text-muted small">主要產業別</label>
+                <p class="mb-0" id="industry">-</p>
+              </div>
+              <div class="col-md-2">
+                <label class="text-muted small">成立年份</label>
+                <p class="mb-0" id="foundYear">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">員工人數</label>
+                <p class="mb-0" id="employeeCount">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">年營業額</label>
+                <p class="mb-0" id="revenue">-</p>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label class="text-muted small">聯絡人姓名</label>
+                <p class="mb-0" id="contactPerson">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">聯絡人職稱</label>
+                <p class="mb-0" id="contactTitle">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">聯絡電話</label>
+                <p class="mb-0" id="phone">-</p>
+              </div>
+              <div class="col-md-3">
+                <label class="text-muted small">電子郵件</label>
+                <p class="mb-0" id="email">-</p>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <label class="text-muted small">公司網站</label>
+                <p class="mb-0" id="website">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 數位現況 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">二、數位化現況評估</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-4">
+              <h6 class="text-primary mb-3">行銷面向</h6>
+              <div id="marketingItems" class="ps-3">
+                <p class="text-muted">無資料</p>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <h6 class="text-primary mb-3">營運面向</h6>
+              <div id="operationItems" class="ps-3">
+                <p class="text-muted">無資料</p>
+              </div>
+            </div>
+
+            <div class="mb-0">
+              <h6 class="text-primary mb-3">顧客服務面向</h6>
+              <div id="customerItems" class="ps-3">
+                <p class="text-muted">無資料</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 轉型經驗 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">三、數位轉型經驗與需求</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-4">
+              <label class="text-muted small">遇到的主要困難</label>
+              <div id="difficulties">-</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="text-muted small">需要的輔導資源</label>
+              <div id="resources">-</div>
+            </div>
+
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="text-muted small">期待達成的效益</label>
+                <p class="mb-0" id="expectedBenefit">-</p>
+              </div>
+              <div class="col-md-6">
+                <label class="text-muted small">目前轉型階段</label>
+                <p class="mb-0" id="transformStage">-</p>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="text-muted small">其他建議或想法</label>
+              <p class="mb-0" id="suggestions">-</p>
+            </div>
+
+            <div>
+              <label class="text-muted small">接受後續聯繫</label>
+              <p class="mb-0" id="allowContact">
+                <span class="badge bg-secondary">否</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    // 初始化佈局
+    checkLogin();
+    initLayout('list');
+
+    // 模擬問卷詳細資料
+    const mockDetailData = {
+      id: 1,
+      surveyId: 'DT2025ABC123',
+      submitDate: '2025-10-05 14:30',
+      basicInfo: {
+        companyName: '台灣科技股份有限公司',
+        taxId: '12345678',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路五段7號',
+        industry: '資訊及通訊傳播業',
+        foundYear: '2010',
+        employeeCount: '51-100人',
+        revenue: '1億-10億',
+        contactPerson: '王小明',
+        contactTitle: '資訊部經理',
+        phone: '02-12345678',
+        email: 'wang@example.com',
+        website: 'https://www.example.com'
+      },
+      digitalStatus: {
+        marketing: [
+          { item: '社群媒體經營', priority: '1' },
+          { item: '數位廣告投放', priority: '2' }
+        ],
+        operation: [
+          { item: '雲端服務使用', priority: '1' },
+          { item: '線上協作工具', priority: '3' }
+        ],
+        customer: [
+          { item: '電子商務平台', priority: '1' },
+          { item: '線上金流服務', priority: '2' }
+        ]
+      },
+      transformation: {
+        difficulties: ['預算不足', '缺乏專業人才', '不知從何開始'],
+        resources: ['補助經費', '教育訓練課程', '專業顧問輔導'],
+        expectedBenefit: '提升營收',
+        transformStage: '初步導入階段',
+        suggestions: '希望政府能提供更多數位轉型成功案例分享，以及實務操作的培訓課程。',
+        allowContact: true
+      }
+    };
+
+    // 載入問卷詳情
+    function loadDetail() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id');
+
+      // 實際應該根據 id 從後端 API 取得資料
+      const data = mockDetailData;
+
+      // 填充基本資料
+      document.getElementById('surveyId').textContent = data.surveyId;
+      document.getElementById('submitDate').textContent = data.submitDate;
+      document.getElementById('companyName').textContent = data.basicInfo.companyName;
+      document.getElementById('taxId').textContent = data.basicInfo.taxId;
+      document.getElementById('city').textContent = data.basicInfo.city;
+      document.getElementById('district').textContent = data.basicInfo.district;
+      document.getElementById('address').textContent = data.basicInfo.address;
+      document.getElementById('industry').textContent = data.basicInfo.industry;
+      document.getElementById('foundYear').textContent = data.basicInfo.foundYear;
+      document.getElementById('employeeCount').textContent = data.basicInfo.employeeCount;
+      document.getElementById('revenue').textContent = data.basicInfo.revenue;
+      document.getElementById('contactPerson').textContent = data.basicInfo.contactPerson;
+      document.getElementById('contactTitle').textContent = data.basicInfo.contactTitle;
+      document.getElementById('phone').textContent = data.basicInfo.phone;
+      document.getElementById('email').textContent = data.basicInfo.email;
+      document.getElementById('website').textContent = data.basicInfo.website || '無';
+
+      // 填充數位現況
+      const marketingDiv = document.getElementById('marketingItems');
+      if (data.digitalStatus.marketing.length > 0) {
+        marketingDiv.innerHTML = data.digitalStatus.marketing.map(item =>
+          `<p class="mb-2">✓ ${item.item} <span class="badge bg-primary ms-2">優先度: ${item.priority}</span></p>`
+        ).join('');
+      }
+
+      const operationDiv = document.getElementById('operationItems');
+      if (data.digitalStatus.operation.length > 0) {
+        operationDiv.innerHTML = data.digitalStatus.operation.map(item =>
+          `<p class="mb-2">✓ ${item.item} <span class="badge bg-primary ms-2">優先度: ${item.priority}</span></p>`
+        ).join('');
+      }
+
+      const customerDiv = document.getElementById('customerItems');
+      if (data.digitalStatus.customer.length > 0) {
+        customerDiv.innerHTML = data.digitalStatus.customer.map(item =>
+          `<p class="mb-2">✓ ${item.item} <span class="badge bg-primary ms-2">優先度: ${item.priority}</span></p>`
+        ).join('');
+      }
+
+      // 填充轉型經驗
+      document.getElementById('difficulties').innerHTML = data.transformation.difficulties.map(d =>
+        `<span class="badge bg-warning text-dark me-2 mb-2">${d}</span>`
+      ).join('');
+
+      document.getElementById('resources').innerHTML = data.transformation.resources.map(r =>
+        `<span class="badge bg-info text-dark me-2 mb-2">${r}</span>`
+      ).join('');
+
+      document.getElementById('expectedBenefit').textContent = data.transformation.expectedBenefit || '無';
+      document.getElementById('transformStage').textContent = data.transformation.transformStage || '無';
+      document.getElementById('suggestions').textContent = data.transformation.suggestions || '無';
+
+      if (data.transformation.allowContact) {
+        document.getElementById('allowContact').innerHTML = '<span class="badge bg-success">是</span>';
+      }
+    }
+
+    // 初始化（已於前方 checkLogin）
+    loadDetail();
+  </script>
+</body>
+</html>

@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>問卷詳情 - 數位轉型問卷系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <style>
+    /* 凍結表頭樣式 */
+    .sticky-table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
+      overflow-x: auto;
+      position: relative;
+      border: 1px solid #dee2e6;
+      border-radius: 0;
+    }
+    
+    .sticky-table-wrapper .table {
+      margin-bottom: 0;
+    }
+    
+    .sticky-table-wrapper .table thead th {
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 100 !important;
+      background-color: #f8f9fa !important;
+      border-bottom: 2px solid #dee2e6 !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* 確保表頭文字可見 */
+    .sticky-table-wrapper .table thead th::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      border-bottom: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div id="detailContainer"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    // 初始化佈局
+    checkLogin();
+    initLayout('list');
+    
+    const STORAGE_KEY = 'surveyStore';
+
+    function getDefaultSurveyStore() {
+      return [
+        {
+          id: 'survey-2025q1',
+          name: '2025 Q1 餐飲業調查',
+          status: '進行中',
+          owner: '餐飲專案組',
+          createdAt: '2025-09-30',
+          description: '聚焦餐飲業者的營運現況與痛點。',
+          definition: {
+            fields: [
+              { id: 'companyName', label: '企業名稱', group: '基本資料', summary: true, type: 'text' },
+              { id: 'taxId', label: '統一編號', group: '基本資料', summary: true, type: 'text' },
+              { id: 'city', label: '所在縣市', group: '基本資料', summary: true, type: 'text' },
+              { id: 'industry', label: '產業別', group: '基本資料', summary: true, type: 'text' },
+              { id: 'industryDetail', label: '細項業別', group: '基本資料', summary: false, type: 'multi' },
+              { id: 'marketingHasTools', label: '行銷數位工具使用情況', group: '行銷推廣', summary: true, type: 'text' },
+              { id: 'marketingImprovement', label: '行銷痛點', group: '行銷推廣', summary: false, type: 'multi' },
+              { id: 'operationsHasTools', label: '營運數位工具使用情況', group: '營運流程', summary: true, type: 'text' },
+              { id: 'operationsPainPoints', label: '營運痛點', group: '營運流程', summary: false, type: 'multi' },
+              { id: 'customerHasTools', label: '顧客互動工具使用情況', group: '顧客互動', summary: true, type: 'text' },
+              { id: 'customerTools', label: '顧客互動工具', group: '顧客互動', summary: false, type: 'multi' },
+              { id: 'customerPainPoints', label: '顧客互動痛點', group: '顧客互動', summary: false, type: 'multi' },
+              { id: 'transformationChallenges', label: '轉型挑戰', group: '轉型挑戰', summary: false, type: 'multi' },
+              { id: 'transformationResources', label: '需要資源', group: '轉型挑戰', summary: false, type: 'multi' },
+              { id: 'transformationBudget', label: '年度預算', group: '轉型挑戰', summary: true, type: 'text' },
+              { id: 'transformationTeam', label: '協助推動人數', group: '轉型挑戰', summary: false, type: 'text' },
+              { id: 'notes', label: '其他建議', group: '其他欄位', summary: false, type: 'text' },
+              { id: 'submittedAt', label: '提交時間', group: '系統欄位', summary: true, type: 'datetime' }
+            ]
+          },
+          responses: [
+            {
+              id: 'DT2025-0001',
+              submittedAt: '2025-10-02T09:15:00',
+              values: {
+                companyName: '法大豐盛有限公司',
+                taxId: '95491548',
+                city: '臺中市',
+                industry: '餐飲業',
+                industryDetail: ['餐食業', '其他-總部'],
+                marketingHasTools: '評估使用',
+                marketingImprovement: [
+                  '提升品牌曝光與知名度',
+                  '接觸或吸引潛在顧客',
+                  '促進購買轉換率'
+                ],
+                operationsHasTools: '評估使用',
+                operationsPainPoints: [
+                  '優化人員出勤與排班管理',
+                  '簡化員工勞健保計算與申報',
+                  '確保薪酬作業流程順暢'
+                ],
+                customerHasTools: '已經使用',
+                customerTools: [
+                  '數位點餐服務',
+                  '多元支付',
+                  '預約／訂位服務'
+                ],
+                customerPainPoints: [
+                  '建立多元服務管道',
+                  '優化付款流程與介面',
+                  '提升舊有顧客回購率'
+                ],
+                transformationChallenges: [
+                  '忙營運：人手不足，無暇投入',
+                  '缺資金：沒有多餘的資金投入'
+                ],
+                transformationResources: [
+                  '客製化輔導',
+                  '一站式諮詢',
+                  '教育訓練／工作坊'
+                ],
+                transformationBudget: '6~10 萬元',
+                transformationTeam: '2~4 位',
+                notes: '希望提供更多案例諮詢與門市導入示範',
+                submittedAt: '2025-10-02T09:15:00'
+              }
+            },
+            {
+              id: 'DT2025-0002',
+              submittedAt: '2025-10-03T14:20:00',
+              values: {
+                companyName: '寶華珠寶銀樓',
+                taxId: '45704047',
+                city: '臺中市',
+                industry: '零售業',
+                industryDetail: ['珠寶零售'],
+                marketingHasTools: '已經使用',
+                marketingImprovement: [
+                  '掌握市場趨勢',
+                  '提升品牌曝光與知名度'
+                ],
+                operationsHasTools: '已經使用',
+                operationsPainPoints: [
+                  '簡化帳務與稅務作業流程',
+                  '提升跨部門溝通與協作效率'
+                ],
+                customerHasTools: '已經使用',
+                customerTools: [
+                  '線上購物服務',
+                  '多元支付'
+                ],
+                customerPainPoints: [
+                  '辨識高潛力顧客',
+                  '優化付款流程與介面'
+                ],
+                transformationChallenges: [
+                  '缺方向：不知如何選擇數位工具／轉型方向'
+                ],
+                transformationResources: [
+                  '教育訓練／工作坊',
+                  '一站式諮詢'
+                ],
+                transformationBudget: '1 萬元以下',
+                transformationTeam: '1 位',
+                notes: '希望平台能提供更多珠寶業成功案例。',
+                submittedAt: '2025-10-03T14:20:00'
+              }
+            }
+          ]
+        },
+        {
+          id: 'survey-2025q2',
+          name: '2025 Q2 零售業調查',
+          status: '草稿',
+          owner: '零售專案組',
+          createdAt: '2025-10-15',
+          description: '延伸調查門市數量與顧客互動方式。',
+          definition: {
+            fields: [
+              { id: 'companyName', label: '企業名稱', group: '基本資料', summary: true, type: 'text' },
+              { id: 'taxId', label: '統一編號', group: '基本資料', summary: true, type: 'text' },
+              { id: 'industryDetail', label: '細項業別', group: '基本資料', summary: true, type: 'text' },
+              { id: 'shopCount', label: '台灣店面數', group: '基本資料', summary: true, type: 'text' },
+              { id: 'branchType', label: '經營型態', group: '基本資料', summary: false, type: 'text' },
+              { id: 'operationsHasTools', label: '營運數位工具使用情況', group: '營運流程', summary: true, type: 'text' },
+              { id: 'operationsPainPoints', label: '營運痛點', group: '營運流程', summary: false, type: 'multi' },
+              { id: 'customerHasTools', label: '顧客互動工具使用情況', group: '顧客互動', summary: true, type: 'text' },
+              { id: 'customerTools', label: '顧客互動工具', group: '顧客互動', summary: false, type: 'multi' },
+              { id: 'transformationBudget', label: '年度預算', group: '轉型挑戰', summary: true, type: 'text' },
+              { id: 'submittedAt', label: '提交時間', group: '系統欄位', summary: true, type: 'datetime' }
+            ]
+          },
+          responses: [
+            {
+              id: 'DT2025-1001',
+              submittedAt: '2025-11-05T11:05:00',
+              values: {
+                companyName: '儷舍婚紗攝影有限公司',
+                taxId: '00127046',
+                industryDetail: '婚紗攝影',
+                shopCount: '1',
+                branchType: '獨立品牌',
+                operationsHasTools: '評估使用',
+                operationsPainPoints: [
+                  '簡化帳務與稅務作業流程',
+                  '優化人員出勤與排班管理'
+                ],
+                customerHasTools: '評估使用',
+                customerTools: [
+                  '社群平臺',
+                  '線上預約系統'
+                ],
+                transformationBudget: '2~5 萬元',
+                submittedAt: '2025-11-05T11:05:00'
+              }
+            },
+            {
+              id: 'DT2025-1002',
+              submittedAt: '2025-11-07T16:45:00',
+              values: {
+                companyName: '金皇樓精品珠寶行',
+                taxId: '87107970',
+                industryDetail: '珠寶零售',
+                shopCount: '1',
+                branchType: '獨立品牌',
+                operationsHasTools: '評估使用',
+                operationsPainPoints: [
+                  '強化營運彈性與庫存控管',
+                  '簡化帳務與稅務作業流程'
+                ],
+                customerHasTools: '已經使用',
+                customerTools: [
+                  '線上購物服務',
+                  '多元支付'
+                ],
+                transformationBudget: '1 萬元以下',
+                submittedAt: '2025-11-07T16:45:00'
+              }
+            }
+          ]
+        },
+        {
+          id: 'survey-empty',
+          name: '新增問卷示範',
+          status: '草稿',
+          owner: '尚未指派',
+          createdAt: '2025-11-15',
+          description: '尚未匯入任何資料，請透過問卷詳情頁匯入試算表。',
+          definition: { fields: [] },
+          responses: []
+        }
+      ];
+    }
+
+    function loadSurveyStore() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return getDefaultSurveyStore();
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.warn('讀取問卷資料失敗，使用預設資料。', e);
+      }
+      return getDefaultSurveyStore();
+    }
+
+    function saveSurveyStore(store) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    }
+
+    const importPresets = {
+      sampleXlsx: {
+        id: 'sampleXlsx',
+        name: '示範問卷填答資料.xlsx',
+        description: '以 Excel 匯入餐飲與服務業問卷，欄位依首列標題動態生成。',
+        headers: [
+          '名稱',
+          '名稱2',
+          '統一編號',
+          '統一編號2',
+          '所在縣市',
+          '產業別',
+          '細項業別',
+          '成立年數',
+          '負責人的年齡層',
+          '目前經常僱用員工人數',
+          '年營業額',
+          '於臺灣的店面數量共有_______間',
+          '是否屬於連鎖加盟體系',
+          '經營型態',
+          '是否為2代（含以上）經營者接班',
+          '屬於哪一個公協會',
+          '在「行銷推廣」是否有使用數位工具',
+          '在「行銷推廣」主要採取哪種方式',
+          '在「行銷推廣」有使用哪些數位工具',
+          '在「行銷推廣」希望透過數位工具改善哪種痛點',
+          '在「內部營運流程」有無使用數位工具',
+          '在「內部營運流程」主要採取哪種方式',
+          '在「內部營運流程」有使用哪些數位工具',
+          '在「內部營運流程」希望透過數位工具改善哪種痛點',
+          '在「顧客互動與關係維繫」是否有使用數位工具',
+          '在「顧客互動與關係維繫」主要採取哪種方式',
+          '在「顧客互動與關係維繫」有使用哪些數位工具',
+          '在「顧客互動與關係維繫」希望改善何種痛點',
+          '在推動數位轉型時，主要面臨哪些挑戰',
+          '在推動數位轉型時，哪些資源最有幫助',
+          '有參加過經濟部或經濟部商業發展署數位轉型的計畫嗎',
+          '參與的計畫有提供哪些資源呢',
+          '每年願意投入多少經費推動數位轉型',
+          '有幾位協助推動數位轉型人才',
+          '對數位轉型還有其他需求或建議嗎'
+        ],
+        rows: [
+          {
+            '名稱': '法***司',
+            '名稱2': '法大豐盛有限公司',
+            '統一編號': '9***8',
+            '統一編號2': '95491548',
+            '所在縣市': '臺中市',
+            '產業別': '餐飲業',
+            '細項業別': '餐食業\n其他-總部',
+            '成立年數': '未滿1年',
+            '負責人的年齡層': '40~49歲',
+            '目前經常僱用員工人數': '1~4人',
+            '年營業額': '500~999萬',
+            '於臺灣的店面數量共有_______間': '8',
+            '是否屬於連鎖加盟體系': '是',
+            '經營型態': '我們是直營',
+            '是否為2代（含以上）經營者接班': '否，由專業經理人經營',
+            '屬於哪一個公協會': '台灣連鎖加盟促進協會',
+            '在「行銷推廣」是否有使用數位工具': '評估使用',
+            '在「行銷推廣」主要採取哪種方式': '社群經營\n品牌活動\n內容行銷',
+            '在「行銷推廣」有使用哪些數位工具': '社群平臺（Facebook、Instagram）\n數位廣告投放\n多元支付',
+            '在「行銷推廣」希望透過數位工具改善哪種痛點': '提升品牌曝光與知名度\n接觸或吸引潛在顧客\n促進購買轉換率',
+            '在「內部營運流程」有無使用數位工具': '評估使用',
+            '在「內部營運流程」主要採取哪種方式': '人工作業搭配試用雲端工具',
+            '在「內部營運流程」有使用哪些數位工具': '排班與考勤系統\n進銷存管理\n電子發票串接',
+            '在「內部營運流程」希望透過數位工具改善哪種痛點': '優化人員出勤與排班管理\n簡化員工勞健保計算與申報\n確保薪酬作業流程順暢',
+            '在「顧客互動與關係維繫」是否有使用數位工具': '已經使用',
+            '在「顧客互動與關係維繫」主要採取哪種方式': '建置會員制度\n啟用線上預約',
+            '在「顧客互動與關係維繫」有使用哪些數位工具': 'LINE 官方帳號\nChatbot 線上客服\n線上預約系統',
+            '在「顧客互動與關係維繫」希望改善何種痛點': '建立多元服務管道\n優化付款流程與介面\n提升舊有顧客回購率',
+            '在推動數位轉型時，主要面臨哪些挑戰': '忙營運：人手不足，無暇投入\n缺資金：沒有多餘的資金投入',
+            '在推動數位轉型時，哪些資源最有幫助': '客製化輔導\n一站式諮詢\n教育訓練／工作坊',
+            '有參加過經濟部或經濟部商業發展署數位轉型的計畫嗎': '有',
+            '參與的計畫有提供哪些資源呢': '專家輔導\n補助／資金\n公協會資源共享',
+            '每年願意投入多少經費推動數位轉型': '6~10 萬元',
+            '有幾位協助推動數位轉型人才': '2~4 位',
+            '對數位轉型還有其他需求或建議嗎': '希望提供更多案例諮詢與門市導入示範'
+          },
+          {
+            '名稱': '儷***公司',
+            '名稱2': '儷舍婚紗攝影有限公司',
+            '統一編號': '0***6',
+            '統一編號2': '00127046',
+            '所在縣市': '臺北市',
+            '產業別': '其他服務業',
+            '細項業別': '攝影業',
+            '成立年數': '8年以上~未滿20年',
+            '負責人的年齡層': '50~59歲',
+            '目前經常僱用員工人數': '10~29人',
+            '年營業額': '1,000~3,999萬',
+            '於臺灣的店面數量共有_______間': '1',
+            '是否屬於連鎖加盟體系': '否',
+            '經營型態': '獨立品牌',
+            '是否為2代（含以上）經營者接班': '否，目前是第1代經營，尚未有接班計畫',
+            '屬於哪一個公協會': '台灣婚宴文創產業發展協會',
+            '在「行銷推廣」是否有使用數位工具': '評估使用',
+            '在「行銷推廣」主要採取哪種方式': '社群經營\n口碑推薦\n活動合作',
+            '在「行銷推廣」有使用哪些數位工具': '社群平臺\n電子報 EDM',
+            '在「行銷推廣」希望透過數位工具改善哪種痛點': '促進購買轉換率\n評估行銷成效',
+            '在「內部營運流程」有無使用數位工具': '評估使用',
+            '在「內部營運流程」主要採取哪種方式': '部分委外搭配內部人員',
+            '在「內部營運流程」有使用哪些數位工具': '排班系統\n專案管理工具',
+            '在「內部營運流程」希望透過數位工具改善哪種痛點': '優化人員出勤與排班管理\n簡化員工勞健保計算與申報',
+            '在「顧客互動與關係維繫」是否有使用數位工具': '評估使用',
+            '在「顧客互動與關係維繫」主要採取哪種方式': '預約洽談\n婚紗成果展示',
+            '在「顧客互動與關係維繫」有使用哪些數位工具': '官方網站\n線上預約系統',
+            '在「顧客互動與關係維繫」希望改善何種痛點': '即時回復顧客問題與需求\n提升舊有顧客回購率',
+            '在推動數位轉型時，主要面臨哪些挑戰': '看不懂：數位工具操作門檻高\n忙營運：人手不足，無暇投入',
+            '在推動數位轉型時，哪些資源最有幫助': '客製化輔導\n案例分享\n一站式諮詢',
+            '有參加過經濟部或經濟部商業發展署數位轉型的計畫嗎': '無',
+            '參與的計畫有提供哪些資源呢': '',
+            '每年願意投入多少經費推動數位轉型': '2~5 萬元',
+            '有幾位協助推動數位轉型人才': '無',
+            '對數位轉型還有其他需求或建議嗎': '後台操作希望更直覺，並提供顧客案例分析工具。'
+          }
+        ]
+      }
+    };
+
+    let surveyStore = loadSurveyStore();
+    let currentSurveyId = null;
+    let currentSurvey = null;
+    let keyword = '';
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+
+    function renderPage() {
+      const container = document.getElementById('detailContainer');
+      const params = new URLSearchParams(window.location.search);
+      currentSurveyId = params.get('id');
+
+      if (!currentSurveyId) {
+        container.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+              <h2 class="h5 mb-3 fw-bold">尚未選擇問卷</h2>
+              <p class="text-muted mb-4">請返回問卷列表選擇要管理的問卷。</p>
+              <a class="btn btn-primary" href="a02-list.html">返回問卷列表</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      surveyStore = loadSurveyStore();
+      currentSurvey = surveyStore.find(survey => survey.id === currentSurveyId);
+
+      if (!currentSurvey) {
+        container.innerHTML = `
+          <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+              <h2 class="h5 mb-3 fw-bold">找不到指定的問卷</h2>
+              <p class="text-muted mb-4">可能已被刪除或尚未建立，請返回列表重新選擇。</p>
+              <a class="btn btn-primary" href="a02-list.html">返回問卷列表</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      renderDetail();
+    }
+
+    function renderDetail() {
+      const container = document.getElementById('detailContainer');
+      const survey = currentSurvey;
+      const fields = survey.definition?.fields || [];
+
+      let html = `
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+          <a class="btn btn-outline-primary btn-sm" href="a02-list.html">← 返回問卷列表</a>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body d-flex flex-wrap gap-3 justify-content-between align-items-start">
+            <div>
+              <h1 class="h4 mb-1 fw-bold">${escapeHtml(survey.name)}</h1>
+              <p class="text-muted mb-2">${escapeHtml(survey.description || '尚未填寫說明。')}</p>
+              <div class="text-muted small">
+                <span class="me-3">建立日期：${escapeHtml(survey.createdAt || '-')}</span>
+                <span>負責單位：${escapeHtml(survey.owner || '尚未指派')}</span>
+              </div>
+            </div>
+            <div class="text-end">
+              <span class="badge ${survey.status === '進行中' ? 'bg-primary' : 'bg-secondary'}">${survey.status}</span>
+              ${renderImportControls(survey.id)}
+            </div>
+          </div>
+          <div class="card-footer bg-white d-flex flex-wrap gap-3 align-items-center">
+            <span class="text-muted">欄位 ${fields.length} 項 · 回覆 ${survey.responses.length} 份</span>
+            <div class="ms-auto">
+              <button class="btn btn-outline-primary btn-sm" onclick="exportSurvey()">匯出問卷資料</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-light border shadow-sm mb-4">
+          <div class="fw-bold mb-1">匯入說明</div>
+          <ol class="text-muted mb-0 ps-3">
+            <li>準備 Excel 或 CSV，第一列放題目標題（例：企業名稱、行銷痛點）。</li>
+            <li>匯入後系統會以首列標題建立欄位定義，並寫入每列答卷。</li>
+            <li>重複匯入會覆蓋欄位定義並重新寫入資料，請先備份需要保留的資料。</li>
+          </ol>
+        </div>
+      `;
+
+      if (!fields.length) {
+        container.innerHTML = html + `
+          <div class="card shadow-sm">
+            <div class="card-body py-5 text-center text-muted">
+              尚未有欄位定義，請先匯入試算表產生欄位。
+            </div>
+          </div>
+        `;
+        attachImportHandlers(survey);
+        return;
+      }
+
+      const filteredResponses = filterResponses(survey.responses, fields);
+      const totalPages = Math.max(1, Math.ceil(filteredResponses.length / PAGE_SIZE));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageData = filteredResponses.slice(start, start + PAGE_SIZE);
+
+      const fieldSummary = `顯示全部欄位（${fields.length}）`;
+
+      const tableHead = `
+        <th style="width: 56px;">#</th>
+        ${fields.map(field => `<th>${escapeHtml(field.label)}</th>`).join('')}
+        <th style="width: 96px;">操作</th>
+      `;
+
+      let tableBody = '';
+      if (!pageData.length) {
+        tableBody = `
+          <tr>
+            <td colspan="${fields.length + 2}" class="text-center py-5 text-muted">
+              尚未有問卷回覆，請匯入資料。
+            </td>
+          </tr>
+        `;
+      } else {
+        tableBody = pageData.map((response, index) => `
+          <tr>
+            <td>${start + index + 1}</td>
+            ${fields.map(field => `<td>${formatValue(response.values[field.id], field)}</td>`).join('')}
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="viewResponse('${response.id}')">查看</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      const pagination = buildPagination(totalPages);
+      const recordInfo = `顯示第 ${pageData.length ? start + 1 : 0} - ${start + pageData.length} 筆，共 ${filteredResponses.length} 筆`;
+
+      html += `
+        <div class="card shadow-sm">
+          <div class="card-header bg-white d-flex flex-wrap gap-3 justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-light text-dark me-2">${escapeHtml(survey.name)}</span>
+              <span class="text-muted">${fieldSummary}</span>
+            </div>
+            <div class="input-group" style="max-width: 280px;">
+              <span class="input-group-text">🔍</span>
+              <input type="search" class="form-control" placeholder="搜尋企業名稱 / 統編"
+                value="${escapeHtml(keyword)}"
+                oninput="updateKeyword(this.value)">
+            </div>
+          </div>
+          <div class="sticky-table-wrapper">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>${tableHead}</tr>
+              </thead>
+              <tbody>${tableBody}</tbody>
+            </table>
+          </div>
+          <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="text-muted">${recordInfo}</span>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">${pagination}</ul>
+            </nav>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+      attachImportHandlers(survey);
+    }
+
+    function renderImportControls(surveyId) {
+      const hasPreset = !!importPresets.sampleXlsx;
+      return `
+        <div class="d-flex flex-column align-items-end gap-2 mt-2">
+          <input class="visually-hidden" type="file" id="importFile-${surveyId}" accept=".xlsx,.xls,.csv">
+          <label class="btn btn-primary btn-sm" for="importFile-${surveyId}">匯入問卷</label>
+          ${hasPreset ? `<button class="btn btn-link btn-sm p-0" id="importPreset-${surveyId}" type="button">套用示範資料</button>` : ''}
+        </div>
+      `;
+    }
+
+    function attachImportHandlers(survey) {
+      const fileInput = document.getElementById(`importFile-${survey.id}`);
+      if (fileInput) {
+        fileInput.addEventListener('change', async event => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (!file) return;
+          try {
+            await handleFileUpload(survey, file);
+          } catch (error) {
+            console.error(error);
+            alert(error?.message ? `匯入失敗：${error.message}` : '匯入失敗，請確認檔案格式。');
+          }
+        });
+      }
+
+      const presetBtn = document.getElementById(`importPreset-${survey.id}`);
+      if (presetBtn) {
+        presetBtn.addEventListener('click', () => handleImportPreset('sampleXlsx'));
+      }
+    }
+
+    function updateKeyword(value) {
+      keyword = value;
+      currentPage = 1;
+      renderDetail();
+    }
+
+    function changePage(page) {
+      currentPage = page;
+      renderDetail();
+    }
+
+    function buildPagination(totalPages) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+        .map(page => `
+          <li class="page-item ${page === currentPage ? 'active' : ''}">
+            <button class="page-link" onclick="changePage(${page})">${page}</button>
+          </li>
+        `).join('');
+    }
+
+    function filterResponses(responses, fields) {
+      if (!keyword) return responses;
+      const lower = keyword.toLowerCase();
+      return responses.filter(response => {
+        const text = [
+          response.id,
+          ...fields.map(field => {
+            const value = response.values[field.id];
+            if (Array.isArray(value)) return value.join(' ');
+            if (value == null) return '';
+            return String(value);
+          })
+        ].join(' ');
+        return text.toLowerCase().includes(lower);
+      });
+    }
+
+    function formatValue(value, field) {
+      if (field.type === 'multi') {
+        const items = Array.isArray(value) ? value : parseValue(value, 'multi');
+        if (!items.length) return '<span class="text-muted">－</span>';
+        return items.map(item => `<span class="badge bg-light text-dark me-1 mb-1">${escapeHtml(item)}</span>`).join('');
+      }
+      if (field.type === 'datetime') {
+        if (!value) return '<span class="text-muted">－</span>';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return `<span>${escapeHtml(String(value))}</span>`;
+        return date.toLocaleString('zh-TW', { hour12: false });
+      }
+      if (!value) return '<span class="text-muted">－</span>';
+      return escapeHtml(String(value)).replace(/\n/g, '<br>');
+    }
+
+    function handleImportPreset(presetId) {
+      const survey = currentSurvey;
+      if (!survey) return;
+      const preset = importPresets[presetId];
+      if (!preset) {
+        alert('找不到示範資料。');
+        return;
+      }
+
+      const rows = [
+        preset.headers,
+        ...preset.rows.map(row =>
+          preset.headers.map(header => row[header] ?? '')
+        )
+      ];
+
+      try {
+        processImportedRows(survey, rows, preset.name);
+      } catch (error) {
+        console.error(error);
+        alert(error?.message ? `匯入失敗：${error.message}` : '匯入失敗，請確認資料格式。');
+      }
+    }
+
+    async function handleFileUpload(survey, file) {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('未能載入匯入所需的解析工具，請重新整理後再試。');
+      }
+
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!ext || !['xlsx', 'xls', 'csv'].includes(ext)) {
+        throw new Error('僅支援匯入 Excel（.xlsx/.xls）或 CSV 檔案。');
+      }
+
+      const mode = ext === 'csv' ? 'text' : 'arrayBuffer';
+      const fileData = await readFileAsync(file, mode);
+
+      let workbook;
+      if (ext === 'csv') {
+        workbook = XLSX.read(typeof fileData === 'string' ? fileData : new TextDecoder('utf-8').decode(fileData), { type: 'string' });
+      } else {
+        workbook = XLSX.read(new Uint8Array(fileData), { type: 'array' });
+      }
+
+      if (!workbook.SheetNames || !workbook.SheetNames.length) {
+        throw new Error('檔案中找不到任何工作表。');
+      }
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+      processImportedRows(survey, rows, file.name);
+    }
+
+    function readFileAsync(file, mode) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = event => resolve(event.target.result);
+        reader.onerror = () => reject(new Error('檔案讀取失敗'));
+        if (mode === 'text') {
+          reader.readAsText(file, 'utf-8');
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      });
+    }
+
+    function processImportedRows(survey, rows, sourceLabel) {
+      if (!rows || !rows.length) {
+        throw new Error('檔案內沒有資料。');
+      }
+
+      const headers = rows[0]
+        .map((cell, index) => {
+          const text = String(cell ?? '').trim();
+          return text || `欄位${index + 1}`;
+        });
+
+      if (!headers.some(header => header.trim().length > 0)) {
+        throw new Error('未找到欄位標題，請確認第一列是否為題目。');
+      }
+
+      const dataRows = rows
+        .slice(1)
+        .filter(row => Array.isArray(row) && row.some(cell => String(cell ?? '').trim() !== ''));
+
+      if (!dataRows.length) {
+        throw new Error('沒有可匯入的資料列。');
+      }
+
+      const fields = buildFieldsFromHeaders(headers);
+      const baseTime = Date.now();
+
+      const responses = dataRows.map((row, index) => {
+        const values = {};
+
+        fields.forEach((field, colIdx) => {
+          const raw = row[colIdx] ?? '';
+          values[field.id] = parseValue(raw, field.type);
+        });
+
+        let submittedAtValue = values.submittedAt;
+        if (Array.isArray(submittedAtValue)) {
+          submittedAtValue = submittedAtValue[0];
+        }
+
+        if (!submittedAtValue) {
+          submittedAtValue = new Date(baseTime + index * 1000).toISOString();
+          values.submittedAt = submittedAtValue;
+        }
+
+        return {
+          id: `${survey.id.toUpperCase()}-${String(index + 1).padStart(4, '0')}`,
+          submittedAt: submittedAtValue,
+          values
+        };
+      });
+
+      if (!fields.some(field => field.id === 'submittedAt')) {
+        fields.push({
+          id: 'submittedAt',
+          label: '提交時間',
+          group: '系統欄位',
+          summary: true,
+          type: 'datetime'
+        });
+        responses.forEach(response => {
+          response.values.submittedAt = response.submittedAt;
+        });
+      }
+
+      survey.definition.fields = fields;
+      survey.responses = responses;
+      survey.status = '進行中';
+
+      const updateIndex = surveyStore.findIndex(item => item.id === survey.id);
+      if (updateIndex !== -1) {
+        surveyStore[updateIndex] = survey;
+        currentSurvey = surveyStore[updateIndex];
+        saveSurveyStore(surveyStore);
+      }
+
+      alert(`匯入完成：已從「${sourceLabel}」導入 ${responses.length} 筆資料。`);
+      renderDetail();
+    }
+
+    function buildFieldsFromHeaders(headers) {
+      const fields = [];
+      const seenIds = new Set();
+
+      headers.forEach((label, index) => {
+        let id = slugify(label);
+        if (!id) id = `field-${index + 1}`;
+        let uniqueId = id;
+        let counter = 1;
+        while (seenIds.has(uniqueId)) {
+          uniqueId = `${id}-${++counter}`;
+        }
+        seenIds.add(uniqueId);
+
+        const type = detectType(label);
+        const group = guessGroup(label);
+
+        fields.push({
+          id: uniqueId,
+          label,
+          group,
+          summary: true,
+          type
+        });
+      });
+
+      return fields;
+    }
+
+    function detectType(label) {
+      const multiKeywords = ['哪些', '痛點', '挑戰', '資源', '方式', '工具'];
+      const datetimeKeywords = ['時間', '日期'];
+      if (datetimeKeywords.some(keyword => label.includes(keyword))) return 'datetime';
+      if (multiKeywords.some(keyword => label.includes(keyword))) return 'multi';
+      return 'text';
+    }
+
+    function guessGroup(label) {
+      if (/行銷/.test(label)) return '行銷推廣';
+      if (/營運/.test(label)) return '營運流程';
+      if (/顧客/.test(label)) return '顧客互動';
+      if (/挑戰|資源|預算/.test(label)) return '轉型挑戰';
+      if (/名稱|統一編號|縣市|產業|成立|店面|經營型態/.test(label)) return '基本資料';
+      return '其他欄位';
+    }
+
+    function slugify(label) {
+      return label
+        .replace(/[^A-Za-z0-9\u4e00-\u9fa5]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, '-')
+        .toLowerCase();
+    }
+
+    function parseValue(raw, type) {
+      if (raw == null || raw === '') {
+        if (type === 'multi') return [];
+        return '';
+      }
+      if (type === 'multi') {
+        if (Array.isArray(raw)) return raw;
+        const tokens = String(raw)
+          .split(/[\n,、，；;]/)
+          .map(token => token.trim())
+          .filter(Boolean);
+        return tokens;
+      }
+      if (type === 'datetime') {
+        const date = new Date(raw);
+        if (!Number.isNaN(date.getTime())) {
+          return date.toISOString();
+        }
+        return String(raw);
+      }
+      return String(raw);
+    }
+
+    function viewResponse(responseId) {
+      alert(`示範：可導向問卷詳情頁，例如列印或單筆瀏覽（ID: ${responseId}）`);
+    }
+
+    function exportSurvey() {
+      alert('示範：可在此匯出目前問卷的欄位定義與回覆資料為 Excel。');
+    }
+
+    function escapeHtml(value) {
+      if (value == null) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    renderPage();
+  </script>
+</body>
+</html>

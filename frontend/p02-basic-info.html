@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>數位轉型問卷系統 - 基本資料</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div class="survey-container">
+    <!-- 進度條 -->
+    <div class="progress-steps">
+      <div class="progress-step active">
+        <div class="progress-circle">1</div>
+        <div class="progress-label">基本資料</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">2</div>
+        <div class="progress-label">數位現況</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">3</div>
+        <div class="progress-label">轉型經驗</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">4</div>
+        <div class="progress-label">完成</div>
+      </div>
+    </div>
+
+    <!-- 表單卡片 -->
+    <div class="card">
+      <div class="card-body p-4">
+        <h2 class="mb-4" style="font-size: var(--font-subtitle); font-weight: bold;">企業基本資料</h2>
+
+        <form id="basicInfoForm">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="companyName" class="form-label required">企業名稱</label>
+              <input type="text" class="form-control" id="companyName" required>
+            </div>
+            <div class="col-md-6">
+              <label for="taxId" class="form-label required">統一編號</label>
+              <input type="text" class="form-control" id="taxId" maxlength="8" pattern="[0-9]{8}" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="city" class="form-label required">縣市</label>
+              <select class="form-select" id="city" required>
+                <option value="">請選擇</option>
+                <option value="台北市">台北市</option>
+                <option value="新北市">新北市</option>
+                <option value="桃園市">桃園市</option>
+                <option value="台中市">台中市</option>
+                <option value="台南市">台南市</option>
+                <option value="高雄市">高雄市</option>
+                <option value="基隆市">基隆市</option>
+                <option value="新竹市">新竹市</option>
+                <option value="嘉義市">嘉義市</option>
+                <option value="新竹縣">新竹縣</option>
+                <option value="苗栗縣">苗栗縣</option>
+                <option value="彰化縣">彰化縣</option>
+                <option value="南投縣">南投縣</option>
+                <option value="雲林縣">雲林縣</option>
+                <option value="嘉義縣">嘉義縣</option>
+                <option value="屏東縣">屏東縣</option>
+                <option value="宜蘭縣">宜蘭縣</option>
+                <option value="花蓮縣">花蓮縣</option>
+                <option value="台東縣">台東縣</option>
+                <option value="澎湖縣">澎湖縣</option>
+                <option value="金門縣">金門縣</option>
+                <option value="連江縣">連江縣</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="district" class="form-label required">鄉鎮市區</label>
+              <input type="text" class="form-control" id="district" required>
+            </div>
+            <div class="col-md-4">
+              <label for="address" class="form-label required">地址</label>
+              <input type="text" class="form-control" id="address" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="industry" class="form-label required">主要產業別</label>
+              <select class="form-select" id="industry" required>
+                <option value="">請選擇</option>
+                <option value="製造業">製造業</option>
+                <option value="批發及零售業">批發及零售業</option>
+                <option value="住宿及餐飲業">住宿及餐飲業</option>
+                <option value="資訊及通訊傳播業">資訊及通訊傳播業</option>
+                <option value="專業、科學及技術服務業">專業、科學及技術服務業</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div class="col-md-6" id="industryOtherDiv" style="display: none;">
+              <label for="industryOther" class="form-label required">請說明產業別</label>
+              <input type="text" class="form-control" id="industryOther">
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="foundYear" class="form-label required">成立年份</label>
+              <input type="number" class="form-control" id="foundYear" min="1900" max="2025" required>
+            </div>
+            <div class="col-md-4">
+              <label for="employeeCount" class="form-label required">員工人數</label>
+              <select class="form-select" id="employeeCount" required>
+                <option value="">請選擇</option>
+                <option value="5人以下">5人以下</option>
+                <option value="6-20人">6-20人</option>
+                <option value="21-50人">21-50人</option>
+                <option value="51-100人">51-100人</option>
+                <option value="101-200人">101-200人</option>
+                <option value="201人以上">201人以上</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="revenue" class="form-label required">年營業額</label>
+              <select class="form-select" id="revenue" required>
+                <option value="">請選擇</option>
+                <option value="500萬以下">500萬以下</option>
+                <option value="500萬-1千萬">500萬-1千萬</option>
+                <option value="1千萬-5千萬">1千萬-5千萬</option>
+                <option value="5千萬-1億">5千萬-1億</option>
+                <option value="1億-10億">1億-10億</option>
+                <option value="10億以上">10億以上</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="contactPerson" class="form-label required">聯絡人姓名</label>
+              <input type="text" class="form-control" id="contactPerson" required>
+            </div>
+            <div class="col-md-6">
+              <label for="contactTitle" class="form-label required">聯絡人職稱</label>
+              <input type="text" class="form-control" id="contactTitle" required>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="phone" class="form-label required">聯絡電話</label>
+              <input type="tel" class="form-control" id="phone" required>
+            </div>
+            <div class="col-md-6">
+              <label for="email" class="form-label required">電子郵件</label>
+              <input type="email" class="form-control" id="email" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="website" class="form-label">公司網站</label>
+            <input type="url" class="form-control" id="website" placeholder="https://">
+          </div>
+
+          <!-- 按鈕組 -->
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-primary" onclick="window.location.href='p01-welcome.html'">
+              ← 上一步
+            </button>
+            <button type="submit" class="btn btn-primary">
+              下一步 →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 產業別「其他」顯示輸入框
+    document.getElementById('industry').addEventListener('change', function() {
+      const otherDiv = document.getElementById('industryOtherDiv');
+      const otherInput = document.getElementById('industryOther');
+
+      if (this.value === '其他') {
+        otherDiv.style.display = 'block';
+        otherInput.required = true;
+      } else {
+        otherDiv.style.display = 'none';
+        otherInput.required = false;
+      }
+    });
+
+    // 表單送出
+    document.getElementById('basicInfoForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // 驗證表單
+      if (this.checkValidity()) {
+        // 儲存資料到 localStorage
+        const formData = {
+          companyName: document.getElementById('companyName').value,
+          taxId: document.getElementById('taxId').value,
+          city: document.getElementById('city').value,
+          district: document.getElementById('district').value,
+          address: document.getElementById('address').value,
+          industry: document.getElementById('industry').value,
+          industryOther: document.getElementById('industryOther').value,
+          foundYear: document.getElementById('foundYear').value,
+          employeeCount: document.getElementById('employeeCount').value,
+          revenue: document.getElementById('revenue').value,
+          contactPerson: document.getElementById('contactPerson').value,
+          contactTitle: document.getElementById('contactTitle').value,
+          phone: document.getElementById('phone').value,
+          email: document.getElementById('email').value,
+          website: document.getElementById('website').value
+        };
+
+        localStorage.setItem('basicInfo', JSON.stringify(formData));
+        window.location.href = 'p03-digital-status.html';
+      } else {
+        this.classList.add('was-validated');
+      }
+    });
+
+    // 載入已儲存的資料
+    window.addEventListener('load', function() {
+      const savedData = localStorage.getItem('basicInfo');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        Object.keys(data).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            element.value = data[key];
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

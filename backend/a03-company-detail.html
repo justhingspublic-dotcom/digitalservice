@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>公司詳情 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 返回按鈕 -->
+        <div class="mb-3" id="backToCompaniesBtn">
+          <a href="a02-companies.html" class="btn btn-outline-secondary btn-sm">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">arrow_back</span>
+            返回公司列表
+          </a>
+        </div>
+
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4" id="companyHeader">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">business</span>
+          <h4 class="mb-0" id="companyTitle">公司詳情</h4>
+        </div>
+
+        <!-- 區塊 1：公司基本資料 -->
+        <div class="card mb-4" id="companyInfoCard">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">公司基本資料</h5>
+            <button class="btn btn-outline-primary btn-sm" onclick="editCompanyInfo()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">edit</span>
+              編輯
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label small text-muted">公司名稱</label>
+                  <div class="fw-bold" id="companyName">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">統一編號</label>
+                  <div id="companyTaxId">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">所在縣市</label>
+                  <div id="companyCity">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">產業別</label>
+                  <div id="companyIndustry">-</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label small text-muted">員工規模</label>
+                  <div id="companyEmployeeRange">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">數位化階段</label>
+                  <div id="companyDigitalStage">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">加入時間</label>
+                  <div id="companyJoinedAt">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">問卷數量</label>
+                  <div id="companySurveyCount">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 區塊 2：輔導紀錄 -->
+        <div class="card mb-4" id="guidanceRecordsCard">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">輔導紀錄</h5>
+            <button class="btn btn-primary btn-sm" onclick="addGuidanceRecord()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
+              新增紀錄
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="guidanceRecordsContainer">
+              <div class="text-center py-4 text-muted">尚無輔導紀錄</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 區塊 3：問卷資料庫 -->
+        <div id="surveySection">
+          <!-- 動態內容區域 -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('companies');
+
+    const STORAGE_KEY = 'companiesStore';
+    let currentCompany = null;
+    let companyId = null;
+    let currentView = 'list'; // 'list', 'surveyDetail', or 'guidanceDetail'
+    let currentSurvey = null;
+    let currentGuidanceRecord = null;
+    let currentGuidanceIndex = null;
+    let surveyDetailKeyword = '';
+    let surveyDetailPage = 1;
+    const SURVEY_DETAIL_PAGE_SIZE = 10;
+
+    // 從 URL 取得公司 ID
+    function getCompanyIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // 載入公司資料
+    function loadCompany() {
+      companyId = getCompanyIdFromUrl();
+      if (!companyId) {
+        alert('找不到公司 ID');
+        window.location.href = 'a02-companies.html';
+        return;
+      }
+
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        alert('找不到公司資料');
+        window.location.href = 'a02-companies.html';
+        return;
+      }
+
+      try {
+        const companies = JSON.parse(raw);
+        currentCompany = companies.find(c => c.id === companyId);
+        
+        if (!currentCompany) {
+          alert('找不到指定的公司');
+          window.location.href = 'a02-companies.html';
+          return;
+        }
+
+        renderCompanyInfo();
+        renderGuidanceRecords();
+        renderSurveyList();
+      } catch (e) {
+        alert('讀取資料失敗');
+        window.location.href = 'a02-companies.html';
+      }
+    }
+
+    // 渲染公司基本資料
+    function renderCompanyInfo() {
+      document.getElementById('companyTitle').textContent = currentCompany.name || '未命名公司';
+      document.getElementById('companyName').textContent = currentCompany.name || '-';
+      document.getElementById('companyTaxId').textContent = currentCompany.taxId || '-';
+      document.getElementById('companyCity').textContent = currentCompany.city || '-';
+      document.getElementById('companyIndustry').textContent = currentCompany.industry || '-';
+      document.getElementById('companyEmployeeRange').textContent = currentCompany.employeeRange || '-';
+      
+      const stageColor = getStageColor(currentCompany.digitalStage);
+      document.getElementById('companyDigitalStage').innerHTML = 
+        `<span class="badge ${stageColor}">${currentCompany.digitalStage || '未評估'}</span>`;
+      
+      document.getElementById('companyJoinedAt').textContent = 
+        formatDateTime(currentCompany.joinedAt || currentCompany.createdAt);
+      
+      const surveyCount = (currentCompany.surveys || []).length;
+      document.getElementById('companySurveyCount').innerHTML = 
+        `<span class="badge bg-info">${surveyCount}</span>`;
+    }
+
+    // 渲染輔導紀錄
+    function renderGuidanceRecords() {
+      const container = document.getElementById('guidanceRecordsContainer');
+      const records = currentCompany.guidanceRecords || [];
+
+      if (records.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-muted">尚無輔導紀錄</div>';
+        return;
+      }
+
+      let html = '<div class="timeline">';
+      records.forEach((record, index) => {
+        // 狀態徽章樣式
+        const statusBadgeClass = {
+          '初訪': 'bg-info',
+          '中期': 'bg-warning',
+          '結案': 'bg-success'
+        };
+        const statusClass = statusBadgeClass[record.status] || 'bg-secondary';
+
+        html += `
+          <div class="timeline-item mb-3 pb-3 ${index < records.length - 1 ? 'border-bottom' : ''}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge bg-primary">${escapeHtml(record.type || '一般輔導')}</span>
+                ${record.status ? `<span class="badge ${statusClass} ms-2">${escapeHtml(record.status)}</span>` : ''}
+                <span class="text-muted small ms-2">${formatDate(record.date)}</span>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="viewGuidanceRecord(${index})">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">visibility</span>
+                  檢視
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteGuidanceRecord(${index})">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">delete</span>
+                  刪除
+                </button>
+              </div>
+            </div>
+            <h6 class="mb-2">${escapeHtml(record.title || '無標題')}</h6>
+            <p class="mb-1 text-muted small">${escapeHtml(record.content || '無內容')}</p>
+            ${record.consultant ? `<div class="small text-muted">輔導顧問：${escapeHtml(record.consultant)}</div>` : ''}
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+    }
+
+    // 渲染問卷列表
+    function renderSurveyList() {
+      currentView = 'list';
+      
+      // 顯示公司資料和輔導紀錄區塊
+      document.getElementById('backToCompaniesBtn').style.display = 'block';
+      document.getElementById('companyHeader').style.display = 'flex';
+      document.getElementById('companyInfoCard').style.display = 'block';
+      document.getElementById('guidanceRecordsCard').style.display = 'block';
+      
+      const container = document.getElementById('surveySection');
+      const surveys = currentCompany.surveys || [];
+
+      let html = `
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">問卷資料庫（${surveys.length} 份）</h5>
+            <button class="btn btn-primary btn-sm" onclick="createSurvey()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
+              新增問卷
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>問卷名稱</th>
+                    <th>狀態</th>
+                    <th>負責單位</th>
+                    <th>建立者</th>
+                    <th>建立日期</th>
+                    <th>欄位數</th>
+                    <th>回覆數</th>
+                    <th style="width: 200px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+      `;
+
+      if (surveys.length === 0) {
+        html += '<tr><td colspan="9" class="text-center py-4 text-muted">尚無問卷資料</td></tr>';
+      } else {
+        surveys.forEach((survey, index) => {
+          const fieldCount = survey.fields?.length || 0;
+          const responseCount = survey.responses?.length || 0;
+          const statusClass = survey.status === '進行中' ? 'bg-primary' : 'bg-secondary';
+
+          html += `
+            <tr>
+              <td class="text-center">${index + 1}</td>
+              <td>
+                <strong>${escapeHtml(survey.name || '未命名')}</strong><br>
+                <small class="text-muted">${escapeHtml(survey.description || '')}</small>
+              </td>
+              <td><span class="badge ${statusClass}">${survey.status || '草稿'}</span></td>
+              <td>${escapeHtml(survey.owner || '-')}</td>
+              <td>${escapeHtml(survey.creator || '-')}</td>
+              <td>${formatDate(survey.createdAt)}</td>
+              <td>${fieldCount}</td>
+              <td>${responseCount}</td>
+              <td style="white-space: nowrap;">
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="viewSurvey('${survey.id}')">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">visibility</span>
+                  查看
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteSurvey(${index})">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">delete</span>
+                  刪除
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      html += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // 渲染問卷詳情
+    function renderSurveyDetail() {
+      currentView = 'detail';
+      
+      // 隱藏公司資料和輔導紀錄區塊，全屏顯示問卷
+      document.getElementById('backToCompaniesBtn').style.display = 'none';
+      document.getElementById('companyHeader').style.display = 'none';
+      document.getElementById('companyInfoCard').style.display = 'none';
+      document.getElementById('guidanceRecordsCard').style.display = 'none';
+      
+      const container = document.getElementById('surveySection');
+      const survey = currentSurvey;
+      const fields = survey.fields || [];
+      const responses = survey.responses || [];
+
+      let html = `
+        <!-- 返回按鈕 -->
+        <div class="mb-3">
+          <button class="btn btn-outline-secondary btn-sm" onclick="backToSurveyList()">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">arrow_back</span>
+            返回問卷列表
+          </button>
+        </div>
+
+        <!-- 問卷標題 -->
+        <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
+          <div class="flex-grow-1">
+            <h1 class="h4 mb-1 fw-bold">${escapeHtml(survey.name || '未命名')}</h1>
+            <p class="text-muted small mb-0">${escapeHtml(survey.description || '無說明')}</p>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="badge ${survey.status === '進行中' ? 'bg-primary' : 'bg-secondary'} fs-6">${survey.status || '草稿'}</span>
+            <input type="file" id="importFile-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('importFile-${survey.id}').click()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+              匯入
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="exportSurveyData()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
+              匯出
+            </button>
+          </div>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">負責單位</div>
+                <div class="fw-bold">${escapeHtml(survey.owner || '未指派')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">建立者</div>
+                <div class="fw-bold">${escapeHtml(survey.creator || '-')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">建立日期</div>
+                <div class="fw-bold">${formatDate(survey.createdAt)}</div>
+              </div>
+            </div>
+          </div>
+          ${survey.lastUploadBy ? `
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">最後上傳</div>
+                <div class="fw-bold">${escapeHtml(survey.lastUploadBy)}</div>
+                <div class="text-muted small">${formatDate(survey.lastUploadAt)}</div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h5 mb-0 text-primary">${fields.length}</div>
+                <div class="text-muted small">欄位數</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h5 mb-0 text-success">${responses.length}</div>
+                <div class="text-muted small">回覆數</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (fields.length === 0) {
+        html += `
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <div class="mb-3">
+              <span class="material-icons" style="font-size: 64px; color: var(--color-border);">description</span>
+            </div>
+            <h5>尚無問卷資料</h5>
+            <p class="text-muted mb-3">此問卷尚未匯入任何欄位定義和回覆資料</p>
+            <input type="file" id="importFileEmpty-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
+            <button class="btn btn-primary" onclick="document.getElementById('importFileEmpty-${survey.id}').click()">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">download</span>
+              立即匯入
+            </button>
+          </div>
+        </div>
+        `;
+      } else {
+        const filteredResponses = filterSurveyResponses(responses, fields);
+        const totalPages = Math.max(1, Math.ceil(filteredResponses.length / SURVEY_DETAIL_PAGE_SIZE));
+        surveyDetailPage = Math.min(surveyDetailPage, totalPages);
+        const start = (surveyDetailPage - 1) * SURVEY_DETAIL_PAGE_SIZE;
+        const pageData = filteredResponses.slice(start, start + SURVEY_DETAIL_PAGE_SIZE);
+
+        html += `
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold">問卷回覆 (${filteredResponses.length})</h6>
+              <div class="position-relative" style="max-width: 280px;">
+                <span class="material-icons position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--color-text-secondary);">search</span>
+                <input type="search" class="form-control form-control-sm ps-5" placeholder="搜尋" 
+                  value="${escapeHtml(surveyDetailKeyword)}" oninput="updateSurveyDetailKeyword(this.value)">
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0" style="overflow-x: auto; overflow-y: visible;">
+              <table class="table table-bordered table-hover mb-0">
+        `;
+
+        if (pageData.length === 0) {
+          html += `
+                <tbody>
+                  <tr>
+                    <td colspan="100" class="text-center py-5 text-muted">
+                      ${responses.length === 0 ? '尚無問卷回覆' : '找不到符合條件的資料'}
+                    </td>
+                  </tr>
+                </tbody>
+          `;
+        } else {
+          html += `
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-center" style="min-width: 60px; white-space: nowrap;">#</th>
+                    <th class="text-center" style="min-width: 120px; white-space: nowrap;">問卷編號</th>
+                    <th class="text-center" style="min-width: 150px; white-space: nowrap;">提交時間</th>
+          `;
+          
+          fields.forEach(field => {
+            html += `<th style="min-width: 200px; white-space: nowrap;">${escapeHtml(field.label)}</th>`;
+          });
+          
+          html += `
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          pageData.forEach((response, index) => {
+            html += `
+                  <tr>
+                    <td class="text-center" style="white-space: nowrap;">${start + index + 1}</td>
+                    <td style="white-space: nowrap;">${escapeHtml(response.id)}</td>
+                    <td style="white-space: nowrap;">${formatDateTime(response.submittedAt)}</td>
+            `;
+
+            fields.forEach(field => {
+              const value = response.values[field.id];
+              html += `<td style="min-width: 200px; max-width: 500px; word-wrap: break-word; white-space: normal;">${formatFieldValue(value, field)}</td>`;
+            });
+            
+            html += `</tr>`;
+          });
+
+          html += `
+                </tbody>
+          `;
+        }
+
+        html += `
+              </table>
+          </div>
+        `;
+
+        if (totalPages > 1) {
+          html += `
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">顯示第 ${start + 1} - ${start + pageData.length} 筆，共 ${filteredResponses.length} 筆</small>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  ${buildSurveyDetailPagination(totalPages)}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          `;
+        } else if (pageData.length > 0) {
+          html += `
+          <div class="card-footer bg-white">
+            <small class="text-muted">共 ${filteredResponses.length} 筆</small>
+          </div>
+          `;
+        }
+        
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // 篩選問卷回覆
+    function filterSurveyResponses(responses, fields) {
+      if (!surveyDetailKeyword) return responses;
+      const lower = surveyDetailKeyword.toLowerCase();
+      return responses.filter(response => {
+        const text = [
+          response.id,
+          ...fields.map(field => {
+            const value = response.values[field.id];
+            if (Array.isArray(value)) return value.join(' ');
+            if (value == null) return '';
+            return String(value);
+          })
+        ].join(' ');
+        return text.toLowerCase().includes(lower);
+      });
+    }
+
+    // 格式化欄位值
+    function formatFieldValue(value, field) {
+      if (field.type === 'multi') {
+        const items = Array.isArray(value) ? value : parseMultiValue(value);
+        if (!items.length) return '<span class="text-muted">－</span>';
+        return items.map(item => `<span class="badge bg-light text-dark me-1 mb-1">${escapeHtml(item)}</span>`).join('');
+      }
+      if (field.type === 'datetime') {
+        return formatDateTime(value);
+      }
+      if (!value) return '<span class="text-muted">－</span>';
+      return escapeHtml(String(value)).replace(/\n/g, '<br>');
+    }
+
+    // 解析多選值
+    function parseMultiValue(value) {
+      if (Array.isArray(value)) return value;
+      if (!value) return [];
+      return String(value).split(/[\n,、，；;]/).map(s => s.trim()).filter(Boolean);
+    }
+
+    // 更新搜尋關鍵字
+    function updateSurveyDetailKeyword(value) {
+      surveyDetailKeyword = value;
+      surveyDetailPage = 1;
+      renderSurveyDetail();
+    }
+
+    // 切換頁碼
+    function changeSurveyDetailPage(page) {
+      surveyDetailPage = page;
+      renderSurveyDetail();
+    }
+
+    // 建立分頁
+    function buildSurveyDetailPagination(totalPages) {
+      let html = '';
+      
+      html += `
+        <li class="page-item ${surveyDetailPage === 1 ? 'disabled' : ''}">
+          <button class="page-link" onclick="changeSurveyDetailPage(${surveyDetailPage - 1})" ${surveyDetailPage === 1 ? 'disabled' : ''}>‹</button>
+        </li>
+      `;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (totalPages <= 7 || i === 1 || i === totalPages || (i >= surveyDetailPage - 1 && i <= surveyDetailPage + 1)) {
+          html += `
+            <li class="page-item ${i === surveyDetailPage ? 'active' : ''}">
+              <button class="page-link" onclick="changeSurveyDetailPage(${i})">${i}</button>
+            </li>
+          `;
+        } else if (i === surveyDetailPage - 2 || i === surveyDetailPage + 2) {
+          html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+      }
+      
+      html += `
+        <li class="page-item ${surveyDetailPage === totalPages ? 'disabled' : ''}">
+          <button class="page-link" onclick="changeSurveyDetailPage(${surveyDetailPage + 1})" ${surveyDetailPage === totalPages ? 'disabled' : ''}>›</button>
+        </li>
+      `;
+      
+      return html;
+    }
+
+    // 取得階段顏色
+    function getStageColor(stage) {
+      switch(stage) {
+        case '尚未開始': return 'bg-secondary';
+        case '初步導入階段': return 'bg-primary';
+        case '持續優化階段': return 'bg-success';
+        case '成熟運用階段': return 'bg-warning';
+        default: return 'bg-light text-dark';
+      }
+    }
+
+    // 格式化日期時間
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 編輯公司資料
+    function editCompanyInfo() {
+      alert('編輯公司資料功能開發中...');
+    }
+
+    // 新增輔導紀錄
+    function addGuidanceRecord() {
+      // 建立模態框表單
+      const modalHtml = `
+        <div class="modal fade" id="addGuidanceModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">新增輔導紀錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">輔導類型</label>
+                  <select class="form-select" id="guidanceType">
+                    <option value="初次訪談">初次訪談</option>
+                    <option value="技術輔導">技術輔導</option>
+                    <option value="追蹤輔導">追蹤輔導</option>
+                    <option value="一般輔導" selected>一般輔導</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">狀態</label>
+                  <select class="form-select" id="guidanceStatus">
+                    <option value="初訪" selected>初訪</option>
+                    <option value="中期">中期</option>
+                    <option value="結案">結案</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導主題</label>
+                  <input type="text" class="form-control" id="guidanceTitle" placeholder="請輸入輔導主題">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導內容</label>
+                  <textarea class="form-control" id="guidanceContent" rows="4" placeholder="請輸入輔導內容"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導顧問</label>
+                  <input type="text" class="form-control" id="guidanceConsultant" placeholder="請輸入輔導顧問姓名">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導日期</label>
+                  <input type="datetime-local" class="form-control" id="guidanceDate" value="${new Date().toISOString().slice(0, 16)}">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveNewGuidanceRecord()">儲存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 移除舊的模態框（如果存在）
+      const oldModal = document.getElementById('addGuidanceModal');
+      if (oldModal) oldModal.remove();
+
+      // 添加到 body
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      // 顯示模態框
+      const modal = new bootstrap.Modal(document.getElementById('addGuidanceModal'));
+      modal.show();
+    }
+
+    function saveNewGuidanceRecord() {
+      const type = document.getElementById('guidanceType').value;
+      const status = document.getElementById('guidanceStatus').value;
+      const title = document.getElementById('guidanceTitle').value.trim();
+      const content = document.getElementById('guidanceContent').value.trim();
+      const consultant = document.getElementById('guidanceConsultant').value.trim();
+      const date = document.getElementById('guidanceDate').value;
+
+      if (!title) {
+        alert('請輸入輔導主題');
+        return;
+      }
+
+      if (!content) {
+        alert('請輸入輔導內容');
+        return;
+      }
+
+      const newRecord = {
+        id: `guidance-${Date.now()}`,
+        date: new Date(date).toISOString(),
+        type: type,
+        status: status,
+        title: title,
+        content: content,
+        consultant: consultant
+      };
+
+      if (!currentCompany.guidanceRecords) {
+        currentCompany.guidanceRecords = [];
+      }
+      currentCompany.guidanceRecords.unshift(newRecord);
+
+      // 儲存到 localStorage
+      saveCompany();
+      renderGuidanceRecords();
+
+      // 關閉模態框
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addGuidanceModal'));
+      modal.hide();
+    }
+
+    // 刪除輔導紀錄
+    function deleteGuidanceRecord(index) {
+      if (!confirm('確定要刪除這筆輔導紀錄嗎？')) return;
+      
+      currentCompany.guidanceRecords.splice(index, 1);
+      saveCompany();
+      renderGuidanceRecords();
+    }
+
+    // 查看問卷
+    function viewSurvey(surveyId) {
+      const surveys = currentCompany.surveys || [];
+      currentSurvey = surveys.find(s => s.id === surveyId);
+      
+      if (!currentSurvey) {
+        alert('找不到指定的問卷');
+        return;
+      }
+
+      surveyDetailKeyword = '';
+      surveyDetailPage = 1;
+      renderSurveyDetail();
+    }
+
+    // 返回問卷列表
+    function backToSurveyList() {
+      currentSurvey = null;
+      surveyDetailKeyword = '';
+      surveyDetailPage = 1;
+      renderSurveyList();
+    }
+
+    // 查看輔導紀錄詳情
+    function viewGuidanceRecord(index) {
+      const records = currentCompany.guidanceRecords || [];
+      currentGuidanceRecord = records[index];
+      currentGuidanceIndex = index;
+      
+      if (!currentGuidanceRecord) {
+        alert('找不到指定的輔導紀錄');
+        return;
+      }
+
+      renderGuidanceDetail();
+    }
+
+    // 返回輔導列表
+    function backToGuidanceList() {
+      currentGuidanceRecord = null;
+      currentGuidanceIndex = null;
+      renderSurveyList(); // 回到主列表（包含輔導紀錄）
+    }
+
+    // 渲染輔導詳情
+    function renderGuidanceDetail() {
+      currentView = 'guidanceDetail';
+      
+      // 隱藏公司資料和輔導紀錄區塊
+      document.getElementById('backToCompaniesBtn').style.display = 'none';
+      document.getElementById('companyHeader').style.display = 'none';
+      document.getElementById('companyInfoCard').style.display = 'none';
+      document.getElementById('guidanceRecordsCard').style.display = 'none';
+
+      const statusBadgeClass = {
+        '初訪': 'bg-info',
+        '中期': 'bg-warning',
+        '結案': 'bg-success'
+      };
+      const statusClass = statusBadgeClass[currentGuidanceRecord.status] || 'bg-secondary';
+
+      const section = document.getElementById('surveySection');
+      section.innerHTML = `
+        <!-- 返回按鈕 -->
+        <div class="mb-3">
+          <button class="btn btn-outline-secondary btn-sm" onclick="backToGuidanceList()">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">arrow_back</span>
+            返回輔導列表
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">輔導紀錄詳情</h5>
+              <div>
+                <button class="btn btn-outline-primary me-2" onclick="editGuidanceRecord()">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">edit</span>
+                  編輯
+                </button>
+                <button class="btn btn-outline-danger" onclick="deleteCurrentGuidanceRecord()">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">delete</span>
+                  刪除
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">輔導類型</label>
+                  <div>
+                    <span class="badge bg-primary fs-6">${escapeHtml(currentGuidanceRecord.type || '一般輔導')}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">狀態</label>
+                  <div>
+                    ${currentGuidanceRecord.status ? `<span class="badge ${statusClass} fs-6">${escapeHtml(currentGuidanceRecord.status)}</span>` : '<span class="text-muted">-</span>'}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">輔導日期</label>
+                  <div class="fw-medium">${formatDateTime(currentGuidanceRecord.date)}</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">輔導顧問</label>
+                  <div class="fw-medium">${escapeHtml(currentGuidanceRecord.consultant || '-')}</div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">輔導主題</label>
+                  <h5>${escapeHtml(currentGuidanceRecord.title || '無標題')}</h5>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label text-muted small">輔導內容</label>
+                  <div class="border rounded p-3" style="background-color: #f8f9fa; min-height: 200px; white-space: pre-wrap;">
+${escapeHtml(currentGuidanceRecord.content || '無內容')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 編輯輔導紀錄
+    function editGuidanceRecord() {
+      if (!currentGuidanceRecord) return;
+
+      // 建立編輯模態框
+      const modalHtml = `
+        <div class="modal fade" id="editGuidanceModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">編輯輔導紀錄</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label">輔導類型</label>
+                  <select class="form-select" id="editGuidanceType">
+                    <option value="初次訪談" ${currentGuidanceRecord.type === '初次訪談' ? 'selected' : ''}>初次訪談</option>
+                    <option value="技術輔導" ${currentGuidanceRecord.type === '技術輔導' ? 'selected' : ''}>技術輔導</option>
+                    <option value="追蹤輔導" ${currentGuidanceRecord.type === '追蹤輔導' ? 'selected' : ''}>追蹤輔導</option>
+                    <option value="一般輔導" ${currentGuidanceRecord.type === '一般輔導' ? 'selected' : ''}>一般輔導</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">狀態</label>
+                  <select class="form-select" id="editGuidanceStatus">
+                    <option value="初訪" ${currentGuidanceRecord.status === '初訪' ? 'selected' : ''}>初訪</option>
+                    <option value="中期" ${currentGuidanceRecord.status === '中期' ? 'selected' : ''}>中期</option>
+                    <option value="結案" ${currentGuidanceRecord.status === '結案' ? 'selected' : ''}>結案</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導主題</label>
+                  <input type="text" class="form-control" id="editGuidanceTitle" value="${escapeHtml(currentGuidanceRecord.title || '')}">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導內容</label>
+                  <textarea class="form-control" id="editGuidanceContent" rows="6">${escapeHtml(currentGuidanceRecord.content || '')}</textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導顧問</label>
+                  <input type="text" class="form-control" id="editGuidanceConsultant" value="${escapeHtml(currentGuidanceRecord.consultant || '')}">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">輔導日期</label>
+                  <input type="datetime-local" class="form-control" id="editGuidanceDate" value="${new Date(currentGuidanceRecord.date).toISOString().slice(0, 16)}">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveEditedGuidanceRecord()">儲存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 移除舊的模態框
+      const oldModal = document.getElementById('editGuidanceModal');
+      if (oldModal) oldModal.remove();
+
+      // 添加到 body
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      // 顯示模態框
+      const modal = new bootstrap.Modal(document.getElementById('editGuidanceModal'));
+      modal.show();
+    }
+
+    // 儲存編輯的輔導紀錄
+    function saveEditedGuidanceRecord() {
+      const type = document.getElementById('editGuidanceType').value;
+      const status = document.getElementById('editGuidanceStatus').value;
+      const title = document.getElementById('editGuidanceTitle').value.trim();
+      const content = document.getElementById('editGuidanceContent').value.trim();
+      const consultant = document.getElementById('editGuidanceConsultant').value.trim();
+      const date = document.getElementById('editGuidanceDate').value;
+
+      if (!title) {
+        alert('請輸入輔導主題');
+        return;
+      }
+
+      if (!content) {
+        alert('請輸入輔導內容');
+        return;
+      }
+
+      // 更新紀錄
+      currentGuidanceRecord.type = type;
+      currentGuidanceRecord.status = status;
+      currentGuidanceRecord.title = title;
+      currentGuidanceRecord.content = content;
+      currentGuidanceRecord.consultant = consultant;
+      currentGuidanceRecord.date = new Date(date).toISOString();
+
+      // 更新公司資料
+      currentCompany.guidanceRecords[currentGuidanceIndex] = currentGuidanceRecord;
+
+      // 儲存到 localStorage
+      saveCompany();
+
+      // 關閉模態框
+      const modal = bootstrap.Modal.getInstance(document.getElementById('editGuidanceModal'));
+      modal.hide();
+
+      // 重新渲染詳情
+      renderGuidanceDetail();
+    }
+
+    // 刪除當前輔導紀錄
+    function deleteCurrentGuidanceRecord() {
+      if (!confirm('確定要刪除這筆輔導紀錄嗎？')) return;
+      
+      currentCompany.guidanceRecords.splice(currentGuidanceIndex, 1);
+      saveCompany();
+      
+      // 返回列表
+      backToGuidanceList();
+    }
+
+    // 新增問卷
+    function createSurvey() {
+      const name = prompt('請輸入問卷名稱：');
+      if (!name) return;
+
+      const description = prompt('請輸入問卷說明（選填）：');
+      const owner = prompt('請輸入負責單位（選填）：');
+      const creator = prompt('請輸入建立者名稱：');
+      
+      if (!creator || !creator.trim()) {
+        alert('必須輸入建立者名稱');
+        return;
+      }
+
+      const newSurvey = {
+        id: `survey-${Date.now()}`,
+        name: name.trim(),
+        description: description?.trim() || '',
+        owner: owner?.trim() || '尚未指派',
+        creator: creator.trim(),
+        status: '草稿',
+        createdAt: new Date().toISOString(),
+        fields: [],
+        responses: []
+      };
+
+      if (!currentCompany.surveys) {
+        currentCompany.surveys = [];
+      }
+      currentCompany.surveys.push(newSurvey);
+
+      saveCompany();
+      renderSurveyList();
+      alert('問卷已建立');
+    }
+
+    // 刪除問卷
+    function deleteSurvey(index) {
+      const survey = currentCompany.surveys[index];
+      if (!confirm(`確定要刪除問卷「${survey.name}」嗎？`)) return;
+      
+      currentCompany.surveys.splice(index, 1);
+      saveCompany();
+      renderSurveyList();
+    }
+
+    // 匯入問卷資料
+    async function handleImportFile(input) {
+      const file = input.files?.[0];
+      input.value = '';
+      if (!file) return;
+
+      // 先要求輸入建立者名稱
+      const creator = prompt('請輸入建立者名稱：');
+      if (!creator || !creator.trim()) {
+        alert('必須輸入建立者名稱才能上傳');
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        alert('載入 Excel 解析工具失敗，請重新整理頁面後再試。');
+        return;
+      }
+
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (!ext || !['xlsx', 'xls', 'csv'].includes(ext)) {
+          alert('僅支援 Excel (.xlsx, .xls) 或 CSV 檔案');
+          return;
+        }
+
+        const mode = ext === 'csv' ? 'text' : 'arrayBuffer';
+        const fileData = await readFileAsync(file, mode);
+
+        let workbook;
+        if (ext === 'csv') {
+          workbook = XLSX.read(fileData, { type: 'string' });
+        } else {
+          workbook = XLSX.read(new Uint8Array(fileData), { type: 'array' });
+        }
+
+        if (!workbook.SheetNames || !workbook.SheetNames.length) {
+          alert('檔案中找不到任何工作表');
+          return;
+        }
+
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+        processImportedData(rows, creator.trim());
+      } catch (error) {
+        console.error(error);
+        alert('匯入失敗：' + (error.message || '請確認檔案格式'));
+      }
+    }
+
+    // 讀取檔案
+    function readFileAsync(file, mode) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = event => resolve(event.target.result);
+        reader.onerror = () => reject(new Error('檔案讀取失敗'));
+        if (mode === 'text') {
+          reader.readAsText(file, 'utf-8');
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      });
+    }
+
+    // 處理匯入的資料
+    function processImportedData(rows, creator) {
+      if (!rows || !rows.length) {
+        alert('檔案內沒有資料');
+        return;
+      }
+
+      const headers = rows[0].map((cell, index) => {
+        const text = String(cell ?? '').trim();
+        return text || `欄位${index + 1}`;
+      });
+
+      const dataRows = rows.slice(1).filter(row => 
+        Array.isArray(row) && row.some(cell => String(cell ?? '').trim() !== '')
+      );
+
+      if (!dataRows.length) {
+        alert('沒有可匯入的資料列');
+        return;
+      }
+
+      const fields = headers.map((label, index) => ({
+        id: `field-${index}`,
+        label: label,
+        group: '匯入資料',
+        summary: true,
+        type: 'text'
+      }));
+
+      const baseTime = Date.now();
+      const responses = dataRows.map((row, index) => {
+        const values = {};
+        headers.forEach((header, colIdx) => {
+          values[`field-${colIdx}`] = row[colIdx] ?? '';
+        });
+
+        const submittedAt = new Date(baseTime + index * 1000).toISOString();
+        values.submittedAt = submittedAt;
+
+        return {
+          id: `${currentSurvey.id.toUpperCase()}-${String(index + 1).padStart(4, '0')}`,
+          submittedAt: submittedAt,
+          values
+        };
+      });
+
+      // 更新問卷
+      currentSurvey.fields = fields;
+      currentSurvey.responses = responses;
+      currentSurvey.status = '進行中';
+      currentSurvey.creator = creator;
+      currentSurvey.lastUploadAt = new Date().toISOString();
+      currentSurvey.lastUploadBy = creator;
+
+      saveCompany();
+      alert(`匯入完成：已導入 ${responses.length} 筆資料，共 ${fields.length} 個欄位`);
+      renderSurveyDetail();
+    }
+
+    // 匯出問卷資料
+    function exportSurveyData() {
+      if (typeof XLSX === 'undefined') {
+        alert('載入 Excel 工具失敗，請重新整理頁面後再試。');
+        return;
+      }
+
+      const survey = currentSurvey;
+      const fields = survey.fields || [];
+      const responses = survey.responses || [];
+
+      if (!responses.length) {
+        alert('此問卷尚無回覆資料可匯出');
+        return;
+      }
+
+      // 建立標題列
+      const headers = ['#', '問卷編號', '提交時間', ...fields.map(f => f.label)];
+
+      // 建立資料列
+      const data = responses.map((response, index) => {
+        const row = [
+          index + 1,
+          response.id,
+          formatDateTime(response.submittedAt)
+        ];
+
+        fields.forEach(field => {
+          const value = response.values[field.id];
+          if (Array.isArray(value)) {
+            row.push(value.join(', '));
+          } else if (value == null) {
+            row.push('');
+          } else {
+            row.push(String(value));
+          }
+        });
+
+        return row;
+      });
+
+      // 建立工作表
+      const wsData = [headers, ...data];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // 設定欄位寬度
+      const colWidths = headers.map((_, i) => {
+        if (i === 0) return { wch: 5 };
+        if (i === 1) return { wch: 15 };
+        if (i === 2) return { wch: 20 };
+        return { wch: 25 };
+      });
+      ws['!cols'] = colWidths;
+
+      // 建立工作簿
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '問卷回覆');
+
+      // 下載檔案
+      const fileName = `${currentCompany.name}_${survey.name}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      alert(`已匯出 ${responses.length} 筆資料`);
+    }
+
+    // 儲存公司資料
+    function saveCompany() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+
+      try {
+        const companies = JSON.parse(raw);
+        const index = companies.findIndex(c => c.id === companyId);
+        if (index !== -1) {
+          companies[index] = currentCompany;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+        }
+      } catch (e) {
+        console.error('儲存失敗', e);
+      }
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      loadCompany();
+    });
+  </script>
+</body>
+</html>
+

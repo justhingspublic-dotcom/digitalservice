@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商業服務業數位應用資料庫 - 後台登入</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #E3F2FD 0%, #FAFAFA 100%);
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-header {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #1565C0 100%);
+      color: #FFFFFF;
+      padding: 32px 24px;
+      border-radius: 12px 12px 0 0;
+      text-align: center;
+    }
+
+    .login-body {
+      padding: 32px;
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    .test-account-box {
+      background-color: var(--color-bg-light);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      color: var(--color-text-secondary);
+    }
+
+    .login-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- 登入標題 -->
+      <div class="login-header">
+        <div class="login-icon">
+          <span class="material-icons" style="font-size: 32px; color: white;">admin_panel_settings</span>
+        </div>
+        <div class="logo-text">商業服務業數位應用資料庫</div>
+        <div class="subtitle">Digital Transformation Survey System</div>
+      </div>
+
+      <!-- 登入表單 -->
+      <div class="login-body">
+        <h5 class="text-center mb-4" style="color: var(--color-text-primary); font-weight: 600;">後台管理登入</h5>
+
+        <form id="loginForm">
+          <div class="mb-3">
+            <label for="username" class="form-label required">帳號</label>
+            <input type="text" class="form-control" id="username" placeholder="請輸入帳號" required autofocus>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label required">密碼</label>
+            <input type="password" class="form-control" id="password" placeholder="請輸入密碼" required>
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="rememberMe">
+            <label class="form-check-label" for="rememberMe">
+              記住我
+            </label>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">login</span>
+              登入
+            </button>
+          </div>
+
+          <!-- 錯誤訊息 -->
+          <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;">
+            <small>帳號或密碼錯誤，請重新輸入</small>
+          </div>
+        </form>
+
+        <!-- 測試帳號提示 -->
+        <div class="mt-4 test-account-box">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="d-flex align-items-center mb-2">
+                <span class="material-icons" style="font-size: 18px; color: var(--color-primary); margin-right: 6px;">info</span>
+                <strong style="color: var(--color-text-primary); font-size: 14px;">測試帳號</strong>
+              </div>
+              <small class="text-muted">
+                帳號：<code>admin</code><br>
+                密碼：<code>admin123</code>
+              </small>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle;">flash_on</span>
+              快速填入
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <div class="login-footer">
+      <small>
+        © 2025 經濟部中小企業處 版權所有
+      </small>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 快速填入測試帳號
+    function fillTestAccount() {
+      document.getElementById('username').value = 'admin';
+      document.getElementById('password').value = 'admin123';
+      document.getElementById('username').focus();
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      const errorMessage = document.getElementById('errorMessage');
+
+      // 簡單的帳密驗證（實際應該呼叫後端 API）
+      if (username === 'admin' && password === 'admin123') {
+        // 登入成功
+        const loginData = {
+          username: username,
+          loginTime: new Date().toISOString(),
+          token: 'mock-jwt-token-' + Date.now()
+        };
+
+        // 儲存登入資訊
+        if (rememberMe) {
+          localStorage.setItem('adminLogin', JSON.stringify(loginData));
+        } else {
+          sessionStorage.setItem('adminLogin', JSON.stringify(loginData));
+        }
+
+        // 導向儀表板
+        window.location.href = 'a04-dashboard.html';
+      } else {
+        // 登入失敗
+        errorMessage.style.display = 'block';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+
+        // 3秒後隱藏錯誤訊息
+        setTimeout(() => {
+          errorMessage.style.display = 'none';
+        }, 3000);
+      }
+    });
+
+    // 檢查是否已登入
+    window.addEventListener('load', function() {
+      const loginData = localStorage.getItem('adminLogin') || sessionStorage.getItem('adminLogin');
+      if (loginData) {
+        // 已登入，直接導向儀表板
+        window.location.href = 'a04-dashboard.html';
+      }
+    });
+
+    // Enter 鍵提交
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
+</body>
+</html>

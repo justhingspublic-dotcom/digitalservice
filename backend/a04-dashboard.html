@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>儀表板 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <!-- 主內容區 -->
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">dashboard</span>
+          <h4 class="mb-0">儀表板與視覺化分析</h4>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="row mb-4">
+          <div class="col-md-3 mb-3">
+            <div class="stat-card">
+              <div class="stat-number" style="color: var(--primary-color);">0</div>
+              <div class="stat-label">總公司數</div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="stat-card">
+              <div class="stat-number" style="color: var(--success-color);">0</div>
+              <div class="stat-label">本週新增</div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="stat-card">
+              <div class="stat-number" style="color: #ff9800;">0</div>
+              <div class="stat-label">本月新增</div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="stat-card">
+              <div class="stat-number" style="color: #2196F3;">0</div>
+              <div class="stat-label">活躍公司數</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 視覺化圖表區域 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">視覺化圖表</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <!-- 圓餅圖 -->
+              <div class="col-md-6">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3 fw-bold text-center">產業別分布</h6>
+                  <canvas id="pieChart" style="max-height: 350px;"></canvas>
+                </div>
+              </div>
+
+              <!-- 橫條圖 -->
+              <div class="col-md-6">
+                <div class="border rounded p-3">
+                  <h6 class="mb-3 fw-bold text-center">年度趨勢分析</h6>
+                  <canvas id="barChart" style="max-height: 350px;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 縣市分布 -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">縣市分布統計</h5>
+              </div>
+              <div class="card-body">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>縣市</th>
+                      <th class="text-end">數量</th>
+                      <th class="text-end">佔比</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>台北市</td>
+                      <td class="text-end">68</td>
+                      <td class="text-end">27.4%</td>
+                    </tr>
+                    <tr>
+                      <td>新北市</td>
+                      <td class="text-end">52</td>
+                      <td class="text-end">21.0%</td>
+                    </tr>
+                    <tr>
+                      <td>桃園市</td>
+                      <td class="text-end">38</td>
+                      <td class="text-end">15.3%</td>
+                    </tr>
+                    <tr>
+                      <td>台中市</td>
+                      <td class="text-end">35</td>
+                      <td class="text-end">14.1%</td>
+                    </tr>
+                    <tr>
+                      <td>台南市</td>
+                      <td class="text-end">28</td>
+                      <td class="text-end">11.3%</td>
+                    </tr>
+                    <tr>
+                      <td>高雄市</td>
+                      <td class="text-end">27</td>
+                      <td class="text-end">10.9%</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="table-light">
+                      <th>總計</th>
+                      <th class="text-end">248</th>
+                      <th class="text-end">100%</th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">產業別分布統計</h5>
+              </div>
+              <div class="card-body">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>產業別</th>
+                      <th class="text-end">數量</th>
+                      <th class="text-end">佔比</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>製造業</td>
+                      <td class="text-end">78</td>
+                      <td class="text-end">31.5%</td>
+                    </tr>
+                    <tr>
+                      <td>批發及零售業</td>
+                      <td class="text-end">65</td>
+                      <td class="text-end">26.2%</td>
+                    </tr>
+                    <tr>
+                      <td>住宿及餐飲業</td>
+                      <td class="text-end">42</td>
+                      <td class="text-end">16.9%</td>
+                    </tr>
+                    <tr>
+                      <td>資訊及通訊傳播業</td>
+                      <td class="text-end">35</td>
+                      <td class="text-end">14.1%</td>
+                    </tr>
+                    <tr>
+                      <td>專業、科學及技術服務業</td>
+                      <td class="text-end">18</td>
+                      <td class="text-end">7.3%</td>
+                    </tr>
+                    <tr>
+                      <td>其他</td>
+                      <td class="text-end">10</td>
+                      <td class="text-end">4.0%</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="table-light">
+                      <th>總計</th>
+                      <th class="text-end">248</th>
+                      <th class="text-end">100%</th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 企業規模 & 轉型階段 -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">員工人數分布</h5>
+              </div>
+              <div class="card-body">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>規模</th>
+                      <th class="text-end">數量</th>
+                      <th class="text-end">佔比</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>5人以下</td>
+                      <td class="text-end">38</td>
+                      <td class="text-end">15.3%</td>
+                    </tr>
+                    <tr>
+                      <td>6-20人</td>
+                      <td class="text-end">72</td>
+                      <td class="text-end">29.0%</td>
+                    </tr>
+                    <tr>
+                      <td>21-50人</td>
+                      <td class="text-end">68</td>
+                      <td class="text-end">27.4%</td>
+                    </tr>
+                    <tr>
+                      <td>51-100人</td>
+                      <td class="text-end">45</td>
+                      <td class="text-end">18.2%</td>
+                    </tr>
+                    <tr>
+                      <td>101-200人</td>
+                      <td class="text-end">18</td>
+                      <td class="text-end">7.3%</td>
+                    </tr>
+                    <tr>
+                      <td>201人以上</td>
+                      <td class="text-end">7</td>
+                      <td class="text-end">2.8%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">數位化階段分布</h5>
+              </div>
+              <div class="card-body">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>階段</th>
+                      <th class="text-end">數量</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="2" class="text-center text-muted">尚無資料</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最新加入公司 -->
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">最新加入公司（最近5家）</h5>
+            <a href="a02-list.html" class="btn btn-sm btn-outline-primary">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">business</span>
+              查看全部公司
+            </a>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th>公司名稱</th>
+                    <th>統一編號</th>
+                    <th>縣市</th>
+                    <th>產業別</th>
+                    <th>加入時間</th>
+                    <th>問卷數</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="recentCompaniesTable">
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">尚無公司資料</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('dashboard');
+
+    let pieChart = null;
+    let barChart = null;
+
+    // 讀取公司資料
+    const STORAGE_KEY = 'companiesStore';
+    
+    function getDefaultCompanies() {
+      return [
+        {
+          id: 'company-001',
+          name: '台灣製造股份有限公司',
+          taxId: '12345678',
+          city: '台北市',
+          industry: '製造業',
+          employeeRange: '51-100人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-01T09:00:00',
+          createdAt: '2025-10-01T09:00:00',
+          surveys: [
+            { id: 'survey-001', name: '2025 Q1 數位轉型調查', status: '進行中', owner: '輔導組', creator: '王大明', createdAt: '2025-10-05', description: '針對製造業數位轉型需求進行調查', fields: [], responses: [] },
+            { id: 'survey-002', name: '客戶滿意度調查', status: '草稿', owner: '客服組', creator: '李小華', createdAt: '2025-10-10', description: '了解客戶對數位服務的滿意度', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-001',
+              date: '2025-10-08T14:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '數位轉型需求評估',
+              content: '與公司主管進行初次訪談，了解目前營運狀況及數位化需求。主要需求包含：ERP 系統導入、生產線數位化、供應鏈管理優化。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-002',
+              date: '2025-10-12T10:30:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'ERP 系統選型建議',
+              content: '根據公司規模與需求，建議導入中小企業適用的 ERP 系統。預估導入時間 3-6 個月，需要配合教育訓練。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-002',
+          name: '新北科技有限公司',
+          taxId: '23456789',
+          city: '新北市',
+          industry: '資訊及通訊傳播業',
+          employeeRange: '21-50人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2025-10-03T14:30:00',
+          createdAt: '2025-10-03T14:30:00',
+          surveys: [
+            { id: 'survey-003', name: '員工數位技能調查', status: '進行中', owner: '人資部', creator: '張志明', createdAt: '2025-10-08', description: '評估員工數位技能現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-003',
+              date: '2025-10-06T15:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 工具應用成效檢討',
+              content: '檢視公司導入的 AI 客服系統使用情況，整體滿意度良好，建議持續優化對話腳本。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-003',
+          name: '桃園餐飲集團',
+          taxId: '34567890',
+          city: '桃園市',
+          industry: '住宿及餐飲業',
+          employeeRange: '101-200人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-05T10:15:00',
+          createdAt: '2025-10-05T10:15:00',
+          surveys: [
+            { id: 'survey-004', name: '餐飲業數位化需求調查', status: '進行中', owner: '餐飲組', creator: '陳美玲', createdAt: '2025-10-12', description: '餐飲業數位化現況與需求', fields: [], responses: [] },
+            { id: 'survey-005', name: '外送平台整合調查', status: '草稿', owner: '資訊組', creator: '陳美玲', createdAt: '2025-10-13', description: '多平台訂單整合需求評估', fields: [], responses: [] },
+            { id: 'survey-006', name: '數位支付使用情況', status: '進行中', owner: '財務組', creator: '陳美玲', createdAt: '2025-10-14', description: '數位支付工具使用狀況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-004',
+              date: '2025-10-09T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '餐飲業數位化轉型規劃',
+              content: '討論多店面管理系統、外送平台整合、數位行銷等需求。建議優先導入 POS 系統整合方案。',
+              consultant: '陳美玲'
+            },
+            {
+              id: 'guidance-005',
+              date: '2025-10-14T16:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '外送平台系統整合建議',
+              content: '評估多個外送平台整合方案，推薦採用第三方整合系統，可節省人力成本。',
+              consultant: '陳美玲'
+            }
+          ]
+        },
+        {
+          id: 'company-004',
+          name: '台中批發貿易行',
+          taxId: '45678901',
+          city: '台中市',
+          industry: '批發及零售業',
+          employeeRange: '6-20人',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-09-28T16:20:00',
+          createdAt: '2025-09-28T16:20:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-013',
+              date: '2025-09-29T10:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '批發業數位轉型初步評估',
+              content: '了解傳統批發業營運模式，主要痛點為庫存管理效率低、訂單處理人工化。建議優先導入進銷存系統。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-005',
+          name: '高雄顧問管理公司',
+          taxId: '56789012',
+          city: '高雄市',
+          industry: '專業、科學及技術服務業',
+          employeeRange: '21-50人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2025-10-07T11:45:00',
+          createdAt: '2025-10-07T11:45:00',
+          surveys: [
+            { id: 'survey-007', name: '顧問服務數位化評估', status: '進行中', owner: '服務組', creator: '張志明', createdAt: '2025-10-09', description: '顧問服務流程數位化評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-006',
+              date: '2025-10-09T09:30:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '顧問業數位化需求評估',
+              content: '討論顧問服務流程數位化需求，包含案件管理系統、客戶關係管理、線上諮詢平台等。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-006',
+          name: '台南紡織工業股份有限公司',
+          taxId: '67890123',
+          city: '台南市',
+          industry: '製造業',
+          employeeRange: '201人以上',
+          digitalStage: '持續優化階段',
+          joinedAt: '2025-09-25T08:30:00',
+          createdAt: '2025-09-25T08:30:00',
+          surveys: [
+            { id: 'survey-008', name: '生產線自動化調查', status: '進行中', owner: '生產部', creator: '王大明', createdAt: '2025-09-30', description: '評估生產線自動化需求', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-007',
+              date: '2025-09-28T14:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '智慧製造解決方案評估',
+              content: '針對紡織生產線進行智慧製造評估，建議導入 IoT 感測器進行品質監控，預估可提升 15% 生產效率。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-008',
+              date: '2025-10-05T10:00:00',
+              type: '追蹤輔導',
+              status: '中期',
+              title: 'IoT 設備導入進度追蹤',
+              content: '確認設備採購進度，協助解決系統整合問題。預計下月開始試運行。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-007',
+          name: '基隆物流運輸有限公司',
+          taxId: '78901234',
+          city: '基隆市',
+          industry: '運輸及倉儲業',
+          employeeRange: '51-100人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-10T13:00:00',
+          createdAt: '2025-10-10T13:00:00',
+          surveys: [
+            { id: 'survey-009', name: '物流追蹤系統調查', status: '進行中', owner: '物流組', creator: '李小華', createdAt: '2025-10-11', description: '物流追蹤系統需求評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-009',
+              date: '2025-10-11T15:30:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '物流數位化需求訪談',
+              content: '了解現有物流管理流程，主要痛點為車輛調度效率不佳、貨物追蹤困難。建議導入 GPS 追蹤系統與智慧調度平台。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-008',
+          name: '新竹電子科技公司',
+          taxId: '89012345',
+          city: '新竹市',
+          industry: '製造業',
+          employeeRange: '101-200人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2024-12-15T10:00:00',
+          createdAt: '2024-12-15T10:00:00',
+          surveys: [
+            { id: 'survey-010', name: '智慧製造評估', status: '進行中', owner: '技術部', creator: '張志明', createdAt: '2024-12-20', description: '智慧製造導入評估', fields: [], responses: [] },
+            { id: 'survey-011', name: 'AI 應用調查', status: '進行中', owner: '研發部', creator: '張志明', createdAt: '2025-01-10', description: 'AI 技術應用現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-010',
+              date: '2024-12-18T13:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'AI 視覺檢測系統導入',
+              content: '協助評估 AI 視覺檢測系統導入可行性，建議從 PCB 板檢測開始試點。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-011',
+              date: '2025-01-15T10:30:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 系統試運行檢討',
+              content: '檢討 AI 視覺檢測系統試運行成果，準確率達 98.5%，建議擴大應用範圍。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-009',
+          name: '宜蘭農產加工社',
+          taxId: '90123456',
+          city: '宜蘭縣',
+          industry: '製造業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-12T15:30:00',
+          createdAt: '2025-10-12T15:30:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-014',
+              date: '2025-10-13T14:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '農產加工業數位化諮詢',
+              content: '評估小型農產加工業數位化需求，建議從基礎電腦化開始，包含簡易記帳、產品標籤列印等。',
+              consultant: '陳美玲'
+            }
+          ]
+        },
+        {
+          id: 'company-010',
+          name: '彰化金融服務公司',
+          taxId: '01234567',
+          city: '彰化縣',
+          industry: '金融及保險業',
+          employeeRange: '51-100人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2024-08-20T09:15:00',
+          createdAt: '2024-08-20T09:15:00',
+          surveys: [
+            { id: 'survey-012', name: '金融科技應用調查', status: '進行中', owner: '金融組', creator: '張志明', createdAt: '2024-09-01', description: 'FinTech 應用評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-015',
+              date: '2024-08-25T10:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'FinTech 系統整合建議',
+              content: '協助評估金融科技解決方案，包含行動支付、線上開戶、數位簽章等功能整合。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-016',
+              date: '2024-11-10T14:30:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: '數位金融服務成效檢討',
+              content: '檢討數位金融服務導入成效，客戶滿意度提升 30%，建議持續擴充服務項目。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-011',
+          name: '雲林食品加工廠',
+          taxId: '11223344',
+          city: '雲林縣',
+          industry: '製造業',
+          employeeRange: '21-50人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-08T14:20:00',
+          createdAt: '2025-10-08T14:20:00',
+          surveys: [
+            { id: 'survey-013', name: '食安追溯系統調查', status: '進行中', owner: '品管部', creator: '陳美玲', createdAt: '2025-10-09', description: '食品安全追溯系統需求', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-012',
+              date: '2025-10-09T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '食品安全追溯系統規劃',
+              content: '評估食品安全追溯系統需求，建議採用區塊鏈技術確保資料不可篡改性，從原料進貨到成品出貨全程追蹤。',
+              consultant: '陳美玲'
+            }
+          ]
+        },
+        {
+          id: 'company-012',
+          name: '嘉義觀光旅遊社',
+          taxId: '22334455',
+          city: '嘉義市',
+          industry: '住宿及餐飲業',
+          employeeRange: '6-20人',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-09-30T11:00:00',
+          createdAt: '2025-09-30T11:00:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-017',
+              date: '2025-10-02T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '旅遊業數位行銷需求評估',
+              content: '了解旅遊社營運現況，主要需求為線上訂房系統、社群媒體行銷、客戶管理系統。建議先從官網優化開始。',
+              consultant: '李小華'
+            },
+            {
+              id: 'guidance-018',
+              date: '2025-10-08T15:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '官網改版與 SEO 優化',
+              content: '協助規劃官網改版方案，包含響應式設計、線上詢價功能、SEO 關鍵字優化。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-013',
+          name: '屏東農業科技公司',
+          taxId: '33445566',
+          city: '屏東縣',
+          industry: '農、林、漁、牧業',
+          employeeRange: '21-50人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2023-05-10T10:30:00',
+          createdAt: '2023-05-10T10:30:00',
+          surveys: [
+            { id: 'survey-014', name: '智慧農業調查', status: '進行中', owner: '農技組', creator: '王大明', createdAt: '2023-06-01', description: '智慧農業技術導入評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-019',
+              date: '2023-05-15T09:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '智慧農業技術導入評估',
+              content: '評估農業科技公司數位轉型需求，討論智慧溫室、自動灌溉系統、農產品溯源等技術應用。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-020',
+              date: '2023-07-20T10:30:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'IoT 感測器系統建置',
+              content: '協助建置 IoT 感測器系統，監控溫度、濕度、土壤狀況等環境參數，提供即時數據分析。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-021',
+              date: '2024-01-10T14:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: '智慧農業系統成效評估',
+              content: '系統運行半年後成效顯著，作物產量提升 20%，水資源節省 35%。建議擴大應用範圍。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-014',
+          name: '花蓮觀光飯店',
+          taxId: '44556677',
+          city: '花蓮縣',
+          industry: '住宿及餐飲業',
+          employeeRange: '51-100人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2024-03-15T09:00:00',
+          createdAt: '2024-03-15T09:00:00',
+          surveys: [
+            { id: 'survey-015', name: '飯店數位化服務調查', status: '進行中', owner: '服務部', creator: '李小華', createdAt: '2024-04-01', description: '飯店數位化服務現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-022',
+              date: '2024-03-20T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '飯店數位化服務升級規劃',
+              content: '評估飯店數位化服務現況，討論智慧客房、行動入住、數位禮賓服務等升級方案。',
+              consultant: '李小華'
+            },
+            {
+              id: 'guidance-023',
+              date: '2024-05-15T14:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '智慧客房系統導入',
+              content: '協助導入智慧客房控制系統，包含語音助理、智慧燈光、溫度控制等功能，提升住客體驗。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-015',
+          name: '台東綠能科技',
+          taxId: '55667788',
+          city: '台東縣',
+          industry: '電力及燃氣供應業',
+          employeeRange: '21-50人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2023-11-20T14:00:00',
+          createdAt: '2023-11-20T14:00:00',
+          surveys: [
+            { id: 'survey-016', name: '綠能監控系統調查', status: '進行中', owner: '技術部', creator: '張志明', createdAt: '2023-12-01', description: '綠能監控系統評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-024',
+              date: '2023-11-25T10:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '綠能監控平台優化',
+              content: '協助優化太陽能發電監控平台，增加即時發電效率分析、異常警報、遠端控制等功能。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-025',
+              date: '2024-03-10T15:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 預測維護系統導入',
+              content: '導入 AI 預測維護系統，透過機器學習預測設備故障，降低維護成本 25%，提升系統可用率。',
+              consultant: '張志明'
+            }
+          ]
+        }
+      ];
+    }
+    
+    function loadCompaniesStore() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        // 如果沒有資料，使用預設假資料
+        const defaultData = getDefaultCompanies();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        return defaultData;
+      }
+      try {
+        const data = JSON.parse(raw);
+        // 如果資料是空的，也使用預設假資料
+        if (!Array.isArray(data) || data.length === 0) {
+          const defaultData = getDefaultCompanies();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+          return defaultData;
+        }
+        return data;
+      } catch (e) {
+        const defaultData = getDefaultCompanies();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        return defaultData;
+      }
+    }
+
+    // 計算統計數據
+    function calculateStats() {
+      const companies = loadCompaniesStore();
+      
+      // 統計總數
+      const totalCount = companies.length;
+      
+      // 本週新增（假設最近7天）
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const weeklyCount = companies.filter(c => {
+        const joinedDate = new Date(c.joinedAt || c.createdAt);
+        return joinedDate >= oneWeekAgo;
+      }).length;
+      
+      // 本月新增（假設最近30天）
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+      const monthlyCount = companies.filter(c => {
+        const joinedDate = new Date(c.joinedAt || c.createdAt);
+        return joinedDate >= oneMonthAgo;
+      }).length;
+      
+      // 活躍公司數（有問卷資料的公司）
+      const activeCount = companies.filter(c => {
+        const surveys = c.surveys || [];
+        return surveys.length > 0;
+      }).length;
+      
+      // 縣市分布
+      const cityCount = {};
+      companies.forEach(c => {
+        const city = c.city || '未填寫';
+        cityCount[city] = (cityCount[city] || 0) + 1;
+      });
+      
+      // 產業別分布
+      const industryCount = {};
+      companies.forEach(c => {
+        const industry = c.industry || '未填寫';
+        industryCount[industry] = (industryCount[industry] || 0) + 1;
+      });
+      
+      // 員工規模分布
+      const employeeCount = {};
+      companies.forEach(c => {
+        const employees = c.employeeRange || '未填寫';
+        employeeCount[employees] = (employeeCount[employees] || 0) + 1;
+      });
+      
+      // 數位化階段統計
+      const stageCount = {};
+      companies.forEach(c => {
+        const stage = c.digitalStage || '未評估';
+        stageCount[stage] = (stageCount[stage] || 0) + 1;
+      });
+      
+      return {
+        totalCount,
+        weeklyCount,
+        monthlyCount,
+        activeCount,
+        cityCount,
+        industryCount,
+        employeeCount,
+        stageCount
+      };
+    }
+
+    // 更新頁面顯示
+    function updateDashboard() {
+      const stats = calculateStats();
+      
+      // 更新統計卡片
+      const statCards = document.querySelectorAll('.stat-card .stat-number');
+      if (statCards.length >= 4) {
+        statCards[0].textContent = stats.totalCount;
+        statCards[1].textContent = stats.weeklyCount;
+        statCards[2].textContent = stats.monthlyCount;
+        statCards[3].textContent = stats.activeCount;
+      }
+      
+      // 更新縣市分布表格
+      updateTable('.row:nth-of-type(2) .col-md-6:nth-child(1) tbody', stats.cityCount, stats.totalCount);
+      
+      // 更新產業別分布表格
+      updateTable('.row:nth-of-type(3) .col-md-6:nth-child(2) tbody', stats.industryCount, stats.totalCount);
+      
+      // 更新員工規模表格
+      updateTable('.row:nth-of-type(4) .col-md-6:nth-child(1) tbody', stats.employeeCount, stats.totalCount, false);
+      
+      // 更新數位化階段表格
+      updateTable('.row:nth-of-type(4) .col-md-6:nth-child(2) tbody', stats.stageCount, stats.totalCount, false);
+      
+      // 更新最新公司列表
+      updateRecentCompanies();
+    }
+
+    function updateTable(selector, dataCount, total, showPercentage = true) {
+      const tbody = document.querySelector(selector);
+      if (!tbody) return;
+      
+      const sortedData = Object.entries(dataCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+      
+      let html = '';
+      sortedData.forEach(([name, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        html += `
+          <tr>
+            <td>${name}</td>
+            <td class="text-end">${count}</td>
+            ${showPercentage ? `<td class="text-end">${percentage}%</td>` : ''}
+          </tr>
+        `;
+      });
+      
+      const totalSum = sortedData.reduce((sum, [, count]) => sum + count, 0);
+      html += `
+        <tr class="table-light">
+          <th>總計</th>
+          <th class="text-end">${totalSum}</th>
+          ${showPercentage ? `<th class="text-end">100%</th>` : ''}
+        </tr>
+      `;
+      
+      tbody.innerHTML = html;
+    }
+
+    function updateRecentCompanies() {
+      const companies = loadCompaniesStore();
+      const tbody = document.getElementById('recentCompaniesTable');
+      if (!tbody) return;
+      
+      // 按加入時間排序，取最新5家
+      const recentCompanies = companies
+        .sort((a, b) => {
+          const dateA = new Date(a.joinedAt || a.createdAt || 0);
+          const dateB = new Date(b.joinedAt || b.createdAt || 0);
+          return dateB - dateA;
+        })
+        .slice(0, 5);
+      
+      if (recentCompanies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">尚無公司資料</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      recentCompanies.forEach(company => {
+        const surveyCount = (company.surveys || []).length;
+        const joinedDate = company.joinedAt || company.createdAt || '-';
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(company.name || '未命名')}</strong></td>
+            <td>${escapeHtml(company.taxId || '-')}</td>
+            <td>${escapeHtml(company.city || '-')}</td>
+            <td>${escapeHtml(company.industry || '-')}</td>
+            <td>${formatDateTime(joinedDate)}</td>
+            <td><span class="badge bg-info">${surveyCount}</span></td>
+            <td>
+              <a href="a02-list.html?companyId=${company.id}" class="btn btn-sm btn-outline-primary">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">visibility</span>
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = html;
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function formatDateTime(dateStr) {
+      if (!dateStr || dateStr === '-') return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 初始化圖表
+    function initCharts() {
+      const companies = loadCompaniesStore();
+      
+      // 產業別統計（圓餅圖）
+      const industryCount = {};
+      companies.forEach(c => {
+        const industry = c.industry || '未填寫';
+        industryCount[industry] = (industryCount[industry] || 0) + 1;
+      });
+      
+      // 年度趨勢分析（橫條圖）- 統計每年新加入的公司
+      const yearData = { 2023: {}, 2024: {}, 2025: {} };
+      
+      companies.forEach(c => {
+        const year = new Date(c.joinedAt || c.createdAt || new Date()).getFullYear();
+        const industry = c.industry || '未填寫';
+        
+        if (yearData[year]) {
+          yearData[year][industry] = (yearData[year][industry] || 0) + 1;
+        }
+      });
+      
+      const allIndustries = Object.keys(industryCount);
+      const industryLabels = allIndustries.length > 0 ? allIndustries : ['暫無資料'];
+      const pieData = allIndustries.length > 0 ? allIndustries.map(ind => industryCount[ind]) : [1];
+      
+      // 圓餅圖
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+          labels: industryLabels,
+          datasets: [{
+            data: pieData,
+            backgroundColor: [
+              '#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5',
+              '#70AD47', '#264478', '#9E480E', '#636363', '#997300', '#255E91'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                padding: 10,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (allIndustries.length === 0) return '暫無資料';
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((context.parsed / total) * 100).toFixed(1);
+                  return `${context.label}: ${context.parsed} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // 橫條圖
+      const barLabels = allIndustries.length > 0 ? allIndustries : ['暫無資料'];
+      const barCtx = document.getElementById('barChart').getContext('2d');
+      barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: barLabels,
+          datasets: [
+            {
+              label: '2023',
+              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2023][ind] || 0) : [0],
+              backgroundColor: '#5470C6'
+            },
+            {
+              label: '2024',
+              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2024][ind] || 0) : [0],
+              backgroundColor: '#91CC75'
+            },
+            {
+              label: '2025',
+              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2025][ind] || 0) : [0],
+              backgroundColor: '#FAC858'
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            x: {
+              stacked: true,
+              beginAtZero: true
+            },
+            y: {
+              stacked: true
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.x}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 頁面載入時更新
+    window.addEventListener('load', function() {
+      updateDashboard();
+      initCharts();
+    });
+  </script>
+</body>
+</html>

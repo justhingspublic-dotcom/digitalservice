@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>進階篩選 - 數位轉型問卷系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="mb-4">
+          <h4 class="mb-1 fw-bold">進階篩選</h4>
+          <p class="text-muted mb-0">多維度條件篩選問卷資料</p>
+        </div>
+
+        <!-- 篩選條件區 -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h6 class="mb-3 fw-bold">篩選欄位選擇</h6>
+            
+            <div class="row g-4">
+              <!-- 基本資料 -->
+              <div class="col-md-6 col-lg-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6 class="fw-bold mb-3" style="color: var(--color-primary);">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">business</span>
+                    基本資料
+                  </h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_industry" checked>
+                    <label class="form-check-label" for="filter_industry">產業別</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_city" checked>
+                    <label class="form-check-label" for="filter_city">所在縣市</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_company">
+                    <label class="form-check-label" for="filter_company">企業名稱</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 數位工具 -->
+              <div class="col-md-6 col-lg-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6 class="fw-bold mb-3" style="color: var(--color-primary);">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">devices</span>
+                    數位工具
+                  </h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_marketing">
+                    <label class="form-check-label" for="filter_marketing">行銷工具</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_operations" checked>
+                    <label class="form-check-label" for="filter_operations">營運工具</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_customer" checked>
+                    <label class="form-check-label" for="filter_customer">顧客互動工具</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 營運狀況 -->
+              <div class="col-md-6 col-lg-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6 class="fw-bold mb-3" style="color: var(--color-primary);">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">assessment</span>
+                    營運狀況
+                  </h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_marketing_pain">
+                    <label class="form-check-label" for="filter_marketing_pain">行銷痛點</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_operations_pain" checked>
+                    <label class="form-check-label" for="filter_operations_pain">營運痛點</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_customer_pain">
+                    <label class="form-check-label" for="filter_customer_pain">顧客互動痛點</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 顧客關係 -->
+              <div class="col-md-6 col-lg-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6 class="fw-bold mb-3" style="color: var(--color-primary);">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">people</span>
+                    顧客關係
+                  </h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_customer_tools" checked>
+                    <label class="form-check-label" for="filter_customer_tools">顧客互動工具</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_customer_status">
+                    <label class="form-check-label" for="filter_customer_status">顧客互動狀況</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 數位轉型 -->
+              <div class="col-md-6 col-lg-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6 class="fw-bold mb-3" style="color: var(--color-primary);">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">trending_up</span>
+                    數位轉型
+                  </h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_challenges" checked>
+                    <label class="form-check-label" for="filter_challenges">轉型挑戰</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_resources">
+                    <label class="form-check-label" for="filter_resources">需要資源</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_budget" checked>
+                    <label class="form-check-label" for="filter_budget">年度預算</label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="filter_team">
+                    <label class="form-check-label" for="filter_team">推動人數</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 操作按鈕 -->
+            <div class="d-flex gap-2 mt-4">
+              <button class="btn btn-secondary" onclick="resetFilters()">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">restart_alt</span>
+                重置篩選
+              </button>
+              <button class="btn btn-primary" onclick="applyFilters()">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">check_circle</span>
+                套用篩選
+              </button>
+              <button class="btn btn-success" onclick="exportResults()">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                匯出篩選結果
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 篩選結果 -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-0 fw-bold">篩選結果</h6>
+                <small class="text-muted">已選擇 <span id="selectedCount">7</span> 個欄位，共篩選出 <span id="resultCount">3</span> 筆資料</small>
+              </div>
+              <div class="position-relative" style="max-width: 280px;">
+                <span class="material-icons position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--color-text-secondary);">search</span>
+                <input type="search" class="form-control form-control-sm ps-5" placeholder="搜尋結果">
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>企業名稱</th>
+                    <th>產業別</th>
+                    <th>所在縣市</th>
+                    <th>營運工具</th>
+                    <th>顧客互動工具</th>
+                    <th>轉型挑戰</th>
+                    <th>年度預算</th>
+                    <th style="width: 120px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                  <tr>
+                    <td>1</td>
+                    <td><strong>法大豐盛有限公司</strong></td>
+                    <td>餐飲業</td>
+                    <td>臺中市</td>
+                    <td><span class="badge bg-warning text-dark">評估使用</span></td>
+                    <td><span class="badge bg-success">已經使用</span></td>
+                    <td>
+                      <span class="badge bg-light text-dark mb-1">忙營運</span>
+                      <span class="badge bg-light text-dark mb-1">缺資金</span>
+                    </td>
+                    <td>6~10 萬元</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="viewDetail('DT2025-0001')">
+                        <span class="material-icons" style="font-size: 14px;">visibility</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><strong>寶華珠寶銀樓</strong></td>
+                    <td>零售業</td>
+                    <td>臺中市</td>
+                    <td><span class="badge bg-success">已經使用</span></td>
+                    <td><span class="badge bg-success">已經使用</span></td>
+                    <td>
+                      <span class="badge bg-light text-dark mb-1">缺方向</span>
+                    </td>
+                    <td>1 萬元以下</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="viewDetail('DT2025-0002')">
+                        <span class="material-icons" style="font-size: 14px;">visibility</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><strong>儷舍婚紗攝影有限公司</strong></td>
+                    <td>零售業</td>
+                    <td>臺中市</td>
+                    <td><span class="badge bg-warning text-dark">評估使用</span></td>
+                    <td><span class="badge bg-warning text-dark">評估使用</span></td>
+                    <td>
+                      <span class="badge bg-light text-dark mb-1">缺資金</span>
+                    </td>
+                    <td>2~5 萬元</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-primary" onclick="viewDetail('DT2025-1001')">
+                        <span class="material-icons" style="font-size: 14px;">visibility</span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer bg-white">
+            <small class="text-muted">顯示 1-3 筆，共 3 筆資料</small>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('filter');
+
+    const STORAGE_KEY = 'surveyStore';
+    let filteredResults = [];
+
+    // 讀取問卷資料
+    function loadSurveyStore() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function resetFilters() {
+      // 重置所有篩選條件
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      updateSelectedCount();
+      // 顯示所有資料
+      filteredResults = getAllResponses();
+      renderResults();
+    }
+
+    function applyFilters() {
+      // 取得所有選中的篩選欄位
+      const selectedFields = {};
+      
+      if (document.getElementById('filter_industry').checked) selectedFields.industry = true;
+      if (document.getElementById('filter_city').checked) selectedFields.city = true;
+      if (document.getElementById('filter_company').checked) selectedFields.companyName = true;
+      
+      if (document.getElementById('filter_marketing').checked) selectedFields.marketingHasTools = true;
+      if (document.getElementById('filter_operations').checked) selectedFields.operationsHasTools = true;
+      if (document.getElementById('filter_customer').checked) selectedFields.customerHasTools = true;
+      
+      if (document.getElementById('filter_marketing_pain').checked) selectedFields.marketingImprovement = true;
+      if (document.getElementById('filter_operations_pain').checked) selectedFields.operationsPainPoints = true;
+      if (document.getElementById('filter_customer_pain').checked) selectedFields.customerPainPoints = true;
+      
+      if (document.getElementById('filter_customer_tools').checked) selectedFields.customerTools = true;
+      if (document.getElementById('filter_customer_status').checked) selectedFields.customerHasTools2 = true;
+      
+      if (document.getElementById('filter_challenges').checked) selectedFields.transformationChallenges = true;
+      if (document.getElementById('filter_resources').checked) selectedFields.transformationResources = true;
+      if (document.getElementById('filter_budget').checked) selectedFields.transformationBudget = true;
+      if (document.getElementById('filter_team').checked) selectedFields.transformationTeam = true;
+      
+      const fieldCount = Object.keys(selectedFields).length;
+      
+      if (fieldCount === 0) {
+        alert('請至少選擇一個篩選欄位');
+        return;
+      }
+      
+      // 執行篩選
+      filteredResults = filterResponses(selectedFields);
+      renderResults();
+      updateSelectedCount();
+    }
+
+    function getAllResponses() {
+      const surveyStore = loadSurveyStore();
+      return surveyStore.flatMap(survey => 
+        (survey.responses || []).map(response => ({
+          surveyId: survey.id,
+          surveyName: survey.name,
+          ...response
+        }))
+      );
+    }
+
+    function filterResponses(selectedFields) {
+      // 取得所有回覆
+      const allResponses = getAllResponses();
+      
+      // 如果沒有選擇任何欄位，返回所有資料
+      if (Object.keys(selectedFields).length === 0) {
+        return allResponses;
+      }
+      
+      // 篩選：只要有任一選中的欄位有值就保留
+      return allResponses.filter(response => {
+        for (const field in selectedFields) {
+          const value = response.values[field];
+          // 如果這個欄位有值（不為空、null、undefined），就保留這筆資料
+          if (value !== null && value !== undefined && value !== '' && 
+              (!Array.isArray(value) || value.length > 0)) {
+            return true;
+          }
+        }
+        return false;
+      });
+    }
+
+    function renderResults() {
+      const tbody = document.getElementById('resultsTableBody');
+      const resultCount = document.getElementById('resultCount');
+      
+      resultCount.textContent = filteredResults.length;
+      
+      if (filteredResults.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted">找不到符合條件的資料</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      filteredResults.slice(0, 50).forEach((response, index) => {
+        const values = response.values;
+        html += `
+          <tr>
+            <td>${index + 1}</td>
+            <td><strong>${escapeHtml(values.companyName || '-')}</strong></td>
+            <td>${escapeHtml(values.industry || '-')}</td>
+            <td>${escapeHtml(values.city || '-')}</td>
+            <td>${renderBadge(values.operationsHasTools)}</td>
+            <td>${renderBadge(values.customerHasTools)}</td>
+            <td>${renderMultiValue(values.transformationChallenges)}</td>
+            <td>${escapeHtml(values.transformationBudget || '-')}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="viewDetail('${response.id}')">
+                <span class="material-icons" style="font-size: 14px;">visibility</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      if (filteredResults.length > 50) {
+        html += `
+          <tr>
+            <td colspan="9" class="text-center text-muted py-2">
+              <small>顯示前 50 筆，共 ${filteredResults.length} 筆結果</small>
+            </td>
+          </tr>
+        `;
+      }
+      
+      tbody.innerHTML = html;
+    }
+
+    function renderBadge(value) {
+      if (!value) return '-';
+      const badgeClass = 
+        value === '已經使用' ? 'bg-success' :
+        value === '評估使用' ? 'bg-warning text-dark' :
+        'bg-secondary';
+      return `<span class="badge ${badgeClass}">${escapeHtml(value)}</span>`;
+    }
+
+    function renderMultiValue(value) {
+      if (!value) return '-';
+      const items = Array.isArray(value) ? value : [value];
+      return items.slice(0, 2).map(item => 
+        `<span class="badge bg-light text-dark mb-1">${escapeHtml(item)}</span>`
+      ).join(' ');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('input[type="checkbox"]:checked').length;
+      document.getElementById('selectedCount').textContent = count;
+    }
+
+    function exportResults() {
+      if (filteredResults.length === 0) {
+        alert('沒有資料可以匯出');
+        return;
+      }
+      alert(`將匯出 ${filteredResults.length} 筆篩選結果\n（Demo 版本：實際專案需整合 Excel 匯出功能）`);
+    }
+
+    function viewDetail(id) {
+      alert(`查看問卷詳情：${id}\n（Demo 版本：實際專案可跳轉到詳情頁）`);
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 監聽篩選條件變化
+      document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+      
+      // 初始顯示所有資料
+      filteredResults = getAllResponses();
+      renderResults();
+      updateSelectedCount();
+    });
+  </script>
+</body>
+</html>
+

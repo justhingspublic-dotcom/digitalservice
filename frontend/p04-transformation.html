@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>數位轉型問卷系統 - 轉型經驗</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div class="survey-container">
+    <!-- 進度條 -->
+    <div class="progress-steps">
+      <div class="progress-step completed">
+        <div class="progress-circle">✓</div>
+        <div class="progress-label">基本資料</div>
+      </div>
+      <div class="progress-step completed">
+        <div class="progress-circle">✓</div>
+        <div class="progress-label">數位現況</div>
+      </div>
+      <div class="progress-step active">
+        <div class="progress-circle">3</div>
+        <div class="progress-label">轉型經驗</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">4</div>
+        <div class="progress-label">完成</div>
+      </div>
+    </div>
+
+    <!-- 表單卡片 -->
+    <div class="card">
+      <div class="card-body p-4">
+        <h2 class="mb-4" style="font-size: var(--font-subtitle); font-weight: bold;">數位轉型經驗與需求</h2>
+
+        <form id="transformationForm">
+          <!-- 困難點 -->
+          <div class="mb-4">
+            <label class="form-label required">一、在推動數位轉型時，您遇到的主要困難有哪些？（可複選）</label>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty1" value="預算不足">
+              <label class="form-check-label" for="difficulty1">
+                預算不足
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty2" value="缺乏專業人才">
+              <label class="form-check-label" for="difficulty2">
+                缺乏專業人才
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty3" value="不知從何開始">
+              <label class="form-check-label" for="difficulty3">
+                不知從何開始
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty4" value="員工抗拒改變">
+              <label class="form-check-label" for="difficulty4">
+                員工抗拒改變
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty5" value="缺乏相關知識">
+              <label class="form-check-label" for="difficulty5">
+                缺乏相關知識與資訊
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty6" value="系統整合困難">
+              <label class="form-check-label" for="difficulty6">
+                現有系統整合困難
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty7" value="資安疑慮">
+              <label class="form-check-label" for="difficulty7">
+                資訊安全疑慮
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="difficulty8" value="看不到效益">
+              <label class="form-check-label" for="difficulty8">
+                投資效益不明確
+              </label>
+            </div>
+
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="difficultyOther" value="其他">
+              <label class="form-check-label" for="difficultyOther">
+                其他
+              </label>
+            </div>
+
+            <div id="difficultyOtherDiv" style="display: none;">
+              <textarea class="form-control" id="difficultyOtherText" rows="2" placeholder="請說明其他困難"></textarea>
+            </div>
+          </div>
+
+          <!-- 資源需求 -->
+          <div class="mb-4">
+            <label class="form-label required">二、您最需要什麼樣的輔導資源？（可複選，最多3項）</label>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource1" value="補助經費">
+              <label class="form-check-label" for="resource1">
+                補助經費
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource2" value="教育訓練">
+              <label class="form-check-label" for="resource2">
+                教育訓練課程
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource3" value="顧問輔導">
+              <label class="form-check-label" for="resource3">
+                專業顧問輔導
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource4" value="技術支援">
+              <label class="form-check-label" for="resource4">
+                技術支援服務
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource5" value="成功案例">
+              <label class="form-check-label" for="resource5">
+                成功案例分享
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource6" value="診斷服務">
+              <label class="form-check-label" for="resource6">
+                數位能力診斷服務
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resource7" value="媒合服務">
+              <label class="form-check-label" for="resource7">
+                廠商媒合服務
+              </label>
+            </div>
+
+            <div class="form-check mb-3">
+              <input class="form-check-input resource-checkbox" type="checkbox" id="resourceOther" value="其他">
+              <label class="form-check-label" for="resourceOther">
+                其他
+              </label>
+            </div>
+
+            <div id="resourceOtherDiv" style="display: none;">
+              <textarea class="form-control" id="resourceOtherText" rows="2" placeholder="請說明其他需求"></textarea>
+            </div>
+          </div>
+
+          <!-- 預期效益 -->
+          <div class="mb-4">
+            <label for="expectedBenefit" class="form-label">三、推動數位轉型後，您最期待達成的效益為何？</label>
+            <select class="form-select" id="expectedBenefit">
+              <option value="">請選擇</option>
+              <option value="提升營收">提升營收</option>
+              <option value="降低成本">降低成本</option>
+              <option value="提高效率">提高工作效率</option>
+              <option value="優化服務">優化顧客服務</option>
+              <option value="擴大市場">擴大市場通路</option>
+              <option value="增強競爭力">增強競爭力</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+
+          <!-- 轉型階段 -->
+          <div class="mb-4">
+            <label for="transformStage" class="form-label">四、您認為貴企業目前處於數位轉型的哪個階段？</label>
+            <select class="form-select" id="transformStage">
+              <option value="">請選擇</option>
+              <option value="尚未開始">尚未開始，正在評估</option>
+              <option value="初步導入">初步導入階段</option>
+              <option value="持續優化">持續優化階段</option>
+              <option value="成熟運用">成熟運用階段</option>
+            </select>
+          </div>
+
+          <!-- 開放建議 -->
+          <div class="mb-4">
+            <label for="suggestions" class="form-label">五、其他建議或想法（選填）</label>
+            <textarea class="form-control" id="suggestions" rows="4" placeholder="歡迎提供任何對政府輔導政策的建議或期待..."></textarea>
+          </div>
+
+          <!-- 接受聯繫 -->
+          <div class="mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="allowContact">
+              <label class="form-check-label" for="allowContact">
+                我願意接受相關單位後續聯繫，提供進一步輔導資訊
+              </label>
+            </div>
+          </div>
+
+          <!-- 按鈕組 -->
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-primary" onclick="window.location.href='p03-digital-status.html'">
+              ← 上一步
+            </button>
+            <button type="submit" class="btn btn-primary">
+              提交問卷 →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 困難點「其他」顯示輸入框
+    document.getElementById('difficultyOther').addEventListener('change', function() {
+      const otherDiv = document.getElementById('difficultyOtherDiv');
+      otherDiv.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // 資源需求「其他」顯示輸入框
+    document.getElementById('resourceOther').addEventListener('change', function() {
+      const otherDiv = document.getElementById('resourceOtherDiv');
+      otherDiv.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // 資源需求限制最多3項
+    const resourceCheckboxes = document.querySelectorAll('.resource-checkbox');
+    resourceCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const checkedCount = document.querySelectorAll('.resource-checkbox:checked').length;
+        if (checkedCount > 3) {
+          this.checked = false;
+          alert('最多只能選擇3項資源需求');
+        }
+      });
+    });
+
+    // 表單送出
+    document.getElementById('transformationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // 收集困難點
+      const difficulties = [];
+      for (let i = 1; i <= 8; i++) {
+        const checkbox = document.getElementById(`difficulty${i}`);
+        if (checkbox && checkbox.checked) {
+          difficulties.push(checkbox.value);
+        }
+      }
+      if (document.getElementById('difficultyOther').checked) {
+        difficulties.push(document.getElementById('difficultyOtherText').value);
+      }
+
+      // 收集資源需求
+      const resources = [];
+      for (let i = 1; i <= 7; i++) {
+        const checkbox = document.getElementById(`resource${i}`);
+        if (checkbox && checkbox.checked) {
+          resources.push(checkbox.value);
+        }
+      }
+      if (document.getElementById('resourceOther').checked) {
+        resources.push(document.getElementById('resourceOtherText').value);
+      }
+
+      // 驗證至少選一項
+      if (difficulties.length === 0) {
+        alert('請至少選擇一項遇到的困難');
+        return;
+      }
+
+      if (resources.length === 0) {
+        alert('請至少選擇一項需要的資源');
+        return;
+      }
+
+      // 組合資料
+      const formData = {
+        difficulties: difficulties,
+        resources: resources,
+        expectedBenefit: document.getElementById('expectedBenefit').value,
+        transformStage: document.getElementById('transformStage').value,
+        suggestions: document.getElementById('suggestions').value,
+        allowContact: document.getElementById('allowContact').checked
+      };
+
+      localStorage.setItem('transformation', JSON.stringify(formData));
+
+      // 提交到後端（這裡模擬）
+      submitSurvey();
+    });
+
+    function submitSurvey() {
+      // 收集所有資料
+      const basicInfo = JSON.parse(localStorage.getItem('basicInfo') || '{}');
+      const digitalStatus = JSON.parse(localStorage.getItem('digitalStatus') || '{}');
+      const transformation = JSON.parse(localStorage.getItem('transformation') || '{}');
+
+      const surveyData = {
+        basicInfo,
+        digitalStatus,
+        transformation,
+        submitTime: new Date().toISOString()
+      };
+
+      // 這裡應該發送到後端 API
+      console.log('提交問卷資料：', surveyData);
+
+      // 模擬提交成功
+      localStorage.setItem('surveySubmitted', 'true');
+      window.location.href = 'p05-complete.html';
+    }
+
+    // 載入已儲存的資料
+    window.addEventListener('load', function() {
+      const savedData = localStorage.getItem('transformation');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+
+        // 還原困難點
+        data.difficulties?.forEach(difficulty => {
+          for (let i = 1; i <= 8; i++) {
+            const checkbox = document.getElementById(`difficulty${i}`);
+            if (checkbox && checkbox.value === difficulty) {
+              checkbox.checked = true;
+            }
+          }
+        });
+
+        // 還原資源需求
+        data.resources?.forEach(resource => {
+          for (let i = 1; i <= 7; i++) {
+            const checkbox = document.getElementById(`resource${i}`);
+            if (checkbox && checkbox.value === resource) {
+              checkbox.checked = true;
+            }
+          }
+        });
+
+        // 還原其他欄位
+        if (data.expectedBenefit) document.getElementById('expectedBenefit').value = data.expectedBenefit;
+        if (data.transformStage) document.getElementById('transformStage').value = data.transformStage;
+        if (data.suggestions) document.getElementById('suggestions').value = data.suggestions;
+        if (data.allowContact) document.getElementById('allowContact').checked = data.allowContact;
+      }
+    });
+  </script>
+</body>
+</html>

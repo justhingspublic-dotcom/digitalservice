@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>數位轉型問卷系統 - 數位現況</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div class="survey-container">
+    <!-- 進度條 -->
+    <div class="progress-steps">
+      <div class="progress-step completed">
+        <div class="progress-circle">✓</div>
+        <div class="progress-label">基本資料</div>
+      </div>
+      <div class="progress-step active">
+        <div class="progress-circle">2</div>
+        <div class="progress-label">數位現況</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">3</div>
+        <div class="progress-label">轉型經驗</div>
+      </div>
+      <div class="progress-step">
+        <div class="progress-circle">4</div>
+        <div class="progress-label">完成</div>
+      </div>
+    </div>
+
+    <!-- 表單卡片 -->
+    <div class="card">
+      <div class="card-body p-4">
+        <h2 class="mb-4" style="font-size: var(--font-subtitle); font-weight: bold;">數位化現況評估</h2>
+        <p class="text-muted mb-4">請依據目前使用情況勾選，並填寫改善優先順序（1=最優先，數字越大越不優先）</p>
+
+        <form id="digitalStatusForm">
+          <!-- 行銷面向 -->
+          <div class="mb-4">
+            <h5 class="mb-3 pb-2 border-bottom">一、行銷面向</h5>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="marketing1" value="社群媒體經營">
+                  <label class="form-check-label" for="marketing1">
+                    社群媒體經營（Facebook、Instagram、LINE 等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="marketing1Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="marketing2" value="數位廣告投放">
+                  <label class="form-check-label" for="marketing2">
+                    數位廣告投放（Google、Facebook Ads 等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="marketing2Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="marketing3" value="電子郵件行銷">
+                  <label class="form-check-label" for="marketing3">
+                    電子郵件行銷（EDM）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="marketing3Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="marketing4" value="內容行銷">
+                  <label class="form-check-label" for="marketing4">
+                    內容行銷（部落格、影音、直播等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="marketing4Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="marketing5" value="SEO優化">
+                  <label class="form-check-label" for="marketing5">
+                    搜尋引擎優化（SEO）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="marketing5Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 營運面向 -->
+          <div class="mb-4">
+            <h5 class="mb-3 pb-2 border-bottom">二、營運面向</h5>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="operation1" value="雲端服務">
+                  <label class="form-check-label" for="operation1">
+                    雲端服務使用（Google Workspace、Microsoft 365 等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="operation1Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="operation2" value="ERP系統">
+                  <label class="form-check-label" for="operation2">
+                    企業資源規劃系統（ERP）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="operation2Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="operation3" value="進銷存系統">
+                  <label class="form-check-label" for="operation3">
+                    進銷存管理系統
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="operation3Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="operation4" value="線上協作工具">
+                  <label class="form-check-label" for="operation4">
+                    線上協作工具（Slack、Trello、Notion 等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="operation4Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="operation5" value="數據分析工具">
+                  <label class="form-check-label" for="operation5">
+                    數據分析工具（Google Analytics、BI 工具等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="operation5Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 顧客面向 -->
+          <div class="mb-4">
+            <h5 class="mb-3 pb-2 border-bottom">三、顧客服務面向</h5>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="customer1" value="電商平台">
+                  <label class="form-check-label" for="customer1">
+                    電子商務平台（官網、蝦皮、momo 等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="customer1Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="customer2" value="線上支付">
+                  <label class="form-check-label" for="customer2">
+                    線上金流服務（信用卡、行動支付等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="customer2Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="customer3" value="CRM系統">
+                  <label class="form-check-label" for="customer3">
+                    客戶關係管理系統（CRM）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="customer3Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="customer4" value="聊天機器人">
+                  <label class="form-check-label" for="customer4">
+                    線上客服（聊天機器人、即時通訊等）
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="customer4Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="customer5" value="會員系統">
+                  <label class="form-check-label" for="customer5">
+                    會員管理系統
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="input-group">
+                  <span class="input-group-text">優先度</span>
+                  <input type="number" class="form-control priority-input" id="customer5Priority" min="1" max="5" placeholder="1-5">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 按鈕組 -->
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-primary" onclick="window.location.href='p02-basic-info.html'">
+              ← 上一步
+            </button>
+            <button type="submit" class="btn btn-primary">
+              下一步 →
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 表單送出
+    document.getElementById('digitalStatusForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // 收集資料
+      const formData = {
+        marketing: [],
+        operation: [],
+        customer: []
+      };
+
+      // 收集行銷面向
+      for (let i = 1; i <= 5; i++) {
+        const checkbox = document.getElementById(`marketing${i}`);
+        if (checkbox.checked) {
+          formData.marketing.push({
+            item: checkbox.value,
+            priority: document.getElementById(`marketing${i}Priority`).value || null
+          });
+        }
+      }
+
+      // 收集營運面向
+      for (let i = 1; i <= 5; i++) {
+        const checkbox = document.getElementById(`operation${i}`);
+        if (checkbox.checked) {
+          formData.operation.push({
+            item: checkbox.value,
+            priority: document.getElementById(`operation${i}Priority`).value || null
+          });
+        }
+      }
+
+      // 收集顧客面向
+      for (let i = 1; i <= 5; i++) {
+        const checkbox = document.getElementById(`customer${i}`);
+        if (checkbox.checked) {
+          formData.customer.push({
+            item: checkbox.value,
+            priority: document.getElementById(`customer${i}Priority`).value || null
+          });
+        }
+      }
+
+      localStorage.setItem('digitalStatus', JSON.stringify(formData));
+      window.location.href = 'p04-transformation.html';
+    });
+
+    // 載入已儲存的資料
+    window.addEventListener('load', function() {
+      const savedData = localStorage.getItem('digitalStatus');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+
+        // 還原行銷面向
+        data.marketing?.forEach(item => {
+          for (let i = 1; i <= 5; i++) {
+            const checkbox = document.getElementById(`marketing${i}`);
+            if (checkbox.value === item.item) {
+              checkbox.checked = true;
+              if (item.priority) {
+                document.getElementById(`marketing${i}Priority`).value = item.priority;
+              }
+            }
+          }
+        });
+
+        // 還原營運面向
+        data.operation?.forEach(item => {
+          for (let i = 1; i <= 5; i++) {
+            const checkbox = document.getElementById(`operation${i}`);
+            if (checkbox.value === item.item) {
+              checkbox.checked = true;
+              if (item.priority) {
+                document.getElementById(`operation${i}Priority`).value = item.priority;
+              }
+            }
+          }
+        });
+
+        // 還原顧客面向
+        data.customer?.forEach(item => {
+          for (let i = 1; i <= 5; i++) {
+            const checkbox = document.getElementById(`customer${i}`);
+            if (checkbox.value === item.item) {
+              checkbox.checked = true;
+              if (item.priority) {
+                document.getElementById(`customer${i}Priority`).value = item.priority;
+              }
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

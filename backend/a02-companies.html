@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>所有公司 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">business</span>
+          <h4 class="mb-0">所有公司</h4>
+        </div>
+
+        <!-- 搜尋與篩選 -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">搜尋</label>
+                <input type="search" class="form-control" id="keyword" placeholder="輸入公司名稱 / 統一編號" oninput="filterCompanies()">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">縣市</label>
+                <select class="form-select" id="cityFilter" onchange="filterCompanies()">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">產業別</label>
+                <select class="form-select" id="industryFilter" onchange="filterCompanies()">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">數位化階段</label>
+                <select class="form-select" id="stageFilter" onchange="filterCompanies()">
+                  <option value="">全部</option>
+                  <option value="尚未開始">尚未開始</option>
+                  <option value="初步導入階段">初步導入階段</option>
+                  <option value="持續優化階段">持續優化階段</option>
+                  <option value="成熟運用階段">成熟運用階段</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 公司列表 -->
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">公司列表（<span id="companyCount">0</span> 家）</h5>
+            <button class="btn btn-primary btn-sm" onclick="addCompany()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
+              新增公司
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>公司名稱</th>
+                    <th>統一編號</th>
+                    <th>縣市</th>
+                    <th>產業別</th>
+                    <th>員工規模</th>
+                    <th>數位化階段</th>
+                    <th>問卷數</th>
+                    <th>加入時間</th>
+                    <th style="width: 100px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="companiesTableBody">
+                  <tr>
+                    <td colspan="10" class="text-center py-4 text-muted">載入中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('companies');
+
+    const STORAGE_KEY = 'companiesStore';
+    let allCompanies = [];
+
+    // 載入公司資料
+    function loadCompanies() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // 初始化篩選選項
+    function initFilters() {
+      allCompanies = loadCompanies();
+      
+      // 縣市選項
+      const cities = [...new Set(allCompanies.map(c => c.city).filter(Boolean))].sort();
+      const citySelect = document.getElementById('cityFilter');
+      cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+      
+      // 產業別選項
+      const industries = [...new Set(allCompanies.map(c => c.industry).filter(Boolean))].sort();
+      const industrySelect = document.getElementById('industryFilter');
+      industries.forEach(industry => {
+        const option = document.createElement('option');
+        option.value = industry;
+        option.textContent = industry;
+        industrySelect.appendChild(option);
+      });
+    }
+
+    // 篩選公司
+    function filterCompanies() {
+      const keyword = document.getElementById('keyword').value.toLowerCase();
+      const cityFilter = document.getElementById('cityFilter').value;
+      const industryFilter = document.getElementById('industryFilter').value;
+      const stageFilter = document.getElementById('stageFilter').value;
+
+      const filtered = allCompanies.filter(company => {
+        const matchKeyword = !keyword || 
+          (company.name && company.name.toLowerCase().includes(keyword)) ||
+          (company.taxId && company.taxId.includes(keyword));
+        const matchCity = !cityFilter || company.city === cityFilter;
+        const matchIndustry = !industryFilter || company.industry === industryFilter;
+        const matchStage = !stageFilter || company.digitalStage === stageFilter;
+        
+        return matchKeyword && matchCity && matchIndustry && matchStage;
+      });
+
+      renderCompanies(filtered);
+    }
+
+    // 渲染公司列表
+    function renderCompanies(companies) {
+      const tbody = document.getElementById('companiesTableBody');
+      const countSpan = document.getElementById('companyCount');
+      
+      countSpan.textContent = companies.length;
+
+      if (companies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">找不到符合條件的公司</td></tr>';
+        return;
+      }
+
+      let html = '';
+      companies.forEach((company, index) => {
+        const surveyCount = (company.surveys || []).length;
+        const stageColor = getStageColor(company.digitalStage);
+        
+        html += `
+          <tr>
+            <td class="text-center">${index + 1}</td>
+            <td><strong>${escapeHtml(company.name || '未命名')}</strong></td>
+            <td>${escapeHtml(company.taxId || '-')}</td>
+            <td>${escapeHtml(company.city || '-')}</td>
+            <td>${escapeHtml(company.industry || '-')}</td>
+            <td>${escapeHtml(company.employeeRange || '-')}</td>
+            <td><span class="badge ${stageColor}">${escapeHtml(company.digitalStage || '未評估')}</span></td>
+            <td><span class="badge bg-info">${surveyCount}</span></td>
+            <td>${formatDate(company.joinedAt || company.createdAt)}</td>
+            <td>
+              <a href="a03-company-detail.html?id=${company.id}" class="btn btn-sm btn-outline-primary">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">visibility</span>
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 取得階段顏色
+    function getStageColor(stage) {
+      switch(stage) {
+        case '尚未開始': return 'bg-secondary';
+        case '初步導入階段': return 'bg-primary';
+        case '持續優化階段': return 'bg-success';
+        case '成熟運用階段': return 'bg-warning';
+        default: return 'bg-light text-dark';
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 新增公司
+    function addCompany() {
+      alert('新增公司功能開發中...');
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      initFilters();
+      filterCompanies();
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>輔導紀錄 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">history_edu</span>
+          <h4 class="mb-0">輔導紀錄</h4>
+        </div>
+
+        <!-- 篩選條件 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">篩選條件</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">公司名稱</label>
+                <select class="form-select" id="companyNameFilter">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">縣市</label>
+                <select class="form-select" id="cityFilter">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">產業別</label>
+                <select class="form-select" id="industryFilter">
+                  <option value="">全部</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">輔導類型</label>
+                <select class="form-select" id="typeFilter">
+                  <option value="">全部</option>
+                  <option value="初次訪談">初次訪談</option>
+                  <option value="技術輔導">技術輔導</option>
+                  <option value="追蹤輔導">追蹤輔導</option>
+                  <option value="一般輔導">一般輔導</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">狀態</label>
+                <select class="form-select" id="statusFilter">
+                  <option value="">全部</option>
+                  <option value="初訪">初訪</option>
+                  <option value="中期">中期</option>
+                  <option value="結案">結案</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">輔導顧問</label>
+                <select class="form-select" id="consultantFilter">
+                  <option value="">全部</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-3 mt-2">
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">開始日期</label>
+                <input type="date" class="form-control" id="startDateFilter">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">結束日期</label>
+                <input type="date" class="form-control" id="endDateFilter">
+              </div>
+              <div class="col-md-6 d-flex align-items-end">
+                <button class="btn btn-primary me-2" onclick="searchRecords()">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">search</span>
+                  搜尋
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">clear</span>
+                  清除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 結果區域 -->
+        <div id="resultsContainer">
+          <!-- 初始空白狀態 -->
+          <div class="card">
+            <div class="card-body text-center py-5">
+              <span class="material-icons" style="font-size: 80px; color: #e0e0e0;">search</span>
+              <h5 class="mt-3 mb-2">請使用上方篩選條件查詢輔導紀錄</h5>
+              <p class="text-muted mb-0">選擇篩選條件後點擊「搜尋」按鈕，或直接點擊「搜尋」查看所有紀錄</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('guidance');
+
+    const STORAGE_KEY = 'companiesStore';
+    let allCompanies = [];
+
+    // 載入資料並初始化篩選選項
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        allCompanies = [];
+        return;
+      }
+      try {
+        allCompanies = JSON.parse(raw);
+      } catch (e) {
+        allCompanies = [];
+      }
+
+      // 初始化篩選選項
+      initFilterOptions();
+    }
+
+    // 初始化篩選選項
+    function initFilterOptions() {
+      // 公司名稱選項
+      const companySelect = document.getElementById('companyNameFilter');
+      allCompanies.forEach(company => {
+        const option = document.createElement('option');
+        option.value = company.id;
+        option.textContent = company.name;
+        companySelect.appendChild(option);
+      });
+
+      // 縣市選項
+      const cities = [...new Set(allCompanies.map(c => c.city).filter(Boolean))].sort();
+      const citySelect = document.getElementById('cityFilter');
+      cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+
+      // 產業別選項
+      const industries = [...new Set(allCompanies.map(c => c.industry).filter(Boolean))].sort();
+      const industrySelect = document.getElementById('industryFilter');
+      industries.forEach(industry => {
+        const option = document.createElement('option');
+        option.value = industry;
+        option.textContent = industry;
+        industrySelect.appendChild(option);
+      });
+
+      // 輔導顧問選項
+      const consultants = new Set();
+      allCompanies.forEach(company => {
+        const records = company.guidanceRecords || [];
+        records.forEach(record => {
+          if (record.consultant) {
+            consultants.add(record.consultant);
+          }
+        });
+      });
+      const consultantSelect = document.getElementById('consultantFilter');
+      [...consultants].sort().forEach(consultant => {
+        const option = document.createElement('option');
+        option.value = consultant;
+        option.textContent = consultant;
+        consultantSelect.appendChild(option);
+      });
+    }
+
+    // 搜尋紀錄
+    function searchRecords() {
+      const companyId = document.getElementById('companyNameFilter').value;
+      const city = document.getElementById('cityFilter').value;
+      const industry = document.getElementById('industryFilter').value;
+      const type = document.getElementById('typeFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const consultant = document.getElementById('consultantFilter').value;
+      const startDate = document.getElementById('startDateFilter').value;
+      const endDate = document.getElementById('endDateFilter').value;
+
+      // 收集所有符合條件的輔導紀錄
+      const results = [];
+
+      allCompanies.forEach(company => {
+        // 公司篩選
+        if (companyId && company.id !== companyId) return;
+        if (city && company.city !== city) return;
+        if (industry && company.industry !== industry) return;
+
+        const records = company.guidanceRecords || [];
+        records.forEach(record => {
+          // 紀錄篩選
+          if (type && record.type !== type) return;
+          if (status && record.status !== status) return;
+          if (consultant && record.consultant !== consultant) return;
+
+          // 日期篩選
+          const recordDate = new Date(record.date);
+          if (startDate && recordDate < new Date(startDate)) return;
+          if (endDate && recordDate > new Date(endDate + 'T23:59:59')) return;
+
+          results.push({
+            company: company,
+            record: record
+          });
+        });
+      });
+
+      // 按日期排序（最新的在前）
+      results.sort((a, b) => new Date(b.record.date) - new Date(a.record.date));
+
+      // 顯示結果
+      displayResults(results);
+    }
+
+    // 顯示結果
+    function displayResults(results) {
+      const container = document.getElementById('resultsContainer');
+
+      if (results.length === 0) {
+        container.innerHTML = `
+          <div class="card">
+            <div class="card-body text-center py-5">
+              <span class="material-icons" style="font-size: 80px; color: #e0e0e0;">search_off</span>
+              <h5 class="mt-3 mb-2">找不到符合條件的輔導紀錄</h5>
+              <p class="text-muted mb-0">請嘗試調整篩選條件</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">搜尋結果（共 ${results.length} 筆）</h5>
+          </div>
+          <div class="card-body">
+      `;
+
+      results.forEach((item, index) => {
+        const { company, record } = item;
+        const isLast = index === results.length - 1;
+
+        // 狀態徽章樣式
+        const statusBadgeClass = {
+          '初訪': 'bg-info',
+          '中期': 'bg-warning',
+          '結案': 'bg-success'
+        };
+        const statusClass = statusBadgeClass[record.status] || 'bg-secondary';
+
+        html += `
+          <div class="mb-4 pb-4 ${!isLast ? 'border-bottom' : ''}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <span class="badge bg-primary">${escapeHtml(record.type || '一般輔導')}</span>
+                ${record.status ? `<span class="badge ${statusClass} ms-2">${escapeHtml(record.status)}</span>` : ''}
+                <span class="text-muted small ms-2">${formatDate(record.date)}</span>
+              </div>
+              <a href="a03-company-detail.html?id=${company.id}" class="btn btn-sm btn-outline-primary">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">business</span>
+                查看公司
+              </a>
+            </div>
+            <h6 class="mb-2">${escapeHtml(record.title || '無標題')}</h6>
+            <div class="mb-2">
+              <strong>公司：</strong>
+              <a href="a03-company-detail.html?id=${company.id}" class="text-decoration-none">
+                ${escapeHtml(company.name)}
+              </a>
+              ${company.city ? `<span class="text-muted ms-2">${escapeHtml(company.city)}</span>` : ''}
+              ${company.industry ? `<span class="text-muted ms-2">・ ${escapeHtml(company.industry)}</span>` : ''}
+            </div>
+            <p class="mb-2 text-muted">${escapeHtml(record.content || '無內容')}</p>
+            ${record.consultant ? `<div class="small text-muted">輔導顧問：${escapeHtml(record.consultant)}</div>` : ''}
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // 清除篩選條件
+    function clearFilters() {
+      document.getElementById('companyNameFilter').value = '';
+      document.getElementById('cityFilter').value = '';
+      document.getElementById('industryFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('consultantFilter').value = '';
+      document.getElementById('startDateFilter').value = '';
+      document.getElementById('endDateFilter').value = '';
+
+      // 重置為空白狀態
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <span class="material-icons" style="font-size: 80px; color: #e0e0e0;">search</span>
+            <h5 class="mt-3 mb-2">請使用上方篩選條件查詢輔導紀錄</h5>
+            <p class="text-muted mb-0">選擇篩選條件後點擊「搜尋」按鈕，或直接點擊「搜尋」查看所有紀錄</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      loadData();
+    });
+  </script>
+</body>
+</html>
+

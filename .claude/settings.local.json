@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for file in frontend/*.html backend/*.html)",
+      "Bash(do)",
+      "Bash(if grep -q \"Material Icons\" \"$file\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(open frontend/p01-welcome.html)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
