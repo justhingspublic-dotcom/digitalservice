@@ -22,6 +22,46 @@
     </main>
   </div>
 
+  <!-- 新增問卷 Modal -->
+  <div class="modal fade" id="createSurveyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">新增問卷</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createSurveyForm">
+            <div class="mb-3">
+              <label for="surveyName" class="form-label">問卷名稱 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="surveyName" 
+                placeholder="例如：2025 Q3 線上零售調查" required>
+            </div>
+            <div class="mb-3">
+              <label for="surveyDescription" class="form-label">問卷說明</label>
+              <textarea class="form-control" id="surveyDescription" rows="3"
+                placeholder="請簡述此問卷的調查目的與範圍"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="surveyOwner" class="form-label">負責單位</label>
+              <input type="text" class="form-control" id="surveyOwner" 
+                placeholder="例如：餐飲專案組">
+            </div>
+            <div class="mb-3">
+              <label for="surveyCreator" class="form-label">建立者 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="surveyCreator" 
+                placeholder="請輸入您的姓名" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="submitCreateSurvey()">建立問卷</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="../assets/js/layout.js"></script>
@@ -47,7 +87,9 @@
           name: '2025 Q1 餐飲業調查',
           status: '進行中',
           owner: '餐飲專案組',
+          creator: '王大明',
           createdAt: '2025-09-30',
+          createdTime: '2025-09-30T09:00:00',
           description: '聚焦餐飲業者的營運現況與痛點。',
           definition: {
             fields: [
@@ -167,7 +209,9 @@
           name: '2025 Q2 零售業調查',
           status: '草稿',
           owner: '零售專案組',
+          creator: '李小華',
           createdAt: '2025-10-15',
+          createdTime: '2025-10-15T14:30:00',
           description: '延伸調查門市數量與顧客互動方式。',
           definition: {
             fields: [
@@ -238,7 +282,9 @@
           name: '新增問卷示範',
           status: '草稿',
           owner: '尚未指派',
+          creator: '系統管理員',
           createdAt: '2025-11-15',
+          createdTime: '2025-11-15T10:00:00',
           description: '尚未匯入任何資料，請透過問卷詳情頁匯入試算表。',
           definition: { fields: [] },
           responses: []
@@ -334,6 +380,7 @@
                     <th>問卷名稱</th>
                     <th>狀態</th>
                     <th>負責單位</th>
+                    <th>建立者</th>
                     <th>建立日期</th>
                     <th>欄位數</th>
                     <th>回覆數</th>
@@ -346,7 +393,7 @@
       if (!filtered.length) {
         html += `
           <tr>
-            <td colspan="8" class="text-center py-5 text-muted">找不到符合條件的問卷。</td>
+            <td colspan="9" class="text-center py-5 text-muted">找不到符合條件的問卷。</td>
           </tr>
         `;
       } else {
@@ -363,6 +410,7 @@
             </span>
           </td>
           <td>${escapeHtml(survey.owner || '－')}</td>
+          <td>${escapeHtml(survey.creator || '－')}</td>
           <td>${escapeHtml(survey.createdAt || '-')}</td>
           <td>${survey.definition?.fields?.length || 0}</td>
           <td>${survey.responses?.length || 0}</td>
@@ -397,29 +445,68 @@
       renderListView();
     }
 
-    function createSurvey() {
-      const name = prompt('請輸入問卷名稱（例如：2025 Q3 線上零售調查）');
-      if (!name) return;
+    let createSurveyModalInstance = null;
 
+    function createSurvey() {
+      // 清空表單
+      document.getElementById('surveyName').value = '';
+      document.getElementById('surveyDescription').value = '';
+      document.getElementById('surveyOwner').value = '';
+      document.getElementById('surveyCreator').value = '';
+      
+      // 顯示 Modal
+      if (!createSurveyModalInstance) {
+        createSurveyModalInstance = new bootstrap.Modal(document.getElementById('createSurveyModal'));
+      }
+      createSurveyModalInstance.show();
+    }
+
+    function submitCreateSurvey() {
+      const name = document.getElementById('surveyName').value.trim();
+      const description = document.getElementById('surveyDescription').value.trim();
+      const owner = document.getElementById('surveyOwner').value.trim();
+      const creator = document.getElementById('surveyCreator').value.trim();
+
+      // 驗證必填欄位
+      if (!name) {
+        alert('請輸入問卷名稱');
+        return;
+      }
+      if (!creator) {
+        alert('請輸入建立者姓名');
+        return;
+      }
+
+      const now = new Date();
       const newSurvey = {
         id: `survey-${Date.now()}`,
-        name: name.trim(),
+        name: name,
+        description: description || '尚未填寫說明',
+        owner: owner || '尚未指派',
+        creator: creator,
         status: '草稿',
-        owner: '尚未指派',
-        createdAt: new Date().toISOString().slice(0, 10),
-        description: '尚未匯入任何資料',
+        createdAt: now.toISOString().slice(0, 10),
+        createdTime: now.toISOString(),
         definition: { fields: [] },
         responses: []
       };
 
       surveyStore.unshift(newSurvey);
       saveSurveyStore(surveyStore);
+      
+      // 關閉 Modal
+      createSurveyModalInstance.hide();
+      
+      // 重新渲染列表
       renderListView();
 
-      const goDetail = confirm('問卷已建立，要立即查看詳情嗎？');
-      if (goDetail) {
-        showDetail(newSurvey.id);
-      }
+      // 詢問是否要立即查看
+      setTimeout(() => {
+        const goDetail = confirm(`問卷「${name}」已建立成功！\n\n要立即前往問卷詳情頁匯入資料嗎？`);
+        if (goDetail) {
+          showDetail(newSurvey.id);
+        }
+      }, 300);
     }
 
     function renderDetailView() {
@@ -456,7 +543,7 @@
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-md-3">
+          <div class="col-md-2">
             <div class="card">
               <div class="card-body text-center">
                 <div class="text-muted small mb-1">負責單位</div>
@@ -464,7 +551,15 @@
               </div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">建立者</div>
+                <div class="fw-bold">${escapeHtml(survey.creator || '未知')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
             <div class="card">
               <div class="card-body text-center">
                 <div class="text-muted small mb-1">建立日期</div>
@@ -472,7 +567,7 @@
               </div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <div class="card">
               <div class="card-body text-center">
                 <div class="h5 mb-0 text-primary">${fields.length}</div>
@@ -480,11 +575,19 @@
               </div>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <div class="card">
               <div class="card-body text-center">
                 <div class="h5 mb-0 text-success">${responses.length}</div>
                 <div class="text-muted small">回覆數</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-muted small mb-1">狀態</div>
+                <span class="badge ${survey.status === '進行中' ? 'bg-primary' : 'bg-secondary'}">${survey.status}</span>
               </div>
             </div>
           </div>

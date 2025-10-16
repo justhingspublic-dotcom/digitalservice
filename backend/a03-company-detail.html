@@ -274,6 +274,84 @@
     </div>
   </div>
 
+  <!-- 新增問卷 Modal -->
+  <div class="modal fade" id="createSurveyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">新增問卷</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createSurveyForm">
+            <div class="mb-3">
+              <label for="newSurveyName" class="form-label">問卷名稱 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newSurveyName" 
+                placeholder="例如：2025 Q3 數位轉型調查" required>
+            </div>
+            <div class="mb-3">
+              <label for="newSurveyDescription" class="form-label">問卷說明</label>
+              <textarea class="form-control" id="newSurveyDescription" rows="3"
+                placeholder="請簡述此問卷的調查目的與範圍"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="newSurveyOwner" class="form-label">負責單位</label>
+              <input type="text" class="form-control" id="newSurveyOwner" 
+                placeholder="例如：輔導組">
+            </div>
+            <div class="mb-3">
+              <label for="newSurveyCreator" class="form-label">建立者 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newSurveyCreator" 
+                placeholder="請輸入您的姓名" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="submitCreateSurvey()">建立問卷</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 篩選 Modal -->
+  <div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">篩選與欄位設定</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- 顯示欄位區塊 -->
+          <div class="mb-4">
+            <h6 class="fw-bold mb-3">顯示欄位</h6>
+            <div id="fieldSelectionContainer" class="row g-2" style="max-height: 200px; overflow-y: auto;">
+              <!-- 動態生成 checkbox -->
+            </div>
+          </div>
+          
+          <!-- 篩選條件區塊 -->
+          <div>
+            <h6 class="fw-bold mb-3">篩選條件</h6>
+            <div id="filterConditionsContainer" style="max-height: 400px; overflow-y: auto;">
+              <!-- 動態生成 Accordion -->
+            </div>
+            <p class="text-muted small mt-2 mb-0">
+              <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+              同欄位內為 OR，不同欄位間為 AND
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">清除篩選</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="applyFilters()">套用</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/layout.js"></script>
   <script>
@@ -290,6 +368,13 @@
     let surveyDetailKeyword = '';
     let surveyDetailPage = 1;
     const SURVEY_DETAIL_PAGE_SIZE = 10;
+    
+    // 篩選功能相關變數
+    let visibleFields = [];  // 顯示的欄位 ID 陣列
+    let filterConditions = {}; // 篩選條件 {fieldId: [選中的值陣列]}
+    let activeFilterCount = 0; // 啟用的篩選條件數量
+    let filterModalInstance = null;
+    let fieldSearchKeywords = {}; // 每個欄位的搜尋關鍵字 {fieldId: keyword}
 
     // 從 URL 取得公司 ID
     function getCompanyIdFromUrl() {
@@ -521,6 +606,11 @@
       const survey = currentSurvey;
       const fields = survey.fields || [];
       const responses = survey.responses || [];
+      
+      // 第一次進入時，初始化為顯示所有欄位
+      if (visibleFields.length === 0 && fields.length > 0) {
+        visibleFields = fields.map(f => f.id);
+      }
 
       let html = `
         <!-- 返回按鈕 -->
@@ -544,68 +634,134 @@
               <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
               匯入
             </button>
-            <button class="btn btn-outline-primary btn-sm" onclick="exportSurveyData()">
-              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
-              匯出
-            </button>
+            <div class="btn-group">
+              <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
+                匯出
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="exportData('excel'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">table_chart</span>
+                  匯出 Excel
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportData('csv'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">description</span>
+                  匯出 CSV
+                </a></li>
+              </ul>
+            </div>
           </div>
         </div>
 
         <!-- 統計卡片 -->
         <div class="row g-3 mb-4">
-          <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
                 <div class="text-muted small mb-1">負責單位</div>
                 <div class="fw-bold">${escapeHtml(survey.owner || '未指派')}</div>
               </div>
             </div>
           </div>
-          <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
-                <div class="text-muted small mb-1">建立者</div>
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="text-muted small mb-1">建立者 / 建立日期</div>
                 <div class="fw-bold">${escapeHtml(survey.creator || '-')}</div>
+                <div class="text-muted small">${formatDate(survey.createdAt)}</div>
               </div>
             </div>
           </div>
           <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
-                <div class="text-muted small mb-1">建立日期</div>
-                <div class="fw-bold">${formatDate(survey.createdAt)}</div>
-              </div>
-            </div>
-          </div>
-          ${survey.lastUploadBy ? `
-          <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
-                <div class="text-muted small mb-1">最後上傳</div>
-                <div class="fw-bold">${escapeHtml(survey.lastUploadBy)}</div>
-                <div class="text-muted small">${formatDate(survey.lastUploadAt)}</div>
-              </div>
-            </div>
-          </div>
-          ` : ''}
-          <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
                 <div class="h5 mb-0 text-primary">${fields.length}</div>
                 <div class="text-muted small">欄位數</div>
               </div>
             </div>
           </div>
           <div class="col-md-2">
-            <div class="card">
-              <div class="card-body text-center">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
                 <div class="h5 mb-0 text-success">${responses.length}</div>
                 <div class="text-muted small">回覆數</div>
               </div>
             </div>
           </div>
+          <div class="col-md-2">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="h5 mb-0 text-info">${(survey.importHistory || []).length}</div>
+                <div class="text-muted small">匯入次數</div>
+              </div>
+            </div>
+          </div>
         </div>
       `;
+
+      // 匯入歷史記錄
+      const importHistory = survey.importHistory || [];
+      if (importHistory.length > 0) {
+        const collapseId = `importHistory-${survey.id}`;
+        html += `
+        <div class="card mb-4">
+          <div class="card-header bg-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold">
+                <span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">history</span>
+                匯入歷史記錄（${importHistory.length} 次）
+              </h6>
+              <span class="material-icons" style="font-size: 20px; color: #666;">expand_more</span>
+            </div>
+          </div>
+          <div class="collapse" id="${collapseId}">
+            <div class="card-body p-0">
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                      <th style="width: 50px;">#</th>
+                      <th>檔案名稱</th>
+                      <th>上傳者</th>
+                      <th>上傳時間</th>
+                      <th class="text-center">匯入筆數</th>
+                      <th class="text-center">欄位數</th>
+                      <th style="width: 100px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+        `;
+        
+        importHistory.forEach((record, index) => {
+          html += `
+                    <tr>
+                      <td class="text-center">${index + 1}</td>
+                      <td>
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: #4CAF50; margin-right: 4px;">insert_drive_file</span>
+                        ${escapeHtml(record.fileName)}
+                      </td>
+                      <td>${escapeHtml(record.uploadedBy)}</td>
+                      <td>${formatDateTime(record.uploadedAt)}</td>
+                      <td class="text-center"><span class="badge bg-primary">${record.recordCount}</span></td>
+                      <td class="text-center"><span class="badge bg-info">${record.fieldCount}</span></td>
+                      <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteImportRecord('${record.id}')" title="刪除記錄">
+                          <span class="material-icons" style="font-size: 16px;">delete</span>
+                        </button>
+                      </td>
+                    </tr>
+          `;
+        });
+        
+        html += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        `;
+      }
 
       if (fields.length === 0) {
         html += `
@@ -636,11 +792,10 @@
           <div class="card-header bg-white">
             <div class="d-flex justify-content-between align-items-center">
               <h6 class="mb-0 fw-bold">問卷回覆 (${filteredResponses.length})</h6>
-              <div class="position-relative" style="max-width: 280px;">
-                <span class="material-icons position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--color-text-secondary);">search</span>
-                <input type="search" class="form-control form-control-sm ps-5" placeholder="搜尋" 
-                  value="${escapeHtml(surveyDetailKeyword)}" oninput="updateSurveyDetailKeyword(this.value)">
-              </div>
+              <button class="btn btn-outline-primary btn-sm" onclick="openFilterModal()">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">filter_list</span>
+                篩選${activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              </button>
             </div>
           </div>
           <div class="card-body p-0" style="overflow-x: auto; overflow-y: visible;">
@@ -658,6 +813,9 @@
                 </tbody>
           `;
         } else {
+          // 只顯示選中的欄位
+          const displayFields = fields.filter(f => visibleFields.length === 0 || visibleFields.includes(f.id));
+          
           html += `
                 <thead class="table-light">
                   <tr>
@@ -666,7 +824,7 @@
                     <th class="text-center" style="min-width: 150px; white-space: nowrap;">提交時間</th>
           `;
           
-          fields.forEach(field => {
+          displayFields.forEach(field => {
             html += `<th style="min-width: 200px; white-space: nowrap;">${escapeHtml(field.label)}</th>`;
           });
           
@@ -684,7 +842,7 @@
                     <td style="white-space: nowrap;">${formatDateTime(response.submittedAt)}</td>
             `;
 
-            fields.forEach(field => {
+            displayFields.forEach(field => {
               const value = response.values[field.id];
               html += `<td style="min-width: 200px; max-width: 500px; word-wrap: break-word; white-space: normal;">${formatFieldValue(value, field)}</td>`;
             });
@@ -731,19 +889,28 @@
 
     // 篩選問卷回覆
     function filterSurveyResponses(responses, fields) {
-      if (!surveyDetailKeyword) return responses;
-      const lower = surveyDetailKeyword.toLowerCase();
+      // 沒有任何篩選條件，返回全部
+      const activeFilters = Object.entries(filterConditions).filter(([fieldId, values]) => values && values.length > 0);
+      
+      if (activeFilters.length === 0) {
+        return responses;
+      }
+      
       return responses.filter(response => {
-        const text = [
-          response.id,
-          ...fields.map(field => {
-            const value = response.values[field.id];
-            if (Array.isArray(value)) return value.join(' ');
-            if (value == null) return '';
-            return String(value);
-          })
-        ].join(' ');
-        return text.toLowerCase().includes(lower);
+        // 檢查所有欄位的篩選條件（不同欄位之間為 AND）
+        return activeFilters.every(([fieldId, selectedValues]) => {
+          const responseValue = response.values[fieldId];
+          
+          // 檢查是否符合該欄位的任一選項（同一欄位內為 OR）
+          return selectedValues.some(selectedValue => {
+            // 處理陣列值（多選）
+            if (Array.isArray(responseValue)) {
+              return responseValue.some(v => String(v) === String(selectedValue));
+            }
+            // 處理單一值
+            return String(responseValue) === String(selectedValue);
+          });
+        });
       });
     }
 
@@ -1101,6 +1268,11 @@
       currentSurvey = null;
       surveyDetailKeyword = '';
       surveyDetailPage = 1;
+      // 重置篩選狀態
+      visibleFields = [];
+      filterConditions = {};
+      activeFilterCount = 0;
+      fieldSearchKeywords = {};
       renderSurveyList();
     }
 
@@ -1339,28 +1511,50 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
       backToGuidanceList();
     }
 
+    // 新增問卷 Modal 實例
+    let createSurveyModalInstance = null;
+
     // 新增問卷
     function createSurvey() {
-      const name = prompt('請輸入問卷名稱：');
-      if (!name) return;
-
-      const description = prompt('請輸入問卷說明（選填）：');
-      const owner = prompt('請輸入負責單位（選填）：');
-      const creator = prompt('請輸入建立者名稱：');
+      // 清空表單
+      document.getElementById('newSurveyName').value = '';
+      document.getElementById('newSurveyDescription').value = '';
+      document.getElementById('newSurveyOwner').value = '';
+      document.getElementById('newSurveyCreator').value = '';
       
-      if (!creator || !creator.trim()) {
-        alert('必須輸入建立者名稱');
+      // 顯示 Modal
+      if (!createSurveyModalInstance) {
+        createSurveyModalInstance = new bootstrap.Modal(document.getElementById('createSurveyModal'));
+      }
+      createSurveyModalInstance.show();
+    }
+
+    // 提交新增問卷
+    function submitCreateSurvey() {
+      const name = document.getElementById('newSurveyName').value.trim();
+      const description = document.getElementById('newSurveyDescription').value.trim();
+      const owner = document.getElementById('newSurveyOwner').value.trim();
+      const creator = document.getElementById('newSurveyCreator').value.trim();
+      
+      // 驗證必填欄位
+      if (!name) {
+        alert('請輸入問卷名稱');
+        return;
+      }
+      if (!creator) {
+        alert('請輸入建立者姓名');
         return;
       }
 
+      const now = new Date();
       const newSurvey = {
         id: `survey-${Date.now()}`,
-        name: name.trim(),
-        description: description?.trim() || '',
-        owner: owner?.trim() || '尚未指派',
-        creator: creator.trim(),
+        name: name,
+        description: description || '尚未填寫說明',
+        owner: owner || '尚未指派',
+        creator: creator,
         status: '草稿',
-        createdAt: new Date().toISOString(),
+        createdAt: now.toISOString(),
         fields: [],
         responses: []
       };
@@ -1371,8 +1565,17 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
       currentCompany.surveys.push(newSurvey);
 
       saveCompany();
+      
+      // 關閉 Modal
+      createSurveyModalInstance.hide();
+      
+      // 重新渲染列表
       renderSurveyList();
-      alert('問卷已建立');
+      
+      // 提示成功
+      setTimeout(() => {
+        alert(`問卷「${name}」已成功新增！`);
+      }, 300);
     }
 
     // 刪除問卷
@@ -1429,7 +1632,7 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
         const worksheet = workbook.Sheets[sheetName];
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-        processImportedData(rows, creator.trim());
+        processImportedData(rows, creator.trim(), file.name);
       } catch (error) {
         console.error(error);
         alert('匯入失敗：' + (error.message || '請確認檔案格式'));
@@ -1451,7 +1654,7 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
     }
 
     // 處理匯入的資料
-    function processImportedData(rows, creator) {
+    function processImportedData(rows, creator, fileName) {
       if (!rows || !rows.length) {
         alert('檔案內沒有資料');
         return;
@@ -1495,6 +1698,22 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
           values
         };
       });
+
+      // 初始化匯入歷史（如果不存在）
+      if (!currentSurvey.importHistory) {
+        currentSurvey.importHistory = [];
+      }
+
+      // 記錄本次匯入
+      const importRecord = {
+        id: `import-${Date.now()}`,
+        fileName: fileName,
+        uploadedBy: creator,
+        uploadedAt: new Date().toISOString(),
+        recordCount: responses.length,
+        fieldCount: fields.length
+      };
+      currentSurvey.importHistory.unshift(importRecord);
 
       // 更新問卷
       currentSurvey.fields = fields;
@@ -1589,6 +1808,449 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
       } catch (e) {
         console.error('儲存失敗', e);
       }
+    }
+
+    // 刪除匯入記錄
+    function deleteImportRecord(importId) {
+      if (!confirm('確定要刪除此匯入記錄嗎？\n注意：這不會刪除問卷資料，只是刪除記錄。')) {
+        return;
+      }
+      
+      if (!currentSurvey.importHistory) {
+        return;
+      }
+      
+      // 找到並刪除記錄
+      const index = currentSurvey.importHistory.findIndex(record => record.id === importId);
+      if (index !== -1) {
+        currentSurvey.importHistory.splice(index, 1);
+        saveCompany();
+        renderSurveyDetail();
+        alert('匯入記錄已刪除');
+      }
+    }
+
+    // 開啟篩選 Modal
+    function openFilterModal() {
+      if (!currentSurvey) return;
+      
+      const fields = currentSurvey.fields || [];
+      
+      // 初始化 visibleFields（第一次開啟時全選）
+      if (visibleFields.length === 0) {
+        visibleFields = fields.map(f => f.id);
+      }
+      
+      // 渲染欄位選擇區
+      renderFieldSelection(fields);
+      
+      // 渲染篩選條件區
+      renderFilterConditions(fields);
+      
+      // 顯示 Modal
+      if (!filterModalInstance) {
+        filterModalInstance = new bootstrap.Modal(document.getElementById('filterModal'));
+      }
+      filterModalInstance.show();
+    }
+
+    // 渲染欄位選擇區
+    function renderFieldSelection(fields) {
+      const container = document.getElementById('fieldSelectionContainer');
+      let html = '';
+      
+      fields.forEach(field => {
+        const checked = visibleFields.includes(field.id) ? 'checked' : '';
+        html += `
+          <div class="col-md-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" 
+                     id="field-${field.id}" value="${field.id}" ${checked}
+                     onchange="toggleFieldVisibility('${field.id}', this.checked)">
+              <label class="form-check-label" for="field-${field.id}">
+                ${escapeHtml(field.label)}
+              </label>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+
+    // 渲染篩選條件區（只顯示已勾選的欄位）
+    function renderFilterConditions(fields) {
+      const container = document.getElementById('filterConditionsContainer');
+      let html = '';
+      
+      const visibleFieldObjects = fields.filter(f => visibleFields.includes(f.id));
+      
+      if (visibleFieldObjects.length === 0) {
+        html = '<p class="text-muted">請先選擇要顯示的欄位</p>';
+      } else {
+        const responses = currentSurvey.responses || [];
+        
+        html += '<div class="accordion" id="filterAccordion">';
+        
+        visibleFieldObjects.forEach((field, index) => {
+          // 統計該欄位的所有不同值
+          const valueStats = getFieldValueStats(responses, field.id);
+          const searchKeyword = fieldSearchKeywords[field.id] || '';
+          const selectedValues = filterConditions[field.id] || [];
+          
+          // 過濾選項（根據搜尋關鍵字）
+          const filteredValues = valueStats.filter(stat => {
+            if (!searchKeyword) return true;
+            return String(stat.value).toLowerCase().includes(searchKeyword.toLowerCase());
+          });
+          
+          // 顯示已選數量
+          const selectedCount = selectedValues.length;
+          const countBadge = selectedCount > 0 ? `<span class="badge bg-primary">${selectedCount}</span>` : '';
+          
+          html += `
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading-${field.id}">
+                <button class="accordion-button collapsed" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#collapse-${field.id}">
+                  <span class="flex-grow-1">${escapeHtml(field.label)}</span>
+                  ${countBadge}
+                </button>
+              </h2>
+              <div id="collapse-${field.id}" class="accordion-collapse collapse" 
+                   data-bs-parent="#filterAccordion">
+                <div class="accordion-body">
+                  <!-- 搜尋框 -->
+                  <div class="input-group input-group-sm mb-2">
+                    <span class="input-group-text">
+                      <span class="material-icons" style="font-size: 16px;">search</span>
+                    </span>
+                    <input type="text" class="form-control form-control-sm" 
+                           id="search-${field.id}" 
+                           value="${escapeHtml(searchKeyword)}"
+                           placeholder="搜尋選項..."
+                           oninput="updateFieldSearch('${field.id}', this.value)">
+                  </div>
+                  
+                  <!-- Checkbox 列表 -->
+                  <div id="options-${field.id}" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px; background: #f8f9fa;">
+          `;
+          
+          if (filteredValues.length === 0) {
+            html += '<p class="text-muted small mb-0">無符合的選項</p>';
+          } else {
+            filteredValues.forEach(stat => {
+              const valueStr = String(stat.value);
+              const isChecked = selectedValues.includes(valueStr) ? 'checked' : '';
+              const safeValue = escapeHtml(valueStr).replace(/'/g, '&#39;');
+              
+              html += `
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" 
+                         id="opt-${field.id}-${stat.index}" 
+                         value="${safeValue}"
+                         ${isChecked}
+                         onchange="toggleFilterOption('${field.id}', '${safeValue}', this.checked)">
+                  <label class="form-check-label small" for="opt-${field.id}-${stat.index}">
+                    ${escapeHtml(valueStr)} <span class="text-muted">(${stat.count})</span>
+                  </label>
+                </div>
+              `;
+            });
+          }
+          
+          html += `
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 統計欄位的所有不同值及其出現次數
+    function getFieldValueStats(responses, fieldId) {
+      const valueCount = {};
+      
+      responses.forEach(response => {
+        const value = response.values[fieldId];
+        
+        // 處理陣列值（多選）
+        if (Array.isArray(value)) {
+          value.forEach(v => {
+            const key = String(v);
+            valueCount[key] = (valueCount[key] || 0) + 1;
+          });
+        } else if (value != null && value !== '') {
+          const key = String(value);
+          valueCount[key] = (valueCount[key] || 0) + 1;
+        }
+      });
+      
+      // 轉換為陣列並排序（按出現次數降序）
+      return Object.entries(valueCount)
+        .map(([value, count], index) => ({ value, count, index }))
+        .sort((a, b) => b.count - a.count);
+    }
+    
+    // 更新欄位搜尋關鍵字
+    function updateFieldSearch(fieldId, keyword) {
+      fieldSearchKeywords[fieldId] = keyword;
+      // 只重新渲染該欄位的選項列表
+      updateFieldOptions(fieldId);
+    }
+    
+    // 更新單一欄位的選項列表（不重新渲染整個區塊）
+    function updateFieldOptions(fieldId) {
+      const container = document.getElementById(`options-${fieldId}`);
+      if (!container) return;
+      
+      const responses = currentSurvey.responses || [];
+      const field = (currentSurvey.fields || []).find(f => f.id === fieldId);
+      if (!field) return;
+      
+      const valueStats = getFieldValueStats(responses, fieldId);
+      const searchKeyword = fieldSearchKeywords[fieldId] || '';
+      const selectedValues = filterConditions[fieldId] || [];
+      
+      // 過濾選項
+      const filteredValues = valueStats.filter(stat => {
+        if (!searchKeyword) return true;
+        return String(stat.value).toLowerCase().includes(searchKeyword.toLowerCase());
+      });
+      
+      let html = '';
+      if (filteredValues.length === 0) {
+        html = '<p class="text-muted small mb-0">無符合的選項</p>';
+      } else {
+        filteredValues.forEach(stat => {
+          const valueStr = String(stat.value);
+          const isChecked = selectedValues.includes(valueStr) ? 'checked' : '';
+          const safeValue = escapeHtml(valueStr).replace(/'/g, '&#39;');
+          
+          html += `
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" 
+                     id="opt-${fieldId}-${stat.index}" 
+                     value="${safeValue}"
+                     ${isChecked}
+                     onchange="toggleFilterOption('${fieldId}', '${safeValue}', this.checked)">
+              <label class="form-check-label small" for="opt-${fieldId}-${stat.index}">
+                ${escapeHtml(valueStr)} <span class="text-muted">(${stat.count})</span>
+              </label>
+            </div>
+          `;
+        });
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 切換篩選選項
+    function toggleFilterOption(fieldId, value, isChecked) {
+      if (!filterConditions[fieldId]) {
+        filterConditions[fieldId] = [];
+      }
+      
+      if (isChecked) {
+        if (!filterConditions[fieldId].includes(value)) {
+          filterConditions[fieldId].push(value);
+        }
+      } else {
+        filterConditions[fieldId] = filterConditions[fieldId].filter(v => v !== value);
+      }
+      
+      // 更新 Accordion header 的 badge
+      updateAccordionBadge(fieldId);
+    }
+    
+    // 更新 Accordion 標題的 badge
+    function updateAccordionBadge(fieldId) {
+      const button = document.querySelector(`#heading-${fieldId} button`);
+      if (!button) return;
+      
+      const selectedValues = filterConditions[fieldId] || [];
+      const selectedCount = selectedValues.length;
+      
+      // 移除舊的 badge
+      const oldBadge = button.querySelector('.badge');
+      if (oldBadge) {
+        oldBadge.remove();
+      }
+      
+      // 如果有選中項目，添加新的 badge
+      if (selectedCount > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-primary';
+        badge.textContent = selectedCount;
+        button.appendChild(badge);
+      }
+    }
+
+    // 切換欄位顯示
+    function toggleFieldVisibility(fieldId, isVisible) {
+      if (isVisible) {
+        if (!visibleFields.includes(fieldId)) {
+          visibleFields.push(fieldId);
+        }
+      } else {
+        visibleFields = visibleFields.filter(id => id !== fieldId);
+      }
+      
+      // 重新渲染篩選條件區
+      const fields = currentSurvey.fields || [];
+      renderFilterConditions(fields);
+    }
+
+    // 套用篩選
+    function applyFilters() {
+      // 計算啟用的篩選條件數量（有選中項目的欄位）
+      activeFilterCount = 0;
+      Object.values(filterConditions).forEach(values => {
+        if (values && values.length > 0) {
+          activeFilterCount++;
+        }
+      });
+      
+      // 關閉 Modal
+      filterModalInstance.hide();
+      
+      // 重新渲染問卷詳情
+      renderSurveyDetail();
+    }
+
+    // 清除篩選
+    function clearFilters() {
+      filterConditions = {};
+      activeFilterCount = 0;
+      fieldSearchKeywords = {};
+      
+      // 重置顯示欄位為全選
+      const fields = currentSurvey.fields || [];
+      visibleFields = fields.map(f => f.id);
+      
+      // 重新渲染欄位選擇區和篩選條件區
+      renderFieldSelection(fields);
+      renderFilterConditions(fields);
+    }
+
+    // 匯出資料
+    function exportData(format) {
+      if (!currentSurvey) return;
+      
+      const fields = currentSurvey.fields || [];
+      const responses = currentSurvey.responses || [];
+      
+      // 取得篩選後的資料
+      const filteredResponses = filterSurveyResponses(responses, fields);
+      
+      if (filteredResponses.length === 0) {
+        alert('沒有資料可以匯出');
+        return;
+      }
+      
+      // 決定要匯出的欄位（如果沒有設定 visibleFields，則匯出全部）
+      const exportFields = visibleFields.length > 0 
+        ? fields.filter(f => visibleFields.includes(f.id))
+        : fields;
+      
+      if (exportFields.length === 0) {
+        alert('請至少選擇一個要顯示的欄位');
+        return;
+      }
+      
+      // 準備資料
+      const data = [];
+      
+      // 標題行（包含基本欄位 + 動態欄位）
+      const headers = ['#', '問卷編號', '提交時間', ...exportFields.map(f => f.label)];
+      data.push(headers);
+      
+      // 資料行
+      filteredResponses.forEach((response, index) => {
+        const row = [
+          index + 1,
+          response.id,
+          formatDateTime(response.submittedAt)
+        ];
+        
+        // 加入各欄位的值
+        exportFields.forEach(field => {
+          const value = response.values[field.id];
+          let cellValue = '';
+          
+          if (Array.isArray(value)) {
+            cellValue = value.join(', ');
+          } else if (value != null) {
+            cellValue = String(value);
+          }
+          
+          row.push(cellValue);
+        });
+        
+        data.push(row);
+      });
+      
+      // 根據格式匯出
+      if (format === 'excel') {
+        exportToExcel(data);
+      } else if (format === 'csv') {
+        exportToCSV(data);
+      }
+    }
+    
+    // 匯出為 Excel
+    function exportToExcel(data) {
+      if (typeof XLSX === 'undefined') {
+        alert('XLSX 庫尚未載入，請稍後再試');
+        return;
+      }
+      
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '問卷回覆');
+      
+      const fileName = `${currentCompany.name}_${currentSurvey.name}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      alert(`已匯出 ${data.length - 1} 筆資料`);
+    }
+    
+    // 匯出為 CSV
+    function exportToCSV(data) {
+      // 將資料轉換為 CSV 格式
+      const csvContent = data.map(row => {
+        return row.map(cell => {
+          // 處理包含逗號、引號或換行的儲存格
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return '"' + cellStr.replace(/"/g, '""') + '"';
+          }
+          return cellStr;
+        }).join(',');
+      }).join('\n');
+      
+      // 加上 BOM 以支援中文
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // 創建下載連結
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      const fileName = `${currentCompany.name}_${currentSurvey.name}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`已匯出 ${data.length - 1} 筆資料`);
     }
 
     // 初始化
