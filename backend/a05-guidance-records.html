@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div id="topbar"></div>
@@ -28,6 +29,17 @@
             <h5 class="mb-0">篩選條件</h5>
           </div>
           <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <label class="form-label small text-muted mb-1">關鍵字搜尋</label>
+                <div class="position-relative">
+                  <span class="material-icons position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d;">search</span>
+                  <input type="text" class="form-control ps-5" id="keywordFilter" 
+                         placeholder="搜尋公司名稱、輔導主題、顧問、內容等任意關鍵字..."
+                         onkeypress="if(event.key === 'Enter') searchRecords()">
+                </div>
+              </div>
+            </div>
             <div class="row g-3">
               <div class="col-md-3">
                 <label class="form-label small text-muted mb-1">公司名稱</label>
@@ -189,6 +201,7 @@
 
     // 搜尋紀錄
     function searchRecords() {
+      const keyword = document.getElementById('keywordFilter').value.trim().toLowerCase();
       const companyId = document.getElementById('companyNameFilter').value;
       const city = document.getElementById('cityFilter').value;
       const industry = document.getElementById('industryFilter').value;
@@ -218,6 +231,23 @@
           const recordDate = new Date(record.date);
           if (startDate && recordDate < new Date(startDate)) return;
           if (endDate && recordDate > new Date(endDate + 'T23:59:59')) return;
+
+          // 關鍵字搜尋（搜尋所有欄位）
+          if (keyword) {
+            const searchText = [
+              company.name || '',              // 公司名稱
+              company.city || '',              // 縣市
+              company.industry || '',          // 產業別
+              record.type || '',               // 輔導類型
+              record.status || '',             // 狀態
+              record.consultant || '',         // 輔導顧問
+              record.title || '',              // 輔導主題
+              record.content || '',            // 輔導內容
+              record.suggestions || ''         // 建議
+            ].join(' ').toLowerCase();
+            
+            if (!searchText.includes(keyword)) return;
+          }
 
           results.push({
             company: company,
@@ -250,10 +280,34 @@
         return;
       }
 
+      // 儲存結果到全域變數供匯出使用
+      window.currentSearchResults = results;
+      
       let html = `
         <div class="card">
-          <div class="card-header bg-white">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">搜尋結果（共 ${results.length} 筆）</h5>
+            <div class="btn-group">
+              <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                匯出
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#" onclick="exportSearchResults('excel'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">table_chart</span>
+                  匯出 Excel
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportSearchResults('csv'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">description</span>
+                  匯出 CSV
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-muted" href="#" onclick="alert('PDF 匯出功能開發中，敬請期待！'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">picture_as_pdf</span>
+                  匯出 PDF（開發中）
+                </a></li>
+              </ul>
+            </div>
           </div>
           <div class="card-body">
       `;
@@ -308,6 +362,7 @@
 
     // 清除篩選條件
     function clearFilters() {
+      document.getElementById('keywordFilter').value = '';
       document.getElementById('companyNameFilter').value = '';
       document.getElementById('cityFilter').value = '';
       document.getElementById('industryFilter').value = '';
@@ -361,6 +416,126 @@
     window.addEventListener('load', function() {
       loadData();
     });
+    
+    // 匯出搜尋結果
+    function exportSearchResults(format) {
+      const results = window.currentSearchResults || [];
+      
+      if (results.length === 0) {
+        alert('沒有搜尋結果可以匯出');
+        return;
+      }
+      
+      // 準備資料
+      const data = [];
+      
+      // 標題行
+      const headers = [
+        '#',
+        '公司名稱',
+        '縣市',
+        '產業別',
+        '輔導日期',
+        '輔導類型',
+        '輔導階段',
+        '輔導顧問',
+        '輔導主題',
+        '輔導內容',
+        '建議',
+        '附件數量'
+      ];
+      data.push(headers);
+      
+      // 資料行
+      results.forEach((item, index) => {
+        const { company, record } = item;
+        const row = [
+          index + 1,
+          company.name || '',
+          company.city || '',
+          company.industry || '',
+          formatDateTime(record.date),
+          record.type || '',
+          record.status || '',
+          record.consultant || '',
+          record.title || '',
+          record.content || '',
+          record.suggestions || '',
+          (record.attachments || []).length
+        ];
+        data.push(row);
+      });
+      
+      // 根據格式匯出
+      if (format === 'excel') {
+        exportResultsToExcel(data);
+      } else if (format === 'csv') {
+        exportResultsToCSV(data);
+      }
+    }
+    
+    // 匯出為 Excel
+    function exportResultsToExcel(data) {
+      if (typeof XLSX === 'undefined') {
+        alert('XLSX 庫尚未載入，請稍後再試');
+        return;
+      }
+      
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '輔導紀錄');
+      
+      const fileName = `輔導紀錄彙整_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      alert(`已匯出 ${data.length - 1} 筆輔導紀錄`);
+    }
+    
+    // 匯出為 CSV
+    function exportResultsToCSV(data) {
+      // 將資料轉換為 CSV 格式
+      const csvContent = data.map(row => {
+        return row.map(cell => {
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return '"' + cellStr.replace(/"/g, '""') + '"';
+          }
+          return cellStr;
+        }).join(',');
+      }).join('\n');
+      
+      // 加上 BOM 以支援中文
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // 創建下載連結
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      const fileName = `輔導紀錄彙整_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`已匯出 ${data.length - 1} 筆輔導紀錄`);
+    }
+    
+    // 輔助函數：格式化日期時間
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
   </script>
 </body>
 </html>

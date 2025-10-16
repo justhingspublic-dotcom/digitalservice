@@ -128,10 +128,33 @@
         <div class="card mb-4" id="guidanceRecordsCard">
           <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">輔導紀錄</h5>
+            <div class="d-flex gap-2">
+              <div class="btn-group">
+                <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+                  匯出
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" onclick="exportGuidanceRecords('excel'); return false;">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">table_chart</span>
+                    匯出 Excel
+                  </a></li>
+                  <li><a class="dropdown-item" href="#" onclick="exportGuidanceRecords('csv'); return false;">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">description</span>
+                    匯出 CSV
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-muted" href="#" onclick="alert('PDF 匯出功能開發中，敬請期待！'); return false;">
+                    <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">picture_as_pdf</span>
+                    匯出 PDF（開發中）
+                  </a></li>
+                </ul>
+              </div>
             <button class="btn btn-primary btn-sm" onclick="addGuidanceRecord()">
               <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
               新增紀錄
             </button>
+            </div>
           </div>
           <div class="card-body">
             <div id="guidanceRecordsContainer">
@@ -636,9 +659,9 @@
             </button>
             <div class="btn-group">
               <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
-                <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
-                匯出
-              </button>
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
+              匯出
+            </button>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#" onclick="exportData('excel'); return false;">
                   <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">table_chart</span>
@@ -696,7 +719,7 @@
               </div>
             </div>
           </div>
-        </div>
+              </div>
       `;
 
       // 匯入歷史記錄
@@ -760,7 +783,7 @@
             </div>
           </div>
         </div>
-        `;
+      `;
       }
 
       if (fields.length === 0) {
@@ -1315,7 +1338,7 @@
       const statusClass = statusBadgeClass[currentGuidanceRecord.status] || 'bg-secondary';
 
       const section = document.getElementById('surveySection');
-      section.innerHTML = `
+      let html = `
         <!-- 返回按鈕 -->
         <div class="mb-3">
           <button class="btn btn-outline-secondary btn-sm" onclick="backToGuidanceList()">
@@ -1387,7 +1410,398 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
             </div>
           </div>
         </div>
+
+        <!-- 附件管理 -->
+        <div class="card mt-4">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">attach_file</span>
+              附件管理
+            </h5>
+            <input type="file" id="attachmentInput" class="d-none" multiple onchange="handleAttachmentUpload(this)">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('attachmentInput').click()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
+              上傳附件
+            </button>
+          </div>
+          <div class="card-body" id="attachmentListContainer">
+            ${renderAttachments()}
+          </div>
+        </div>
       `;
+      
+      // 設置 section 的 HTML
+      section.innerHTML = html;
+    }
+    
+    // 更新附件列表（不重新渲染整個頁面）
+    function updateAttachmentList() {
+      const container = document.getElementById('attachmentListContainer');
+      if (container) {
+        container.innerHTML = renderAttachments();
+      }
+    }
+    
+    // 渲染附件列表
+    function renderAttachments() {
+      const attachments = currentGuidanceRecord.attachments || [];
+      
+      if (attachments.length === 0) {
+        return '<div class="text-center py-4 text-muted">尚無附件</div>';
+      }
+      
+      // 按類型分類
+      const reports = attachments.filter(a => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv'].includes(a.type));
+      const images = attachments.filter(a => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(a.type));
+      const others = attachments.filter(a => !reports.includes(a) && !images.includes(a));
+      
+      let html = '';
+      
+      // 報告文件
+      if (reports.length > 0) {
+        html += `
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseReports">
+              <h6 class="mb-0">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">description</span>
+                報告文件 (${reports.length})
+              </h6>
+              <span class="material-icons">expand_more</span>
+            </div>
+            <div class="collapse show" id="collapseReports">
+              <div class="list-group">
+        `;
+        reports.forEach(att => {
+          // 根據檔案類型選擇圖標和顏色
+          let icon = 'description';
+          let iconColor = '#6c757d';
+          
+          if (att.type === 'pdf') {
+            icon = 'picture_as_pdf';
+            iconColor = '#dc3545'; // 紅色
+          } else if (['xls', 'xlsx'].includes(att.type)) {
+            icon = 'table_chart';
+            iconColor = '#28a745'; // 綠色
+          } else if (['doc', 'docx'].includes(att.type)) {
+            icon = 'article';
+            iconColor = '#007bff'; // 藍色
+          } else if (['ppt', 'pptx'].includes(att.type)) {
+            icon = 'slideshow';
+            iconColor = '#fd7e14'; // 橘色
+          } else if (att.type === 'csv') {
+            icon = 'grid_on';
+            iconColor = '#20c997'; // 青綠色
+          }
+          
+          html += `
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <span class="material-icons me-2" style="color: ${iconColor}; font-size: 24px;">${icon}</span>
+                  <div>
+                    <div>${escapeHtml(att.name)}</div>
+                    <small class="text-muted">${formatFileSize(att.size)} • ${formatDateTime(att.uploadedAt)}</small>
+                  </div>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary me-2" onclick="downloadAttachment('${att.id}')">
+                    <span class="material-icons" style="font-size: 16px;">download</span>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteAttachment('${att.id}')">
+                    <span class="material-icons" style="font-size: 16px;">delete</span>
+                  </button>
+                </div>
+              </div>
+          `;
+        });
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 現場照片
+      if (images.length > 0) {
+        html += `
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseImages">
+              <h6 class="mb-0">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">photo_library</span>
+                現場照片 (${images.length})
+              </h6>
+              <span class="material-icons">expand_more</span>
+            </div>
+            <div class="collapse show" id="collapseImages">
+              <div class="row g-3">
+        `;
+        images.forEach(att => {
+          html += `
+              <div class="col-md-3">
+                <div class="card">
+                  <img src="${att.data}" class="card-img-top" style="height: 150px; object-fit: cover; cursor: pointer;" 
+                       onclick="viewImage('${att.id}')" alt="${escapeHtml(att.name)}">
+                  <div class="card-body p-2">
+                    <small class="d-block text-truncate" title="${escapeHtml(att.name)}">${escapeHtml(att.name)}</small>
+                    <div class="d-flex justify-content-between mt-2">
+                      <button class="btn btn-sm btn-outline-primary" onclick="downloadAttachment('${att.id}')">
+                        <span class="material-icons" style="font-size: 14px;">download</span>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="deleteAttachment('${att.id}')">
+                        <span class="material-icons" style="font-size: 14px;">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          `;
+        });
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 其他檔案
+      if (others.length > 0) {
+        html += `
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#collapseOthers">
+              <h6 class="mb-0">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">folder</span>
+                其他檔案 (${others.length})
+              </h6>
+              <span class="material-icons">expand_more</span>
+            </div>
+            <div class="collapse show" id="collapseOthers">
+              <div class="list-group">
+        `;
+        others.forEach(att => {
+          html += `
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <span class="material-icons me-2">insert_drive_file</span>
+                  <div>
+                    <div>${escapeHtml(att.name)}</div>
+                    <small class="text-muted">${formatFileSize(att.size)} • ${formatDateTime(att.uploadedAt)}</small>
+                  </div>
+                </div>
+                <div>
+                  <button class="btn btn-sm btn-outline-primary me-2" onclick="downloadAttachment('${att.id}')">
+                    <span class="material-icons" style="font-size: 16px;">download</span>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteAttachment('${att.id}')">
+                    <span class="material-icons" style="font-size: 16px;">delete</span>
+                  </button>
+                </div>
+              </div>
+          `;
+        });
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      return html;
+    }
+    
+    // 處理附件上傳
+    function handleAttachmentUpload(input) {
+      console.log('=== 開始處理附件上傳 ===');
+      console.log('input:', input);
+      console.log('input.files:', input.files);
+      
+      const files = input.files;
+      if (!files || files.length === 0) {
+        console.log('❌ 沒有選擇檔案');
+        alert('沒有選擇檔案');
+        return;
+      }
+      
+      console.log(`✅ 選擇了 ${files.length} 個檔案`);
+      
+      // 檢查總檔案大小
+      let totalSize = 0;
+      for (let file of files) {
+        console.log(`檔案: ${file.name}, 大小: ${file.size} bytes`);
+        totalSize += file.size;
+      }
+      
+      console.log(`總大小：${totalSize} bytes (${(totalSize / 1024 / 1024).toFixed(2)} MB)`);
+      
+      if (!currentGuidanceRecord) {
+        console.log('❌ currentGuidanceRecord 是 null');
+        alert('找不到當前輔導紀錄');
+        return;
+      }
+      
+      console.log('✅ currentGuidanceRecord 存在:', currentGuidanceRecord);
+      
+      if (!currentGuidanceRecord.attachments) {
+        currentGuidanceRecord.attachments = [];
+      }
+      
+      // 先儲存檔案數量，因為清空 input 後 files.length 會變成 0
+      const totalFiles = files.length;
+      let uploadedCount = 0;
+      let errorCount = 0;
+      
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          try {
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            
+            const attachment = {
+              id: `att-${Date.now()}-${index}`,
+              name: file.name,
+              type: fileExt,
+              size: file.size,
+              data: e.target.result,
+              uploadedAt: new Date().toISOString()
+            };
+            
+            currentGuidanceRecord.attachments.push(attachment);
+            
+            // 同步更新到 currentCompany
+            if (currentCompany.guidanceRecords && currentGuidanceIndex !== null) {
+              currentCompany.guidanceRecords[currentGuidanceIndex] = currentGuidanceRecord;
+            }
+            
+            uploadedCount++;
+            console.log(`已上傳 ${uploadedCount}/${totalFiles} 個檔案`);
+            
+            // 當所有檔案都處理完成
+            if (uploadedCount + errorCount === totalFiles) {
+              try {
+                saveCompany();
+                console.log('已儲存到 localStorage');
+                updateAttachmentList();  // 只更新附件列表，不重新渲染整個頁面
+                
+                if (errorCount > 0) {
+                  alert(`成功上傳 ${uploadedCount} 個附件，${errorCount} 個失敗`);
+                } else {
+                  alert(`成功上傳 ${uploadedCount} 個附件`);
+                }
+              } catch (err) {
+                console.error('儲存失敗：', err);
+                alert('儲存失敗，可能是空間不足。請刪除一些舊資料或選擇較小的檔案。');
+              }
+            }
+          } catch (err) {
+            console.error('處理檔案錯誤：', err);
+            errorCount++;
+          }
+        };
+        
+        reader.onerror = function(err) {
+          console.error('讀取檔案錯誤：', err);
+          alert(`檔案「${file.name}」讀取失敗`);
+          errorCount++;
+          
+          // 檢查是否所有檔案都處理完成
+          if (uploadedCount + errorCount === totalFiles) {
+            if (uploadedCount > 0) {
+              saveCompany();
+              updateAttachmentList();  // 只更新附件列表
+              alert(`成功上傳 ${uploadedCount} 個附件，${errorCount} 個失敗`);
+            }
+          }
+        };
+        
+        reader.readAsDataURL(file);
+      });
+      
+      // 清空 input
+      input.value = '';
+    }
+    
+    // 下載附件
+    function downloadAttachment(attachmentId) {
+      const attachment = currentGuidanceRecord.attachments?.find(a => a.id === attachmentId);
+      if (!attachment) {
+        alert('找不到附件');
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.href = attachment.data;
+      link.download = attachment.name;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // 刪除附件
+    function deleteAttachment(attachmentId) {
+      if (!confirm('確定要刪除此附件嗎？')) return;
+      
+      const index = currentGuidanceRecord.attachments?.findIndex(a => a.id === attachmentId);
+      if (index === -1 || index === undefined) {
+        alert('找不到附件');
+        return;
+      }
+      
+      currentGuidanceRecord.attachments.splice(index, 1);
+      
+      // 同步更新到 currentCompany
+      if (currentCompany.guidanceRecords && currentGuidanceIndex !== null) {
+        currentCompany.guidanceRecords[currentGuidanceIndex] = currentGuidanceRecord;
+      }
+      
+      saveCompany();
+      updateAttachmentList();  // 只更新附件列表
+      alert('附件已刪除');
+    }
+    
+    // 查看圖片（放大顯示）
+    function viewImage(attachmentId) {
+      const attachment = currentGuidanceRecord.attachments?.find(a => a.id === attachmentId);
+      if (!attachment) return;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal fade';
+      modal.id = 'imageViewModal';
+      modal.tabIndex = -1;
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${escapeHtml(attachment.name)}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+              <img src="${attachment.data}" class="img-fluid" alt="${escapeHtml(attachment.name)}">
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // 移除舊的 modal
+      const oldModal = document.getElementById('imageViewModal');
+      if (oldModal) oldModal.remove();
+      
+      document.body.appendChild(modal);
+      const modalInstance = new bootstrap.Modal(modal);
+      modalInstance.show();
+      
+      // Modal 關閉後移除
+      modal.addEventListener('hidden.bs.modal', function() {
+        modal.remove();
+      });
+    }
+    
+    // 格式化檔案大小
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
     // 編輯輔導紀錄
@@ -2251,6 +2665,109 @@ ${escapeHtml(currentGuidanceRecord.content || '無內容')}
       document.body.removeChild(link);
       
       alert(`已匯出 ${data.length - 1} 筆資料`);
+    }
+
+    // 匯出輔導紀錄
+    function exportGuidanceRecords(format) {
+      if (!currentCompany) {
+        alert('找不到公司資料');
+        return;
+      }
+      
+      const records = currentCompany.guidanceRecords || [];
+      
+      if (records.length === 0) {
+        alert('沒有輔導紀錄可以匯出');
+        return;
+      }
+      
+      // 準備資料
+      const data = [];
+      
+      // 標題行
+      const headers = [
+        '#',
+        '輔導日期',
+        '輔導類型',
+        '輔導階段',
+        '輔導顧問',
+        '輔導主題',
+        '輔導內容',
+        '建議',
+        '附件數量'
+      ];
+      data.push(headers);
+      
+      // 資料行
+      records.forEach((record, index) => {
+        const row = [
+          index + 1,
+          formatDateTime(record.date),
+          record.type || '',
+          record.status || '',
+          record.consultant || '',
+          record.title || '',
+          record.content || '',
+          record.suggestions || '',
+          (record.attachments || []).length
+        ];
+        data.push(row);
+      });
+      
+      // 根據格式匯出
+      if (format === 'excel') {
+        exportGuidanceToExcel(data);
+      } else if (format === 'csv') {
+        exportGuidanceToCSV(data);
+      }
+    }
+    
+    // 匯出輔導紀錄為 Excel
+    function exportGuidanceToExcel(data) {
+      if (typeof XLSX === 'undefined') {
+        alert('XLSX 庫尚未載入，請稍後再試');
+        return;
+      }
+      
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '輔導紀錄');
+      
+      const fileName = `${currentCompany.name}_輔導紀錄_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      
+      alert(`已匯出 ${data.length - 1} 筆輔導紀錄`);
+    }
+    
+    // 匯出輔導紀錄為 CSV
+    function exportGuidanceToCSV(data) {
+      // 將資料轉換為 CSV 格式
+      const csvContent = data.map(row => {
+        return row.map(cell => {
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return '"' + cellStr.replace(/"/g, '""') + '"';
+          }
+          return cellStr;
+        }).join(',');
+      }).join('\n');
+      
+      // 加上 BOM 以支援中文
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // 創建下載連結
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      const fileName = `${currentCompany.name}_輔導紀錄_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`已匯出 ${data.length - 1} 筆輔導紀錄`);
     }
 
     // 初始化
