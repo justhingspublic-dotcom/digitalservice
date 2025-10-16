@@ -933,7 +933,6 @@
           console.log('偵測到舊版資料結構，正在更新...');
           const defaultData = getDefaultCompanies();
           localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-          alert('系統已更新公司資料結構，假資料已重新載入');
           return defaultData;
         }
         
