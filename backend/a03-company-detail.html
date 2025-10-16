@@ -42,7 +42,7 @@
           </div>
           <div class="card-body">
             <div class="row g-4">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label small text-muted">公司名稱</label>
                   <div class="fw-bold" id="companyName">-</div>
@@ -56,23 +56,65 @@
                   <div id="companyCity">-</div>
                 </div>
                 <div class="mb-3">
+                  <label class="form-label small text-muted">鄉鎮市區</label>
+                  <div id="companyDistrict">-</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label class="form-label small text-muted">聯絡人姓名</label>
+                  <div id="companyContactPerson">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">聯絡電話</label>
+                  <div id="companyContactPhone">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">Email</label>
+                  <div id="companyContactEmail">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">傳真</label>
+                  <div id="companyFax">-</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
                   <label class="form-label small text-muted">產業別</label>
                   <div id="companyIndustry">-</div>
                 </div>
-              </div>
-              <div class="col-md-6">
                 <div class="mb-3">
                   <label class="form-label small text-muted">員工規模</label>
                   <div id="companyEmployeeRange">-</div>
                 </div>
                 <div class="mb-3">
+                  <label class="form-label small text-muted">資本額</label>
+                  <div id="companyCapital">-</div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small text-muted">公司網址</label>
+                  <div id="companyWebsite">-</div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="mb-3">
+                  <label class="form-label small text-muted">公司地址</label>
+                  <div id="companyAddress">-</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
                   <label class="form-label small text-muted">數位化階段</label>
                   <div id="companyDigitalStage">-</div>
                 </div>
+              </div>
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label small text-muted">加入時間</label>
                   <div id="companyJoinedAt">-</div>
                 </div>
+              </div>
+              <div class="col-md-4">
                 <div class="mb-3">
                   <label class="form-label small text-muted">問卷數量</label>
                   <div id="companySurveyCount">-</div>
@@ -104,6 +146,132 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- 編輯公司 Modal -->
+  <div class="modal fade" id="editCompanyModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">編輯公司資料</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">公司名稱 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editCompanyName" placeholder="請輸入公司名稱">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">統一編號 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editTaxId" placeholder="請輸入8位統一編號" maxlength="8" disabled>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">縣市 <span class="text-danger">*</span></label>
+              <select class="form-select" id="editCity">
+                <option value="">請選擇縣市</option>
+                <option value="台北市">台北市</option>
+                <option value="新北市">新北市</option>
+                <option value="桃園市">桃園市</option>
+                <option value="台中市">台中市</option>
+                <option value="台南市">台南市</option>
+                <option value="高雄市">高雄市</option>
+                <option value="基隆市">基隆市</option>
+                <option value="新竹市">新竹市</option>
+                <option value="嘉義市">嘉義市</option>
+                <option value="新竹縣">新竹縣</option>
+                <option value="苗栗縣">苗栗縣</option>
+                <option value="彰化縣">彰化縣</option>
+                <option value="南投縣">南投縣</option>
+                <option value="雲林縣">雲林縣</option>
+                <option value="嘉義縣">嘉義縣</option>
+                <option value="屏東縣">屏東縣</option>
+                <option value="宜蘭縣">宜蘭縣</option>
+                <option value="花蓮縣">花蓮縣</option>
+                <option value="台東縣">台東縣</option>
+                <option value="澎湖縣">澎湖縣</option>
+                <option value="金門縣">金門縣</option>
+                <option value="連江縣">連江縣</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">鄉鎮市區</label>
+              <input type="text" class="form-control" id="editDistrict" placeholder="請輸入鄉鎮市區">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">資本額</label>
+              <input type="text" class="form-control" id="editCapital" placeholder="例：1000萬">
+            </div>
+            <div class="col-12">
+              <label class="form-label">地址</label>
+              <input type="text" class="form-control" id="editAddress" placeholder="請輸入詳細地址">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">聯絡人姓名 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="editContactPerson" placeholder="請輸入聯絡人姓名">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">聯絡電話 <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" id="editContactPhone" placeholder="例：02-1234-5678">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="editContactEmail" placeholder="example@company.com">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">傳真</label>
+              <input type="tel" class="form-control" id="editFax" placeholder="例：02-1234-5679">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">公司網址</label>
+              <input type="url" class="form-control" id="editWebsite" placeholder="https://www.company.com">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">產業別 <span class="text-danger">*</span></label>
+              <select class="form-select" id="editIndustry">
+                <option value="">請選擇產業別</option>
+                <option value="製造業">製造業</option>
+                <option value="批發及零售業">批發及零售業</option>
+                <option value="住宿及餐飲業">住宿及餐飲業</option>
+                <option value="資訊及通訊傳播業">資訊及通訊傳播業</option>
+                <option value="專業、科學及技術服務業">專業、科學及技術服務業</option>
+                <option value="運輸及倉儲業">運輸及倉儲業</option>
+                <option value="金融及保險業">金融及保險業</option>
+                <option value="農、林、漁、牧業">農、林、漁、牧業</option>
+                <option value="電力及燃氣供應業">電力及燃氣供應業</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">員工規模</label>
+              <select class="form-select" id="editEmployeeRange">
+                <option value="">請選擇員工規模</option>
+                <option value="5人以下">5人以下</option>
+                <option value="6-20人">6-20人</option>
+                <option value="21-50人">21-50人</option>
+                <option value="51-100人">51-100人</option>
+                <option value="101-200人">101-200人</option>
+                <option value="201人以上">201人以上</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">數位化階段</label>
+              <select class="form-select" id="editDigitalStage">
+                <option value="">請選擇數位化階段</option>
+                <option value="尚未開始">尚未開始</option>
+                <option value="初步導入階段">初步導入階段</option>
+                <option value="持續優化階段">持續優化階段</option>
+                <option value="成熟運用階段">成熟運用階段</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="saveEditCompany()">儲存</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -170,6 +338,22 @@
       document.getElementById('companyName').textContent = currentCompany.name || '-';
       document.getElementById('companyTaxId').textContent = currentCompany.taxId || '-';
       document.getElementById('companyCity').textContent = currentCompany.city || '-';
+      document.getElementById('companyDistrict').textContent = currentCompany.district || '-';
+      document.getElementById('companyAddress').textContent = currentCompany.address || '-';
+      document.getElementById('companyContactPerson').textContent = currentCompany.contactPerson || '-';
+      document.getElementById('companyContactPhone').textContent = currentCompany.contactPhone || '-';
+      document.getElementById('companyContactEmail').textContent = currentCompany.contactEmail || '-';
+      document.getElementById('companyFax').textContent = currentCompany.fax || '-';
+      
+      // 網址處理
+      if (currentCompany.website) {
+        document.getElementById('companyWebsite').innerHTML = 
+          `<a href="${escapeHtml(currentCompany.website)}" target="_blank" class="text-decoration-none">${escapeHtml(currentCompany.website)}</a>`;
+      } else {
+        document.getElementById('companyWebsite').textContent = '-';
+      }
+      
+      document.getElementById('companyCapital').textContent = currentCompany.capital || '-';
       document.getElementById('companyIndustry').textContent = currentCompany.industry || '-';
       document.getElementById('companyEmployeeRange').textContent = currentCompany.employeeRange || '-';
       
@@ -682,9 +866,101 @@
       return div.innerHTML;
     }
 
+    let editCompanyModal = null;
+
     // 編輯公司資料
     function editCompanyInfo() {
-      alert('編輯公司資料功能開發中...');
+      if (!currentCompany) return;
+
+      // 填入現有資料
+      document.getElementById('editCompanyName').value = currentCompany.name || '';
+      document.getElementById('editTaxId').value = currentCompany.taxId || '';
+      document.getElementById('editCity').value = currentCompany.city || '';
+      document.getElementById('editDistrict').value = currentCompany.district || '';
+      document.getElementById('editAddress').value = currentCompany.address || '';
+      document.getElementById('editContactPerson').value = currentCompany.contactPerson || '';
+      document.getElementById('editContactPhone').value = currentCompany.contactPhone || '';
+      document.getElementById('editContactEmail').value = currentCompany.contactEmail || '';
+      document.getElementById('editFax').value = currentCompany.fax || '';
+      document.getElementById('editWebsite').value = currentCompany.website || '';
+      document.getElementById('editCapital').value = currentCompany.capital || '';
+      document.getElementById('editIndustry').value = currentCompany.industry || '';
+      document.getElementById('editEmployeeRange').value = currentCompany.employeeRange || '';
+      document.getElementById('editDigitalStage').value = currentCompany.digitalStage || '';
+
+      // 顯示 Modal
+      if (!editCompanyModal) {
+        editCompanyModal = new bootstrap.Modal(document.getElementById('editCompanyModal'));
+      }
+      editCompanyModal.show();
+    }
+
+    // 儲存編輯的公司資料
+    function saveEditCompany() {
+      // 取得表單資料
+      const name = document.getElementById('editCompanyName').value.trim();
+      const city = document.getElementById('editCity').value;
+      const district = document.getElementById('editDistrict').value.trim();
+      const address = document.getElementById('editAddress').value.trim();
+      const contactPerson = document.getElementById('editContactPerson').value.trim();
+      const contactPhone = document.getElementById('editContactPhone').value.trim();
+      const contactEmail = document.getElementById('editContactEmail').value.trim();
+      const fax = document.getElementById('editFax').value.trim();
+      const website = document.getElementById('editWebsite').value.trim();
+      const capital = document.getElementById('editCapital').value.trim();
+      const industry = document.getElementById('editIndustry').value;
+      const employeeRange = document.getElementById('editEmployeeRange').value;
+      const digitalStage = document.getElementById('editDigitalStage').value;
+
+      // 驗證必填欄位
+      if (!name) {
+        alert('請輸入公司名稱');
+        return;
+      }
+      if (!city) {
+        alert('請選擇縣市');
+        return;
+      }
+      if (!contactPerson) {
+        alert('請輸入聯絡人姓名');
+        return;
+      }
+      if (!contactPhone) {
+        alert('請輸入聯絡電話');
+        return;
+      }
+      if (!industry) {
+        alert('請選擇產業別');
+        return;
+      }
+
+      // 更新公司資料
+      currentCompany.name = name;
+      currentCompany.city = city;
+      currentCompany.district = district;
+      currentCompany.address = address;
+      currentCompany.contactPerson = contactPerson;
+      currentCompany.contactPhone = contactPhone;
+      currentCompany.contactEmail = contactEmail;
+      currentCompany.fax = fax;
+      currentCompany.website = website;
+      currentCompany.capital = capital;
+      currentCompany.industry = industry;
+      currentCompany.employeeRange = employeeRange;
+      currentCompany.digitalStage = digitalStage;
+
+      // 儲存到 localStorage
+      saveCompany();
+
+      // 關閉 Modal
+      if (editCompanyModal) {
+        editCompanyModal.hide();
+      }
+
+      // 重新渲染
+      renderCompanyInfo();
+
+      alert('公司資料已更新');
     }
 
     // 新增輔導紀錄

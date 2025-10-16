@@ -47,6 +47,10 @@ function renderSidebar(activePage) {
           <span class="material-icons" style="font-size: 20px;">history_edu</span>
           <span class="nav-link-text">輔導紀錄</span>
         </a>
+        <a class="nav-link ${activePage === 'users' ? 'active' : ''}" href="a07-users.html" title="使用者管理">
+          <span class="material-icons" style="font-size: 20px;">people</span>
+          <span class="nav-link-text">使用者管理</span>
+        </a>
       </nav>
     </aside>
   `;

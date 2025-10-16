@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>使用者管理 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">people</span>
+          <h4 class="mb-0">使用者管理</h4>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="row mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h3 mb-0 text-primary" id="totalUsers">12</div>
+                <div class="text-muted small">總使用者數</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h3 mb-0 text-success" id="activeUsers">10</div>
+                <div class="text-muted small">啟用中</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h3 mb-0 text-warning" id="inactiveUsers">2</div>
+                <div class="text-muted small">已停用</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜尋與篩選 -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">搜尋</label>
+                <input type="search" class="form-control" id="keyword" placeholder="輸入姓名、帳號或 Email" oninput="filterUsers()">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">角色</label>
+                <select class="form-select" id="roleFilter" onchange="filterUsers()">
+                  <option value="">全部</option>
+                  <option value="系統管理員">系統管理員</option>
+                  <option value="資料管理員">資料管理員</option>
+                  <option value="輔導顧問">輔導顧問</option>
+                  <option value="查看者">查看者</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">狀態</label>
+                <select class="form-select" id="statusFilter" onchange="filterUsers()">
+                  <option value="">全部</option>
+                  <option value="啟用">啟用</option>
+                  <option value="停用">停用</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">部門</label>
+                <select class="form-select" id="deptFilter" onchange="filterUsers()">
+                  <option value="">全部</option>
+                  <option value="資訊處">資訊處</option>
+                  <option value="業務處">業務處</option>
+                  <option value="輔導組">輔導組</option>
+                </select>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">clear</span>
+                  清除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 使用者列表 -->
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">使用者列表（<span id="userCount">0</span> 位）</h5>
+            <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">person_add</span>
+              新增使用者
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>帳號</th>
+                    <th>姓名</th>
+                    <th>Email</th>
+                    <th>角色</th>
+                    <th>部門</th>
+                    <th>狀態</th>
+                    <th>最後登入</th>
+                    <th style="width: 200px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">載入中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 新增/編輯使用者 Modal -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userModalTitle">新增使用者</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">帳號 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="modalUsername" placeholder="請輸入登入帳號">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">姓名 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="modalName" placeholder="請輸入真實姓名">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="modalEmail" placeholder="example@email.com">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">電話</label>
+              <input type="tel" class="form-control" id="modalPhone" placeholder="請輸入聯絡電話">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">角色 <span class="text-danger">*</span></label>
+              <select class="form-select" id="modalRole">
+                <option value="">請選擇角色</option>
+                <option value="系統管理員">系統管理員</option>
+                <option value="資料管理員">資料管理員</option>
+                <option value="輔導顧問">輔導顧問</option>
+                <option value="查看者">查看者</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">部門</label>
+              <select class="form-select" id="modalDept">
+                <option value="">請選擇部門</option>
+                <option value="資訊處">資訊處</option>
+                <option value="業務處">業務處</option>
+                <option value="輔導組">輔導組</option>
+                <option value="企劃處">企劃處</option>
+              </select>
+            </div>
+            <div class="col-md-6" id="passwordField">
+              <label class="form-label">密碼 <span class="text-danger">*</span></label>
+              <input type="password" class="form-control" id="modalPassword" placeholder="請輸入密碼（至少 6 位）">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">狀態</label>
+              <select class="form-select" id="modalStatus">
+                <option value="啟用">啟用</option>
+                <option value="停用">停用</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">備註</label>
+              <textarea class="form-control" id="modalNotes" rows="2" placeholder="其他說明或備註"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="saveUser()">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin();
+    initLayout('users');
+
+    const STORAGE_KEY = 'usersStore';
+    let allUsers = [];
+    let editingUserId = null;
+    let userModal = null;
+
+    // 預設假資料
+    function getDefaultUsers() {
+      return [
+        {
+          id: 'user-001',
+          username: 'admin',
+          name: '系統管理員',
+          email: 'admin@example.com',
+          phone: '02-2345-6789',
+          role: '系統管理員',
+          dept: '資訊處',
+          status: '啟用',
+          lastLogin: '2025-10-16T14:30:00',
+          createdAt: '2024-01-01T00:00:00',
+          notes: '系統超級管理員'
+        },
+        {
+          id: 'user-002',
+          username: 'linda.chen',
+          name: '陳麗娜',
+          email: 'linda.chen@example.com',
+          phone: '02-2345-6790',
+          role: '資料管理員',
+          dept: '業務處',
+          status: '啟用',
+          lastLogin: '2025-10-16T10:15:00',
+          createdAt: '2024-03-15T00:00:00',
+          notes: ''
+        },
+        {
+          id: 'user-003',
+          username: 'david.wang',
+          name: '王大衛',
+          email: 'david.wang@example.com',
+          phone: '0912-345-678',
+          role: '輔導顧問',
+          dept: '輔導組',
+          status: '啟用',
+          lastLogin: '2025-10-16T09:20:00',
+          createdAt: '2024-05-20T00:00:00',
+          notes: '專長：餐飲業、零售業'
+        },
+        {
+          id: 'user-004',
+          username: 'emily.liu',
+          name: '劉艾咪',
+          email: 'emily.liu@example.com',
+          phone: '0923-456-789',
+          role: '輔導顧問',
+          dept: '輔導組',
+          status: '啟用',
+          lastLogin: '2025-10-15T16:45:00',
+          createdAt: '2024-06-10T00:00:00',
+          notes: '專長：製造業、科技業'
+        },
+        {
+          id: 'user-005',
+          username: 'kevin.hsu',
+          name: '許凱文',
+          email: 'kevin.hsu@example.com',
+          phone: '02-2345-6791',
+          role: '資料管理員',
+          dept: '業務處',
+          status: '啟用',
+          lastLogin: '2025-10-14T14:20:00',
+          createdAt: '2024-07-01T00:00:00',
+          notes: ''
+        },
+        {
+          id: 'user-006',
+          username: 'sarah.lin',
+          name: '林莎拉',
+          email: 'sarah.lin@example.com',
+          phone: '0934-567-890',
+          role: '輔導顧問',
+          dept: '輔導組',
+          status: '啟用',
+          lastLogin: '2025-10-13T11:30:00',
+          createdAt: '2024-08-15T00:00:00',
+          notes: '專長：服務業、文創產業'
+        },
+        {
+          id: 'user-007',
+          username: 'tony.chen',
+          name: '陳東尼',
+          email: 'tony.chen@example.com',
+          phone: '02-2345-6792',
+          role: '查看者',
+          dept: '企劃處',
+          status: '啟用',
+          lastLogin: '2025-10-12T09:00:00',
+          createdAt: '2024-09-01T00:00:00',
+          notes: ''
+        },
+        {
+          id: 'user-008',
+          username: 'amy.wu',
+          name: '吳艾美',
+          email: 'amy.wu@example.com',
+          phone: '0945-678-901',
+          role: '輔導顧問',
+          dept: '輔導組',
+          status: '啟用',
+          lastLogin: '2025-10-11T15:20:00',
+          createdAt: '2024-09-20T00:00:00',
+          notes: '專長：住宿餐飲業'
+        },
+        {
+          id: 'user-009',
+          username: 'jason.chang',
+          name: '張傑森',
+          email: 'jason.chang@example.com',
+          phone: '02-2345-6793',
+          role: '資料管理員',
+          dept: '資訊處',
+          status: '啟用',
+          lastLogin: '2025-10-10T10:30:00',
+          createdAt: '2024-10-01T00:00:00',
+          notes: ''
+        },
+        {
+          id: 'user-010',
+          username: 'jessica.huang',
+          name: '黃潔西卡',
+          email: 'jessica.huang@example.com',
+          phone: '0956-789-012',
+          role: '查看者',
+          dept: '企劃處',
+          status: '啟用',
+          lastLogin: '2025-10-09T13:45:00',
+          createdAt: '2024-10-10T00:00:00',
+          notes: ''
+        },
+        {
+          id: 'user-011',
+          username: 'michael.lee',
+          name: '李麥可',
+          email: 'michael.lee@example.com',
+          phone: '02-2345-6794',
+          role: '輔導顧問',
+          dept: '輔導組',
+          status: '停用',
+          lastLogin: '2025-09-30T17:00:00',
+          createdAt: '2024-02-01T00:00:00',
+          notes: '已離職'
+        },
+        {
+          id: 'user-012',
+          username: 'mary.chou',
+          name: '周瑪莉',
+          email: 'mary.chou@example.com',
+          phone: '0967-890-123',
+          role: '查看者',
+          dept: '業務處',
+          status: '停用',
+          lastLogin: '2025-08-15T12:00:00',
+          createdAt: '2024-04-01T00:00:00',
+          notes: '長期請假'
+        }
+      ];
+    }
+
+    // 載入使用者資料
+    function loadUsers() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        allUsers = getDefaultUsers();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+      } else {
+        try {
+          allUsers = JSON.parse(raw);
+        } catch (e) {
+          allUsers = getDefaultUsers();
+        }
+      }
+    }
+
+    // 儲存使用者資料
+    function saveUsers() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsers));
+    }
+
+    // 篩選使用者
+    function filterUsers() {
+      const keyword = document.getElementById('keyword').value.toLowerCase();
+      const roleFilter = document.getElementById('roleFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      const deptFilter = document.getElementById('deptFilter').value;
+
+      const filtered = allUsers.filter(user => {
+        const matchKeyword = !keyword || 
+          (user.username && user.username.toLowerCase().includes(keyword)) ||
+          (user.name && user.name.toLowerCase().includes(keyword)) ||
+          (user.email && user.email.toLowerCase().includes(keyword));
+        const matchRole = !roleFilter || user.role === roleFilter;
+        const matchStatus = !statusFilter || user.status === statusFilter;
+        const matchDept = !deptFilter || user.dept === deptFilter;
+        
+        return matchKeyword && matchRole && matchStatus && matchDept;
+      });
+
+      renderUsers(filtered);
+      updateStats();
+    }
+
+    // 渲染使用者列表
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTableBody');
+      const countSpan = document.getElementById('userCount');
+      
+      countSpan.textContent = users.length;
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">找不到符合條件的使用者</td></tr>';
+        return;
+      }
+
+      let html = '';
+      users.forEach((user, index) => {
+        const roleColor = getRoleColor(user.role);
+        const statusColor = user.status === '啟用' ? 'bg-success' : 'bg-secondary';
+        
+        html += `
+          <tr>
+            <td class="text-center">${index + 1}</td>
+            <td><strong>${escapeHtml(user.username)}</strong></td>
+            <td>${escapeHtml(user.name)}</td>
+            <td><small>${escapeHtml(user.email)}</small></td>
+            <td><span class="badge ${roleColor}">${escapeHtml(user.role)}</span></td>
+            <td>${escapeHtml(user.dept || '-')}</td>
+            <td><span class="badge ${statusColor}">${escapeHtml(user.status)}</span></td>
+            <td><small>${formatDateTime(user.lastLogin)}</small></td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser('${user.id}')" title="編輯">
+                <span class="material-icons" style="font-size: 16px;">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-warning me-1" onclick="toggleUserStatus('${user.id}')" title="${user.status === '啟用' ? '停用' : '啟用'}">
+                <span class="material-icons" style="font-size: 16px;">${user.status === '啟用' ? 'lock' : 'lock_open'}</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${user.id}')" title="刪除">
+                <span class="material-icons" style="font-size: 16px;">delete</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 更新統計數據
+    function updateStats() {
+      const total = allUsers.length;
+      const active = allUsers.filter(u => u.status === '啟用').length;
+      const inactive = allUsers.filter(u => u.status === '停用').length;
+
+      document.getElementById('totalUsers').textContent = total;
+      document.getElementById('activeUsers').textContent = active;
+      document.getElementById('inactiveUsers').textContent = inactive;
+    }
+
+    // 取得角色顏色
+    function getRoleColor(role) {
+      switch(role) {
+        case '系統管理員': return 'bg-danger';
+        case '資料管理員': return 'bg-primary';
+        case '輔導顧問': return 'bg-info';
+        case '查看者': return 'bg-secondary';
+        default: return 'bg-light text-dark';
+      }
+    }
+
+    // 顯示新增使用者 Modal
+    function showAddUserModal() {
+      editingUserId = null;
+      document.getElementById('userModalTitle').textContent = '新增使用者';
+      document.getElementById('passwordField').style.display = 'block';
+      
+      // 清空表單
+      document.getElementById('modalUsername').value = '';
+      document.getElementById('modalName').value = '';
+      document.getElementById('modalEmail').value = '';
+      document.getElementById('modalPhone').value = '';
+      document.getElementById('modalRole').value = '';
+      document.getElementById('modalDept').value = '';
+      document.getElementById('modalPassword').value = '';
+      document.getElementById('modalStatus').value = '啟用';
+      document.getElementById('modalNotes').value = '';
+      
+      document.getElementById('modalUsername').disabled = false;
+      
+      if (!userModal) {
+        userModal = new bootstrap.Modal(document.getElementById('userModal'));
+      }
+      userModal.show();
+    }
+
+    // 編輯使用者
+    function editUser(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) {
+        alert('找不到使用者');
+        return;
+      }
+
+      editingUserId = userId;
+      document.getElementById('userModalTitle').textContent = '編輯使用者';
+      document.getElementById('passwordField').style.display = 'none';
+      
+      document.getElementById('modalUsername').value = user.username;
+      document.getElementById('modalName').value = user.name;
+      document.getElementById('modalEmail').value = user.email;
+      document.getElementById('modalPhone').value = user.phone || '';
+      document.getElementById('modalRole').value = user.role;
+      document.getElementById('modalDept').value = user.dept || '';
+      document.getElementById('modalStatus').value = user.status;
+      document.getElementById('modalNotes').value = user.notes || '';
+      
+      document.getElementById('modalUsername').disabled = true;
+      
+      if (!userModal) {
+        userModal = new bootstrap.Modal(document.getElementById('userModal'));
+      }
+      userModal.show();
+    }
+
+    // 儲存使用者
+    function saveUser() {
+      const username = document.getElementById('modalUsername').value.trim();
+      const name = document.getElementById('modalName').value.trim();
+      const email = document.getElementById('modalEmail').value.trim();
+      const phone = document.getElementById('modalPhone').value.trim();
+      const role = document.getElementById('modalRole').value;
+      const dept = document.getElementById('modalDept').value;
+      const password = document.getElementById('modalPassword').value;
+      const status = document.getElementById('modalStatus').value;
+      const notes = document.getElementById('modalNotes').value.trim();
+
+      // 驗證
+      if (!username) {
+        alert('請輸入帳號');
+        return;
+      }
+      if (!name) {
+        alert('請輸入姓名');
+        return;
+      }
+      if (!email) {
+        alert('請輸入 Email');
+        return;
+      }
+      if (!role) {
+        alert('請選擇角色');
+        return;
+      }
+      if (!editingUserId && !password) {
+        alert('請輸入密碼');
+        return;
+      }
+      if (password && password.length < 6) {
+        alert('密碼至少需要 6 位');
+        return;
+      }
+
+      if (editingUserId) {
+        // 編輯模式
+        const user = allUsers.find(u => u.id === editingUserId);
+        if (user) {
+          user.name = name;
+          user.email = email;
+          user.phone = phone;
+          user.role = role;
+          user.dept = dept;
+          user.status = status;
+          user.notes = notes;
+        }
+      } else {
+        // 新增模式
+        // 檢查帳號是否重複
+        if (allUsers.some(u => u.username === username)) {
+          alert('此帳號已存在');
+          return;
+        }
+
+        const newUser = {
+          id: `user-${Date.now()}`,
+          username: username,
+          name: name,
+          email: email,
+          phone: phone,
+          role: role,
+          dept: dept,
+          status: status,
+          lastLogin: null,
+          createdAt: new Date().toISOString(),
+          notes: notes
+        };
+        allUsers.push(newUser);
+      }
+
+      saveUsers();
+      filterUsers();
+      
+      if (userModal) {
+        userModal.hide();
+      }
+      
+      alert(editingUserId ? '使用者已更新' : '使用者已新增');
+    }
+
+    // 切換使用者狀態
+    function toggleUserStatus(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      const newStatus = user.status === '啟用' ? '停用' : '啟用';
+      const confirmMsg = newStatus === '停用' 
+        ? `確定要停用使用者「${user.name}」嗎？停用後該使用者將無法登入系統。`
+        : `確定要啟用使用者「${user.name}」嗎？`;
+
+      if (!confirm(confirmMsg)) return;
+
+      user.status = newStatus;
+      saveUsers();
+      filterUsers();
+    }
+
+    // 刪除使用者
+    function deleteUser(userId) {
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      if (user.username === 'admin') {
+        alert('無法刪除系統管理員帳號');
+        return;
+      }
+
+      if (!confirm(`確定要刪除使用者「${user.name}」嗎？此操作無法復原。`)) return;
+
+      allUsers = allUsers.filter(u => u.id !== userId);
+      saveUsers();
+      filterUsers();
+      alert('使用者已刪除');
+    }
+
+    // 清除篩選
+    function clearFilters() {
+      document.getElementById('keyword').value = '';
+      document.getElementById('roleFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('deptFilter').value = '';
+      filterUsers();
+    }
+
+    // 格式化日期時間
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '從未登入';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      loadUsers();
+      filterUsers();
+    });
+  </script>
+</body>
+</html>
+
