@@ -128,20 +128,24 @@
 
         <!-- 測試帳號提示 -->
         <div class="mt-4 test-account-box">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="d-flex align-items-center mb-2">
-                <span class="material-icons" style="font-size: 18px; color: var(--color-primary); margin-right: 6px;">info</span>
-                <strong style="color: var(--color-text-primary); font-size: 14px;">測試帳號</strong>
-              </div>
-              <small class="text-muted">
-                帳號：<code>admin</code><br>
-                密碼：<code>admin123</code>
-              </small>
-            </div>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount()">
-              <span class="material-icons" style="font-size: 16px; vertical-align: middle;">flash_on</span>
-              快速填入
+          <div class="d-flex align-items-center mb-2">
+            <span class="material-icons" style="font-size: 18px; color: var(--color-primary); margin-right: 6px;">info</span>
+            <strong style="color: var(--color-text-primary); font-size: 14px;">示範帳號</strong>
+          </div>
+          <div class="mb-3">
+            <small class="text-muted d-block">系統管理員：admin / admin123</small>
+            <small class="text-muted d-block">輔導顧問：consultant / consult123</small>
+            <small class="text-muted d-block">分析人員：analyst / analyst123</small>
+          </div>
+          <div class="btn-group w-100" role="group">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('admin')">
+              系統管理員
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('consultant')">
+              輔導顧問
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('analyst')">
+              分析人員
             </button>
           </div>
         </div>
@@ -158,46 +162,87 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    const ROLE_PERMISSIONS = {
+      '系統管理員': ['dashboard', 'companies', 'guidance', 'users'],
+      '輔導顧問': ['companies', 'guidance'],
+      '分析人員': ['dashboard', 'companies']
+    };
+
+    const NAV_ROUTES = {
+      dashboard: 'a04-dashboard.html',
+      companies: 'a02-companies.html',
+      guidance: 'a05-guidance-records.html',
+      users: 'a07-users.html'
+    };
+
+    const demoUsers = {
+      admin: {
+        username: 'admin',
+        password: 'admin123',
+        displayName: '系統管理員',
+        role: '系統管理員'
+      },
+      consultant: {
+        username: 'consultant',
+        password: 'consult123',
+        displayName: '李顧問',
+        role: '輔導顧問'
+      },
+      analyst: {
+        username: 'analyst',
+        password: 'analyst123',
+        displayName: '張分析',
+        role: '分析人員'
+      }
+    };
+
     // 快速填入測試帳號
-    function fillTestAccount() {
-      document.getElementById('username').value = 'admin';
-      document.getElementById('password').value = 'admin123';
+    function fillTestAccount(key = 'admin') {
+      const account = demoUsers[key];
+      if (!account) return;
+
+      document.getElementById('username').value = account.username;
+      document.getElementById('password').value = account.password;
       document.getElementById('username').focus();
     }
 
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
       const rememberMe = document.getElementById('rememberMe').checked;
       const errorMessage = document.getElementById('errorMessage');
 
-      // 簡單的帳密驗證（實際應該呼叫後端 API）
-      if (username === 'admin' && password === 'admin123') {
-        // 登入成功
+      const account = Object.values(demoUsers).find(item => item.username === username);
+
+      if (account && account.password === password) {
+        const permissions = ROLE_PERMISSIONS[account.role] || [];
         const loginData = {
-          username: username,
+          username: account.username,
+          displayName: account.displayName,
+          role: account.role,
           loginTime: new Date().toISOString(),
+          accessibleModules: permissions,
           token: 'mock-jwt-token-' + Date.now()
         };
 
-        // 儲存登入資訊
         if (rememberMe) {
           localStorage.setItem('adminLogin', JSON.stringify(loginData));
         } else {
           sessionStorage.setItem('adminLogin', JSON.stringify(loginData));
         }
 
-        // 導向儀表板
-        window.location.href = 'a04-dashboard.html';
+        const defaultModule = permissions[0] || 'dashboard';
+        const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.dashboard;
+        window.location.href = redirectUrl;
       } else {
-        // 登入失敗
         errorMessage.style.display = 'block';
-        document.getElementById('password').value = '';
-        document.getElementById('password').focus();
+        passwordInput.value = '';
+        passwordInput.focus();
 
-        // 3秒後隱藏錯誤訊息
         setTimeout(() => {
           errorMessage.style.display = 'none';
         }, 3000);
@@ -206,10 +251,17 @@
 
     // 檢查是否已登入
     window.addEventListener('load', function() {
-      const loginData = localStorage.getItem('adminLogin') || sessionStorage.getItem('adminLogin');
+      const loginData = sessionStorage.getItem('adminLogin') || localStorage.getItem('adminLogin');
       if (loginData) {
-        // 已登入，直接導向儀表板
-        window.location.href = 'a04-dashboard.html';
+        try {
+          const parsed = JSON.parse(loginData);
+          const modules = parsed.accessibleModules || [];
+          const defaultModule = modules[0] || 'dashboard';
+          const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.dashboard;
+          window.location.href = redirectUrl;
+        } catch (err) {
+          console.error('登入資訊解析失敗', err);
+        }
       }
     });
 

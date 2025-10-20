@@ -53,6 +53,18 @@
                 </select>
               </div>
             </div>
+            <div class="row g-3 mt-1">
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">聯絡人</label>
+                <input type="text" class="form-control" id="contactFilter" placeholder="輸入聯絡人姓名" oninput="filterCompanies()">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">地區（鄉鎮市區）</label>
+                <select class="form-select" id="districtFilter" onchange="filterCompanies()">
+                  <option value="">全部</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -93,6 +105,7 @@
                     <th>統一編號</th>
                     <th>縣市</th>
                     <th>產業別</th>
+                    <th>聯絡人</th>
                     <th>員工規模</th>
                     <th>數位化階段</th>
                     <th>問卷數</th>
@@ -102,7 +115,7 @@
                 </thead>
                 <tbody id="companiesTableBody">
                   <tr>
-                    <td colspan="10" class="text-center py-4 text-muted">載入中...</td>
+                    <td colspan="11" class="text-center py-4 text-muted">載入中...</td>
                   </tr>
                 </tbody>
               </table>
@@ -243,7 +256,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="../assets/js/layout.js"></script>
   <script>
-    checkLogin();
+    checkLogin('companies');
     initLayout('companies');
 
     const STORAGE_KEY = 'companiesStore';
@@ -272,44 +285,82 @@
     // 初始化篩選選項
     function initFilters() {
       allCompanies = loadCompanies();
+      const citySelect = document.getElementById('cityFilter');
+      const industrySelect = document.getElementById('industryFilter');
+      const districtSelect = document.getElementById('districtFilter');
+
+      if (citySelect) {
+        citySelect.innerHTML = '<option value="">全部</option>';
+      }
+      if (industrySelect) {
+        industrySelect.innerHTML = '<option value="">全部</option>';
+      }
+      if (districtSelect) {
+        districtSelect.innerHTML = '<option value="">全部</option>';
+      }
       
       // 縣市選項
       const cities = [...new Set(allCompanies.map(c => c.city).filter(Boolean))].sort();
-      const citySelect = document.getElementById('cityFilter');
-      cities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        citySelect.appendChild(option);
-      });
+      if (citySelect) {
+        cities.forEach(city => {
+          const option = document.createElement('option');
+          option.value = city;
+          option.textContent = city;
+          citySelect.appendChild(option);
+        });
+      }
       
       // 產業別選項
       const industries = [...new Set(allCompanies.map(c => c.industry).filter(Boolean))].sort();
-      const industrySelect = document.getElementById('industryFilter');
-      industries.forEach(industry => {
-        const option = document.createElement('option');
-        option.value = industry;
-        option.textContent = industry;
-        industrySelect.appendChild(option);
-      });
+      if (industrySelect) {
+        industries.forEach(industry => {
+          const option = document.createElement('option');
+          option.value = industry;
+          option.textContent = industry;
+          industrySelect.appendChild(option);
+        });
+      }
+
+      // 地區選項
+      const districts = [...new Set(allCompanies.map(c => c.district).filter(Boolean))].sort();
+      if (districtSelect) {
+        districts.forEach(district => {
+          const option = document.createElement('option');
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        });
+      }
     }
 
     // 篩選公司
     function filterCompanies() {
-      const keyword = document.getElementById('keyword').value.toLowerCase();
+      const keyword = document.getElementById('keyword').value.trim().toLowerCase();
       const cityFilter = document.getElementById('cityFilter').value;
       const industryFilter = document.getElementById('industryFilter').value;
       const stageFilter = document.getElementById('stageFilter').value;
+      const contactFilter = document.getElementById('contactFilter') ? document.getElementById('contactFilter').value.trim().toLowerCase() : '';
+      const districtFilter = document.getElementById('districtFilter') ? document.getElementById('districtFilter').value : '';
 
       const filtered = allCompanies.filter(company => {
-        const matchKeyword = !keyword || 
-          (company.name && company.name.toLowerCase().includes(keyword)) ||
-          (company.taxId && company.taxId.includes(keyword));
+        const name = (company.name || '').toLowerCase();
+        const taxId = company.taxId || '';
+        const contactPerson = (company.contactPerson || '').toLowerCase();
+        const district = company.district || '';
+
+        const matchKeyword = !keyword ||
+          name.includes(keyword) ||
+          taxId.includes(keyword) ||
+          contactPerson.includes(keyword) ||
+          district.toLowerCase().includes(keyword);
+
         const matchCity = !cityFilter || company.city === cityFilter;
         const matchIndustry = !industryFilter || company.industry === industryFilter;
         const matchStage = !stageFilter || company.digitalStage === stageFilter;
+        const matchContact = !contactFilter || contactPerson.includes(contactFilter);
+        const matchDistrict = !districtFilter || district === districtFilter;
         
-        return matchKeyword && matchCity && matchIndustry && matchStage;
+        return matchKeyword && matchCity && matchIndustry && matchStage && matchContact && matchDistrict;
       });
 
       renderCompanies(filtered);
@@ -323,7 +374,7 @@
       countSpan.textContent = companies.length;
 
       if (companies.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">找不到符合條件的公司</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-4 text-muted">找不到符合條件的公司</td></tr>';
         return;
       }
 
@@ -331,7 +382,7 @@
       companies.forEach((company, index) => {
         const surveyCount = (company.surveys || []).length;
         const stageColor = getStageColor(company.digitalStage);
-        
+
         html += `
           <tr>
             <td class="text-center">${index + 1}</td>
@@ -339,6 +390,7 @@
             <td>${escapeHtml(company.taxId || '-')}</td>
             <td>${escapeHtml(company.city || '-')}</td>
             <td>${escapeHtml(company.industry || '-')}</td>
+            <td>${escapeHtml(company.contactPerson || '-')}</td>
             <td>${escapeHtml(company.employeeRange || '-')}</td>
             <td><span class="badge ${stageColor}">${escapeHtml(company.digitalStage || '未評估')}</span></td>
             <td><span class="badge bg-info">${surveyCount}</span></td>
@@ -769,4 +821,3 @@
   </script>
 </body>
 </html>
-
