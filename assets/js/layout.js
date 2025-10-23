@@ -1,13 +1,13 @@
 // 共用的後台佈局組件，支援角色權限控制
 
 const ROLE_PERMISSIONS = {
-  '系統管理員': ['dashboard', 'companies', 'guidance', 'users'],
+  '系統管理員': ['companies', 'guidance', 'users'],
   '輔導顧問': ['companies', 'guidance'],
-  '分析人員': ['dashboard', 'companies']
+  '分析人員': ['companies']
 };
 
 const NAV_ITEMS = [
-  { key: 'dashboard', label: '儀表板', href: 'a04-dashboard.html', icon: 'dashboard' },
+  // { key: 'dashboard', label: '儀表板', href: 'a04-dashboard.html', icon: 'dashboard' },
   { key: 'companies', label: '所有公司', href: 'a02-companies.html', icon: 'business' },
   { key: 'guidance', label: '輔導紀錄', href: 'a05-guidance-records.html', icon: 'history_edu' },
   { key: 'users', label: '使用者管理', href: 'a07-users.html', icon: 'people' }
@@ -44,7 +44,7 @@ function renderTopbar(user) {
   return `
     <nav class="navbar navbar-expand-lg top-navbar">
       <div class="container-fluid px-4">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="a04-dashboard.html" style="color: #FFFFFF !important;">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="a02-companies.html" style="color: #FFFFFF !important;">
           <span class="material-icons" style="color: #FFFFFF;">analytics</span>
           <strong>商業服務業數位應用資料庫</strong>
         </a>

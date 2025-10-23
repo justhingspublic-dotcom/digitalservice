@@ -163,13 +163,12 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const ROLE_PERMISSIONS = {
-      '系統管理員': ['dashboard', 'companies', 'guidance', 'users'],
+      '系統管理員': ['companies', 'guidance', 'users'],
       '輔導顧問': ['companies', 'guidance'],
-      '分析人員': ['dashboard', 'companies']
+      '分析人員': ['companies']
     };
 
     const NAV_ROUTES = {
-      dashboard: 'a04-dashboard.html',
       companies: 'a02-companies.html',
       guidance: 'a05-guidance-records.html',
       users: 'a07-users.html'
@@ -235,8 +234,8 @@
           sessionStorage.setItem('adminLogin', JSON.stringify(loginData));
         }
 
-        const defaultModule = permissions[0] || 'dashboard';
-        const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.dashboard;
+        const defaultModule = permissions[0] || 'companies';
+        const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.companies;
         window.location.href = redirectUrl;
       } else {
         errorMessage.style.display = 'block';
