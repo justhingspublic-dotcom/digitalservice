@@ -141,8 +141,9 @@
               <input type="text" class="form-control" id="modalCompanyName" placeholder="請輸入公司名稱">
             </div>
             <div class="col-md-6">
-              <label class="form-label">統一編號 <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="modalTaxId" placeholder="請輸入8位統一編號" maxlength="8">
+              <label class="form-label">統一編號</label>
+              <input type="text" class="form-control" id="modalTaxId" placeholder="請輸入8位統一編號（選填）" maxlength="8">
+              <small class="text-muted">若無統編可留空，適用於個人工作室、小攤販等</small>
             </div>
             <div class="col-md-4">
               <label class="form-label">縣市 <span class="text-danger">*</span></label>
@@ -271,15 +272,108 @@
         return [];
       }
       try {
-        const companies = JSON.parse(raw);
+        let companies = JSON.parse(raw);
+        
         // 檢查公司資料是否有新欄位，如果沒有則可能需要更新
         if (companies.length > 0 && !companies[0].hasOwnProperty('contactPerson')) {
           console.warn('公司資料結構需要更新，請訪問儀表板頁面');
         }
+        
+        // 確保無統編的公司存在（用於批量匯入配對）
+        companies = ensureNoTaxIdCompanies(companies);
+        
         return companies;
       } catch (e) {
         return [];
       }
+    }
+
+    // 確保無統編的公司存在
+    function ensureNoTaxIdCompanies(companies) {
+      const noTaxIdCompanies = [
+        {
+          id: 'company-notin-001',
+          name: '小確幸咖啡館',
+          taxId: '',
+          city: '台北市',
+          district: '大安區',
+          address: '和平東路三段88號1樓',
+          contactPerson: '林小美',
+          contactPhone: '02-2366-5566',
+          contactEmail: 'cafe@example.com',
+          fax: '',
+          website: '',
+          capital: '50萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-20T10:00:00',
+          createdAt: '2025-10-20T10:00:00',
+          surveys: [],
+          guidanceRecords: []
+        },
+        {
+          id: 'company-notin-002',
+          name: '巷口小吃店',
+          taxId: '',
+          city: '新北市',
+          district: '三重區',
+          address: '重新路四段168號',
+          contactPerson: '陳大哥',
+          contactPhone: '02-2985-7788',
+          contactEmail: '',
+          fax: '',
+          website: '',
+          capital: '30萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-22T14:30:00',
+          createdAt: '2025-10-22T14:30:00',
+          surveys: [],
+          guidanceRecords: []
+        },
+        {
+          id: 'company-notin-003',
+          name: '美美服飾店',
+          taxId: '',
+          city: '桃園市',
+          district: '中壢區',
+          address: '中央西路299號',
+          contactPerson: '張美美',
+          contactPhone: '03-4567-890',
+          contactEmail: 'fashion@gmail.com',
+          fax: '',
+          website: '',
+          capital: '80萬',
+          industry: '批發及零售業',
+          employeeRange: '6-20人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-18T16:00:00',
+          createdAt: '2025-10-18T16:00:00',
+          surveys: [],
+          guidanceRecords: []
+        }
+      ];
+
+      let hasChanges = false;
+
+      // 檢查每個無統編公司是否存在，不存在則添加
+      noTaxIdCompanies.forEach(noTaxIdCompany => {
+        const exists = companies.some(c => c.id === noTaxIdCompany.id);
+        if (!exists) {
+          companies.push(noTaxIdCompany);
+          hasChanges = true;
+          console.log(`已自動添加無統編公司：${noTaxIdCompany.name}`);
+        }
+      });
+
+      // 如果有變更，儲存回 localStorage
+      if (hasChanges) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+      }
+
+      return companies;
     }
 
     // 初始化篩選選項
@@ -495,14 +589,38 @@
         alert('請輸入公司名稱');
         return;
       }
-      if (!taxId) {
-        alert('請輸入統一編號');
-        return;
+      
+      // 載入現有公司資料
+      const raw = localStorage.getItem(STORAGE_KEY);
+      let companies = [];
+      if (raw) {
+        try {
+          companies = JSON.parse(raw);
+        } catch (e) {
+          companies = [];
+        }
       }
-      if (taxId.length !== 8 || !/^\d{8}$/.test(taxId)) {
-        alert('統一編號必須為8位數字');
-        return;
+      
+      // 統編驗證（非必填，但如果填寫則需驗證格式和重複性）
+      if (taxId) {
+        // 如果有填寫統編，驗證格式
+        if (taxId.length !== 8 || !/^\d{8}$/.test(taxId)) {
+          alert('統一編號格式錯誤，必須為8位數字');
+          return;
+        }
+        
+        // 檢查統編是否重複
+        if (companies.some(c => c.taxId === taxId)) {
+          alert('此統一編號已存在');
+          return;
+        }
+      } else {
+        // 如果沒有填寫統編，給予提醒
+        if (!confirm('⚠️ 您未填寫統一編號\n\n這將導致：\n• 無法透過統編自動配對批量匯入的問卷資料\n• 需要使用手動配對功能\n\n適用對象：個人工作室、小攤販、無統編企業\n\n確定要繼續新增嗎？')) {
+          return;
+        }
       }
+      
       if (!city) {
         alert('請選擇縣市');
         return;
@@ -517,22 +635,6 @@
       }
       if (!industry) {
         alert('請選擇產業別');
-        return;
-      }
-
-      // 檢查統編是否重複
-      const raw = localStorage.getItem(STORAGE_KEY);
-      let companies = [];
-      if (raw) {
-        try {
-          companies = JSON.parse(raw);
-        } catch (e) {
-          companies = [];
-        }
-      }
-
-      if (companies.some(c => c.taxId === taxId)) {
-        alert('此統一編號已存在');
         return;
       }
 

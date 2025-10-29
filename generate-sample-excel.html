@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生成多公司問卷範例檔案</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      padding: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    .btn-generate {
+      padding: 15px 40px;
+      font-size: 18px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+    }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+    }
+    .info-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+    }
+    .company-item {
+      padding: 10px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .company-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-4">🎯 生成多公司問卷範例檔案</h1>
+    
+    <div class="info-box mb-4">
+      <h5>📋 檔案說明</h5>
+      <p class="mb-2">此工具會生成一個包含多家公司問卷回答的 Excel 檔案，用於測試批量匯入功能。</p>
+      <p class="mb-0"><strong>重要：</strong>檔案中會包含「統一編號」欄位，系統會根據此欄位將資料拆分到對應的公司。</p>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">📊 範例資料內容</h5>
+      </div>
+      <div class="card-body">
+        <p><strong>問卷主題：</strong>2025 Q4 餐飲業數位化現況調查</p>
+        <p><strong>參與公司：</strong>8 家公司（含 3 家無統編公司）</p>
+        <p><strong>總回答數：</strong>25 筆（含 2 筆錯誤測試資料）</p>
+        <p><strong>問卷欄位：</strong></p>
+        <ul>
+          <li>統一編號（必要欄位，用於比對公司）</li>
+          <li>企業名稱</li>
+          <li>所在縣市</li>
+          <li>員工人數</li>
+          <li>是否使用數位點餐系統</li>
+          <li>是否使用線上訂位系統</li>
+          <li>年營業額</li>
+          <li>數位化預算</li>
+          <li>主要痛點</li>
+          <li>希望導入的功能</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">🏢 包含的公司與回答數</h5>
+      </div>
+      <div class="card-body" id="companyList">
+        <div class="company-item">
+          <strong>台灣製造股份有限公司</strong> - 統編：12345678 <span class="badge bg-info">3筆回答</span>
+        </div>
+        <div class="company-item">
+          <strong>新北科技有限公司</strong> - 統編：23456789 <span class="badge bg-info">2筆回答</span>
+        </div>
+        <div class="company-item">
+          <strong>桃園餐飲集團</strong> - 統編：34567890 <span class="badge bg-info">4筆回答</span>
+        </div>
+        <div class="company-item">
+          <strong>台中批發貿易行</strong> - 統編：45678901 <span class="badge bg-info">2筆回答</span>
+        </div>
+        <div class="company-item">
+          <strong>雲林食品加工廠</strong> - 統編：11223344 <span class="badge bg-info">3筆回答</span>
+        </div>
+        <hr>
+        <h6 class="text-muted">無統編公司（使用公司名稱比對）</h6>
+        <div class="company-item" style="background-color: #fff3cd;">
+          <strong>小確幸咖啡館</strong> - 統編：（無） <span class="badge bg-info">3筆回答</span>
+        </div>
+        <div class="company-item" style="background-color: #fff3cd;">
+          <strong>巷口小吃店</strong> - 統編：（無） <span class="badge bg-info">2筆回答</span>
+        </div>
+        <div class="company-item" style="background-color: #fff3cd;">
+          <strong>美美服飾店</strong> - 統編：（無） <span class="badge bg-info">4筆回答</span>
+        </div>
+        <hr>
+        <div class="company-item text-danger">
+          <strong>測試資料（無法比對）</strong> - 統編：99999999（不存在） <span class="badge bg-danger">2筆</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button class="btn btn-primary btn-generate" onclick="generateExcel()">
+        📥 生成並下載 Excel 檔案
+      </button>
+    </div>
+
+    <div class="alert alert-info mt-4">
+      <h6>💡 使用步驟</h6>
+      <ol>
+        <li>點擊上方按鈕，下載範例 Excel 檔案（含 17 筆資料）</li>
+        <li>進入「問卷資料庫」→ 新增一份問卷（混合問卷）</li>
+        <li>點擊該問卷的「查看詳情」</li>
+        <li>點擊「匯入」按鈕，選擇剛下載的檔案</li>
+        <li>輸入建立者名稱</li>
+        <li>系統會自動：
+          <ul>
+            <li>✅ 比對統一編號，成功配對 14 筆資料到 5 家公司</li>
+            <li>⚠️ 顯示警告：有 3 筆資料無法比對（用於測試錯誤處理）</li>
+            <li>✅ 詢問是否繼續匯入</li>
+            <li>✅ 將資料自動拆分到各公司</li>
+          </ul>
+        </li>
+        <li>完成後：
+          <ul>
+            <li>在問卷詳情頁可以看到所有 14 筆回答（聚合顯示）</li>
+            <li>在各公司詳情頁只看到各自的回答（例如：台灣製造看到 3 筆）</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    function generateExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('Excel 工具尚未載入，請重新整理頁面');
+        return;
+      }
+
+      // 定義表頭
+      const headers = [
+        '統一編號',
+        '企業名稱',
+        '所在縣市',
+        '員工人數',
+        '是否使用數位點餐系統',
+        '是否使用線上訂位系統',
+        '年營業額',
+        '數位化預算',
+        '主要痛點',
+        '希望導入的功能'
+      ];
+
+      // 定義資料（多家公司的多筆問卷回答）
+      const data = [
+        // 台灣製造股份有限公司 - 3筆
+        [
+          '12345678',
+          '台灣製造股份有限公司',
+          '台北市',
+          '85',
+          '是',
+          '否',
+          '5000萬',
+          '200萬',
+          '訂單管理效率低、庫存控制困難',
+          'ERP系統、自動化生產線監控'
+        ],
+        [
+          '12345678',
+          '台灣製造股份有限公司',
+          '台北市',
+          '85',
+          '否',
+          '否',
+          '5000萬',
+          '200萬',
+          '生產排程人工化、設備維護無紀錄',
+          '生產管理系統、設備管理系統'
+        ],
+        [
+          '12345678',
+          '台灣製造股份有限公司',
+          '台北市',
+          '85',
+          '是',
+          '是',
+          '5000萬',
+          '200萬',
+          '品質檢測流程繁瑣',
+          '品質管理系統、自動檢測設備'
+        ],
+        // 新北科技有限公司 - 2筆
+        [
+          '23456789',
+          '新北科技有限公司',
+          '新北市',
+          '35',
+          '是',
+          '是',
+          '2000萬',
+          '100萬',
+          '客戶資料分散、行銷效果難以追蹤',
+          'CRM系統、數據分析工具'
+        ],
+        [
+          '23456789',
+          '新北科技有限公司',
+          '新北市',
+          '35',
+          '否',
+          '是',
+          '2000萬',
+          '100萬',
+          '專案管理混亂、時程掌控不易',
+          '專案管理系統、時間追蹤工具'
+        ],
+        // 桃園餐飲集團 - 4筆
+        [
+          '34567890',
+          '桃園餐飲集團',
+          '桃園市',
+          '150',
+          '是',
+          '是',
+          '1.2億',
+          '500萬',
+          '多店管理困難、外送平台整合問題',
+          '多店管理系統、外送平台整合、智能排班'
+        ],
+        [
+          '34567890',
+          '桃園餐飲集團',
+          '桃園市',
+          '150',
+          '是',
+          '否',
+          '1.2億',
+          '500萬',
+          '員工排班耗時、薪資計算複雜',
+          '人力資源管理系統、自動排班系統'
+        ],
+        [
+          '34567890',
+          '桃園餐飲集團',
+          '桃園市',
+          '150',
+          '否',
+          '是',
+          '1.2億',
+          '500萬',
+          '食材庫存管理不易、成本難以控制',
+          '智慧庫存系統、成本分析工具'
+        ],
+        [
+          '34567890',
+          '桃園餐飲集團',
+          '桃園市',
+          '150',
+          '是',
+          '是',
+          '1.2億',
+          '500萬',
+          '會員管理系統老舊、缺乏行動支付',
+          '會員CRM系統、行動支付整合'
+        ],
+        // 台中批發貿易行 - 2筆
+        [
+          '45678901',
+          '台中批發貿易行',
+          '台中市',
+          '12',
+          '否',
+          '否',
+          '800萬',
+          '50萬',
+          '進銷存管理人工化、報表製作耗時',
+          '進銷存系統、電子發票系統'
+        ],
+        [
+          '45678901',
+          '台中批發貿易行',
+          '台中市',
+          '12',
+          '否',
+          '否',
+          '800萬',
+          '50萬',
+          '客戶訂單處理慢、缺貨資訊不即時',
+          '訂單管理系統、即時庫存查詢'
+        ],
+        // 雲林食品加工廠 - 3筆
+        [
+          '11223344',
+          '雲林食品加工廠',
+          '雲林縣',
+          '28',
+          '否',
+          '否',
+          '1500萬',
+          '150萬',
+          '食品安全追溯困難、生產流程紙本化',
+          '食品履歷系統、產線數位化、品質管理系統'
+        ],
+        [
+          '11223344',
+          '雲林食品加工廠',
+          '雲林縣',
+          '28',
+          '是',
+          '否',
+          '1500萬',
+          '150萬',
+          '原料採購無系統化管理',
+          '供應商管理系統、採購自動化'
+        ],
+        [
+          '11223344',
+          '雲林食品加工廠',
+          '雲林縣',
+          '28',
+          '否',
+          '是',
+          '1500萬',
+          '150萬',
+          '產品檢驗報告管理混亂',
+          '實驗室管理系統、檢驗報告數位化'
+        ],
+        // 無統編的公司資料（系統中有登記但無統編）
+        // 小確幸咖啡館 - 3筆
+        [
+          '',
+          '小確幸咖啡館',
+          '台北市',
+          '4',
+          '否',
+          '否',
+          '50萬',
+          '10萬',
+          '訂單管理手寫、沒有會員系統',
+          '簡易POS系統、會員管理'
+        ],
+        [
+          '',
+          '小確幸咖啡館',
+          '台北市',
+          '4',
+          '是',
+          '否',
+          '50萬',
+          '10萬',
+          '外送平台抽成太高',
+          '自有外送系統、Line官方帳號'
+        ],
+        [
+          '',
+          '小確幸咖啡館',
+          '台北市',
+          '4',
+          '否',
+          '是',
+          '50萬',
+          '10萬',
+          '庫存管理混亂',
+          '庫存管理系統'
+        ],
+        // 巷口小吃店 - 2筆
+        [
+          '',
+          '巷口小吃店',
+          '新北市',
+          '3',
+          '否',
+          '否',
+          '30萬',
+          '5萬',
+          '完全手工記帳、現金交易為主',
+          '電子支付、簡易記帳系統'
+        ],
+        [
+          '',
+          '巷口小吃店',
+          '新北市',
+          '3',
+          '是',
+          '否',
+          '30萬',
+          '5萬',
+          '想要有線上菜單',
+          '線上菜單系統、QR Code點餐'
+        ],
+        // 美美服飾店 - 4筆
+        [
+          '',
+          '美美服飾店',
+          '桃園市',
+          '8',
+          '是',
+          '是',
+          '80萬',
+          '20萬',
+          '實體店面客流減少、需要發展電商',
+          '電商平台串接、社群行銷工具'
+        ],
+        [
+          '',
+          '美美服飾店',
+          '桃園市',
+          '8',
+          '否',
+          '否',
+          '80萬',
+          '20萬',
+          '庫存管理困難、經常缺貨或積貨',
+          '庫存管理系統、進銷存系統'
+        ],
+        [
+          '',
+          '美美服飾店',
+          '桃園市',
+          '8',
+          '是',
+          '否',
+          '80萬',
+          '20萬',
+          '會員資料分散在紙本',
+          '會員管理系統、CRM'
+        ],
+        [
+          '',
+          '美美服飾店',
+          '桃園市',
+          '8',
+          '否',
+          '是',
+          '80萬',
+          '20萬',
+          '員工排班人工作業',
+          '排班系統、薪資管理'
+        ],
+        // 測試資料：不存在的公司 - 2筆（用於測試錯誤處理）
+        [
+          '99999999',
+          '不存在的公司',
+          '台南市',
+          '50',
+          '否',
+          '是',
+          '3000萬',
+          '150萬',
+          '數位轉型方向不明確',
+          '數位轉型顧問服務'
+        ],
+        [
+          '99999999',
+          '不存在的公司',
+          '台南市',
+          '50',
+          '是',
+          '是',
+          '3000萬',
+          '150萬',
+          '系統整合困難',
+          '系統整合平台'
+        ]
+      ];
+
+      // 建立工作表資料
+      const wsData = [headers, ...data];
+
+      // 建立工作表
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // 設定欄位寬度
+      ws['!cols'] = [
+        { wch: 12 },  // 統一編號
+        { wch: 25 },  // 企業名稱
+        { wch: 10 },  // 所在縣市
+        { wch: 10 },  // 員工人數
+        { wch: 20 },  // 是否使用數位點餐系統
+        { wch: 20 },  // 是否使用線上訂位系統
+        { wch: 12 },  // 年營業額
+        { wch: 12 },  // 數位化預算
+        { wch: 35 },  // 主要痛點
+        { wch: 40 }   // 希望導入的功能
+      ];
+
+      // 建立工作簿
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '問卷回答');
+
+      // 下載檔案
+      const fileName = `多公司問卷範例_2025Q4餐飲業調查_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      // 顯示成功訊息
+      setTimeout(() => {
+        alert('✅ Excel 檔案已生成並下載！\n\n檔案包含：\n━━━━━━━━━━━━━━━━━━━━\n📊 有統編公司 (14筆)\n  · 台灣製造 (3筆)\n  · 新北科技 (2筆)\n  · 桃園餐飲 (4筆)\n  · 台中批發 (2筆)\n  · 雲林食品 (3筆)\n━━━━━━━━━━━━━━━━━━━━\n🏪 無統編公司 (9筆)\n  · 小確幸咖啡館 (3筆)\n  · 巷口小吃店 (2筆)\n  · 美美服飾店 (4筆)\n━━━━━━━━━━━━━━━━━━━━\n❌ 測試錯誤資料 (2筆)\n  · 不存在的公司 (統編99999999)\n━━━━━━━━━━━━━━━━━━━━\n\n總計：25 筆資料\n10 個問卷欄位\n\n請前往「問卷資料庫」測試批量匯入功能！');
+      }, 500);
+    }
+
+    // 頁面載入時檢查 XLSX 是否載入
+    window.addEventListener('load', function() {
+      if (typeof XLSX === 'undefined') {
+        alert('警告：Excel 工具載入失敗，請檢查網路連線並重新整理頁面');
+      }
+    });
+  </script>
+</body>
+</html>
+

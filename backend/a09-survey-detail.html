@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>問卷詳情 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid" id="surveyDetailContainer">
+        <!-- 動態內容將在這裡渲染 -->
+      </div>
+    </main>
+  </div>
+
+  <!-- 篩選 Modal -->
+  <div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">進階篩選</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="filterModalBody">
+          <!-- 動態內容 -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="clearAllFilters()">清除篩選</button>
+          <button type="button" class="btn btn-primary" onclick="applyFilters()">套用篩選</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin('surveys');
+    initLayout('surveys');
+
+    const COMPANIES_STORAGE_KEY = 'companiesStore';
+    const SURVEY_DETAIL_PAGE_SIZE = 10;
+
+    let currentSurvey = null;
+    let currentCompany = null; // 用於單一公司問卷
+    let allCompanies = []; // 儲存所有公司（用於全局問卷）
+    let surveyDetailPage = 1;
+    let filterConditions = {};
+    let activeFilterCount = 0;
+    let visibleFields = [];
+    let filterModal = null;
+
+    // 從 URL 取得問卷 ID
+    function getSurveyIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    // 載入問卷資料
+    function loadSurveyData() {
+      const surveyId = getSurveyIdFromUrl();
+      if (!surveyId) {
+        alert('找不到問卷 ID');
+        window.location.href = 'a08-surveys.html';
+        return;
+      }
+
+      const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+      if (!companiesRaw) {
+        alert('找不到公司資料');
+        return;
+      }
+
+      try {
+        const companies = JSON.parse(companiesRaw);
+        allCompanies = companies;
+        
+        let foundSurvey = null;
+        let foundCompany = null;
+
+        // 從公司中尋找此問卷
+        for (const company of companies) {
+          const surveys = company.surveys || [];
+          const surveyIndex = surveys.findIndex(s => s.id === surveyId);
+          if (surveyIndex !== -1) {
+            foundSurvey = surveys[surveyIndex];
+            foundCompany = company;
+            break;
+          }
+        }
+
+        // 如果在公司中找不到，檢查全局問卷列表
+        if (!foundSurvey) {
+          const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+          if (globalSurveysRaw) {
+            const globalSurveys = JSON.parse(globalSurveysRaw);
+            foundSurvey = globalSurveys.find(s => s.id === surveyId);
+          }
+        }
+
+        if (!foundSurvey) {
+          alert('找不到此問卷');
+          window.location.href = 'a08-surveys.html';
+          return;
+        }
+
+        currentSurvey = foundSurvey;
+        currentCompany = foundCompany;
+
+        // 如果是全局問卷，聚合所有公司的回答
+        if (currentSurvey.isGlobal || currentSurvey.belongsTo === 'global') {
+          aggregateGlobalSurveyData(surveyId, companies);
+        }
+
+        renderSurveyDetail();
+      } catch (e) {
+        console.error('載入問卷資料失敗', e);
+        alert('載入問卷資料失敗');
+      }
+    }
+
+    // 聚合全局問卷的所有公司資料
+    function aggregateGlobalSurveyData(surveyId, companies) {
+      const allResponses = [];
+      const allFields = currentSurvey.fields || [];
+
+      // 1. 收集各公司中已配對的回答
+      companies.forEach(company => {
+        const surveys = company.surveys || [];
+        const survey = surveys.find(s => s.id === surveyId);
+        if (survey && survey.responses) {
+          // 為每個回答加上公司資訊
+          survey.responses.forEach(response => {
+            allResponses.push({
+              ...response,
+              _companyId: company.id,
+              _companyName: company.name
+            });
+          });
+
+          // 合併欄位定義（以防不同公司有不同的欄位）
+          if (survey.fields && survey.fields.length > allFields.length) {
+            currentSurvey.fields = survey.fields;
+          }
+        }
+      });
+
+      // 2. 加入全局問卷中未配對的回答
+      const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+      if (globalSurveysRaw) {
+        try {
+          const globalSurveys = JSON.parse(globalSurveysRaw);
+          const globalSurvey = globalSurveys.find(s => s.id === surveyId);
+          if (globalSurvey && globalSurvey.responses && globalSurvey.responses.length > 0) {
+            // 將未配對的資料加入（這些資料已有 _companyId: 'unmatched'）
+            globalSurvey.responses.forEach(response => {
+              allResponses.push(response);
+            });
+            
+            // 確保使用最新的欄位定義
+            if (globalSurvey.fields && globalSurvey.fields.length > 0) {
+              currentSurvey.fields = globalSurvey.fields;
+            }
+          }
+        } catch (e) {
+          console.error('載入全局問卷未配對資料失敗', e);
+        }
+      }
+
+      // 使用聚合後的回答（包含已配對和未配對）
+      currentSurvey.responses = allResponses;
+    }
+
+    // 渲染問卷詳情
+    function renderSurveyDetail() {
+      const container = document.getElementById('surveyDetailContainer');
+      const survey = currentSurvey;
+      const fields = survey.fields || [];
+      const responses = survey.responses || [];
+      const isGlobal = survey.isGlobal || survey.belongsTo === 'global';
+      
+      // 第一次進入時，初始化為顯示所有欄位
+      if (visibleFields.length === 0 && fields.length > 0) {
+        visibleFields = fields.map(f => f.id);
+      }
+
+      let html = `
+        <!-- 返回按鈕 -->
+        <div class="mb-3">
+          <button class="btn btn-outline-secondary btn-sm" onclick="goBack()">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">arrow_back</span>
+            返回問卷資料庫
+          </button>
+        </div>
+
+        <!-- 問卷標題 -->
+        <div class="d-flex flex-wrap gap-3 align-items-center mb-4">
+          <div class="flex-grow-1">
+            <h1 class="h4 mb-1 fw-bold">${escapeHtml(survey.name || '未命名')}</h1>
+            <p class="text-muted small mb-0">${escapeHtml(survey.description || '無說明')}</p>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            ${isGlobal ? '<span class="badge fs-6" style="background-color: #D2691E; color: white;">混合問卷</span>' : '<span class="badge bg-secondary fs-6">單一公司</span>'}
+            <span class="badge ${survey.status === '進行中' ? 'bg-success' : 'bg-secondary'} fs-6">${survey.status || '草稿'}</span>
+            <input type="file" id="importFile-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('importFile-${survey.id}').click()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+              匯入
+            </button>
+            <div class="btn-group">
+              <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
+              匯出
+            </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="exportData('excel'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">table_chart</span>
+                  匯出 Excel
+                </a></li>
+                <li><a class="dropdown-item" href="#" onclick="exportData('csv'); return false;">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 8px;">description</span>
+                  匯出 CSV
+                </a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="text-muted small mb-1">負責單位</div>
+                <div class="fw-bold">${escapeHtml(survey.owner || '未指派')}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="text-muted small mb-1">建立者 / 建立日期</div>
+                <div class="fw-bold">${escapeHtml(survey.creator || '-')}</div>
+                <div class="text-muted small">${formatDate(survey.createdAt)}</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="h5 mb-0 text-primary">${fields.length}</div>
+                <div class="text-muted small">欄位數</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="h5 mb-0 text-success">${responses.length}</div>
+                <div class="text-muted small">回覆數</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="card h-100">
+              <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 100px;">
+                <div class="h5 mb-0 text-info">${(survey.importHistory || []).length}</div>
+                <div class="text-muted small">匯入次數</div>
+              </div>
+            </div>
+          </div>
+              </div>
+      `;
+
+      // 匯入歷史記錄
+      const importHistory = survey.importHistory || [];
+      if (importHistory.length > 0) {
+        const collapseId = `importHistory-${survey.id}`;
+        html += `
+        <div class="card mb-4">
+          <div class="card-header bg-white" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold">
+                <span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">history</span>
+                匯入歷史記錄（${importHistory.length} 次）
+              </h6>
+              <span class="material-icons" style="font-size: 20px; color: #666;">expand_more</span>
+            </div>
+          </div>
+          <div class="collapse" id="${collapseId}">
+            <div class="card-body p-0">
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="table-light" style="position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                      <th style="width: 50px;">#</th>
+                      <th>檔案名稱</th>
+                      <th>上傳者</th>
+                      <th>上傳時間</th>
+                      <th class="text-center">匯入筆數</th>
+                      <th class="text-center">欄位數</th>
+                      <th style="width: 100px;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+        `;
+        
+        importHistory.forEach((record, index) => {
+          html += `
+                    <tr>
+                      <td class="text-center">${index + 1}</td>
+                      <td>
+                        <span class="material-icons" style="font-size: 16px; vertical-align: middle; color: #4CAF50; margin-right: 4px;">insert_drive_file</span>
+                        ${escapeHtml(record.fileName)}
+                      </td>
+                      <td>${escapeHtml(record.uploadedBy)}</td>
+                      <td>${formatDateTime(record.uploadedAt)}</td>
+                      <td class="text-center"><span class="badge bg-primary">${record.recordCount}</span></td>
+                      <td class="text-center"><span class="badge bg-info">${record.fieldCount}</span></td>
+                      <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteImportRecord('${record.id}')" title="刪除記錄">
+                          <span class="material-icons" style="font-size: 16px;">delete</span>
+                        </button>
+                      </td>
+                    </tr>
+          `;
+        });
+        
+        html += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      }
+
+      if (fields.length === 0) {
+        html += `
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <div class="mb-3">
+              <span class="material-icons" style="font-size: 64px; color: var(--color-border);">description</span>
+            </div>
+            <h5>尚無問卷資料</h5>
+            <p class="text-muted mb-3">此問卷尚未匯入任何欄位定義和回覆資料</p>
+            <input type="file" id="importFileEmpty-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
+            <button class="btn btn-primary" onclick="document.getElementById('importFileEmpty-${survey.id}').click()">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">download</span>
+              立即匯入
+            </button>
+          </div>
+        </div>
+        `;
+      } else {
+        const filteredResponses = filterSurveyResponses(responses, fields);
+        const totalPages = Math.max(1, Math.ceil(filteredResponses.length / SURVEY_DETAIL_PAGE_SIZE));
+        surveyDetailPage = Math.min(surveyDetailPage, totalPages);
+        const start = (surveyDetailPage - 1) * SURVEY_DETAIL_PAGE_SIZE;
+        const pageData = filteredResponses.slice(start, start + SURVEY_DETAIL_PAGE_SIZE);
+
+        // 計算未配對數量
+        const unmatchedCount = isGlobal ? responses.filter(r => r._companyId === 'unmatched').length : 0;
+        
+        html += `
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0 fw-bold">
+                問卷回覆 (${filteredResponses.length})
+                ${unmatchedCount > 0 ? `<span class="badge bg-warning text-dark ms-2">${unmatchedCount} 筆待配對</span>` : ''}
+              </h6>
+              <div class="d-flex align-items-center gap-2">
+                ${unmatchedCount > 0 ? `
+                  <div class="d-flex align-items-center gap-2">
+                    <select id="batchMatchCompany" class="form-select form-select-sm" style="width: 220px;">
+                      <option value="">選擇公司進行批量配對</option>
+                      ${(() => {
+                        const companies = JSON.parse(localStorage.getItem('companiesStore') || '[]');
+                        return companies.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.taxId ? ` (${c.taxId})` : ''}</option>`).join('');
+                      })()}
+                    </select>
+                    <button class="btn btn-success btn-sm" onclick="saveAllMatches()" title="儲存所有配對（包含批量和個別配對）">
+                      <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">save</span>
+                      儲存所有配對
+                    </button>
+                  </div>
+                ` : ''}
+                <button class="btn btn-outline-primary btn-sm" onclick="openFilterModal()">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">filter_list</span>
+                  篩選${activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0" style="overflow-x: auto; overflow-y: visible;">
+              <table class="table table-bordered table-hover mb-0">
+        `;
+
+        if (pageData.length === 0) {
+          html += `
+                <tbody>
+                  <tr>
+                    <td colspan="100" class="text-center py-5 text-muted">
+                      ${responses.length === 0 ? '尚無問卷回覆' : '找不到符合條件的資料'}
+                    </td>
+                  </tr>
+                </tbody>
+          `;
+        } else {
+          // 只顯示選中的欄位
+          const displayFields = fields.filter(f => visibleFields.length === 0 || visibleFields.includes(f.id));
+          
+          html += `
+                <thead class="table-light">
+                  <tr>
+                    ${isGlobal && unmatchedCount > 0 ? `<th class="text-center" style="width: 40px; vertical-align: middle;">
+                      <input type="checkbox" id="selectAllUnmatched" onchange="toggleAllUnmatched(this.checked)" title="全選未配對項目">
+                    </th>` : ''}
+                    <th class="text-center" style="min-width: 60px; white-space: nowrap; vertical-align: middle;">#</th>
+                    <th class="text-center" style="min-width: 120px; white-space: nowrap; vertical-align: middle;">問卷編號</th>
+                    <th class="text-center" style="min-width: 150px; white-space: nowrap; vertical-align: middle;">提交時間</th>
+          `;
+          
+          // 如果是全局問卷，加入公司欄位
+          if (isGlobal) {
+            html += `<th class="text-center" style="min-width: 250px; white-space: nowrap; vertical-align: middle;">所屬公司</th>`;
+          }
+          
+          displayFields.forEach(field => {
+            html += `<th style="min-width: 200px; white-space: nowrap;">${escapeHtml(field.label)}</th>`;
+          });
+          
+          html += `
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          pageData.forEach((response, index) => {
+            const isUnmatched = response._companyId === 'unmatched';
+            html += `
+                  <tr>
+                    ${isGlobal && unmatchedCount > 0 ? `<td class="text-center">
+                      ${isUnmatched ? `<input type="checkbox" class="unmatched-checkbox" data-response-id="${response.id}">` : ''}
+                    </td>` : ''}
+                    <td class="text-center" style="white-space: nowrap;">${start + index + 1}</td>
+                    <td style="white-space: nowrap;">${escapeHtml(response.id)}</td>
+                    <td style="white-space: nowrap;">${formatDateTime(response.submittedAt)}</td>
+            `;
+
+            // 如果是全局問卷，顯示公司名稱或配對下拉選單
+            if (isGlobal) {
+              if (isUnmatched) {
+                // 未配對的資料，顯示下拉選單
+                const companies = JSON.parse(localStorage.getItem('companiesStore') || '[]');
+                html += `<td style="white-space: nowrap;">
+                  <select class="form-select form-select-sm company-matcher" data-response-id="${response.id}" style="min-width: 200px;">
+                    <option value="">-- 請選擇公司 --</option>
+                    ${companies.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.taxId ? ` (${c.taxId})` : ''}</option>`).join('')}
+                  </select>
+                </td>`;
+              } else {
+                // 已配對的資料，顯示公司名稱
+                html += `<td style="white-space: nowrap;">
+                  <span class="badge bg-success" style="font-size: 13px;">${escapeHtml(response._companyName || '-')}</span>
+                </td>`;
+              }
+            }
+
+            displayFields.forEach(field => {
+              const value = response.values[field.id];
+              html += `<td style="min-width: 200px; max-width: 500px; word-wrap: break-word; white-space: normal;">${formatFieldValue(value, field)}</td>`;
+            });
+            
+            html += `</tr>`;
+          });
+
+          html += `
+                </tbody>
+          `;
+        }
+
+        html += `
+              </table>
+          </div>
+        `;
+
+        if (totalPages > 1) {
+          html += `
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">顯示第 ${start + 1} - ${start + pageData.length} 筆，共 ${filteredResponses.length} 筆</small>
+              <nav>
+                <ul class="pagination pagination-sm mb-0">
+                  ${buildSurveyDetailPagination(totalPages)}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          `;
+        } else if (pageData.length > 0) {
+          html += `
+          <div class="card-footer bg-white">
+            <small class="text-muted">共 ${filteredResponses.length} 筆</small>
+          </div>
+          `;
+        }
+        
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // 篩選問卷回覆
+    function filterSurveyResponses(responses, fields) {
+      // 沒有任何篩選條件，返回全部
+      const activeFilters = Object.entries(filterConditions).filter(([fieldId, values]) => values && values.length > 0);
+      
+      if (activeFilters.length === 0) {
+        return responses;
+      }
+      
+      return responses.filter(response => {
+        // 檢查所有欄位的篩選條件（不同欄位之間為 AND）
+        return activeFilters.every(([fieldId, selectedValues]) => {
+          // 特殊處理：配對狀態篩選
+          if (fieldId === '_matchStatus') {
+            const isMatched = response._companyId && response._companyId !== 'unmatched';
+            return selectedValues.some(value => {
+              if (value === 'matched') return isMatched;
+              if (value === 'unmatched') return response._companyId === 'unmatched';
+              return false;
+            });
+          }
+          
+          const responseValue = response.values[fieldId];
+          
+          // 檢查是否符合該欄位的任一選項（同一欄位內為 OR）
+          return selectedValues.some(selectedValue => {
+            // 處理陣列值（多選）
+            if (Array.isArray(responseValue)) {
+              return responseValue.some(v => String(v) === String(selectedValue));
+            }
+            // 處理單一值
+            return String(responseValue) === String(selectedValue);
+          });
+        });
+      });
+    }
+
+    // 格式化欄位值
+    function formatFieldValue(value, field) {
+      if (field.type === 'multi') {
+        const items = Array.isArray(value) ? value : parseMultiValue(value);
+        if (!items.length) return '<span class="text-muted">－</span>';
+        return items.map(item => `<span class="badge bg-light text-dark me-1 mb-1">${escapeHtml(item)}</span>`).join('');
+      }
+      if (field.type === 'datetime') {
+        return formatDateTime(value);
+      }
+      if (!value) return '<span class="text-muted">－</span>';
+      return escapeHtml(String(value)).replace(/\n/g, '<br>');
+    }
+
+    // 解析多選值
+    function parseMultiValue(value) {
+      if (Array.isArray(value)) return value;
+      if (!value) return [];
+      return String(value).split(/[\n,、，；;]/).map(s => s.trim()).filter(Boolean);
+    }
+
+    // 切換頁碼
+    function changeSurveyDetailPage(page) {
+      surveyDetailPage = page;
+      renderSurveyDetail();
+    }
+
+    // 建立分頁
+    function buildSurveyDetailPagination(totalPages) {
+      let html = '';
+      
+      html += `
+        <li class="page-item ${surveyDetailPage === 1 ? 'disabled' : ''}">
+          <button class="page-link" onclick="changeSurveyDetailPage(${surveyDetailPage - 1})" ${surveyDetailPage === 1 ? 'disabled' : ''}>‹</button>
+        </li>
+      `;
+      
+      for (let i = 1; i <= totalPages; i++) {
+        if (totalPages <= 7 || i === 1 || i === totalPages || (i >= surveyDetailPage - 1 && i <= surveyDetailPage + 1)) {
+          html += `
+            <li class="page-item ${i === surveyDetailPage ? 'active' : ''}">
+              <button class="page-link" onclick="changeSurveyDetailPage(${i})">${i}</button>
+            </li>
+          `;
+        } else if (i === surveyDetailPage - 2 || i === surveyDetailPage + 2) {
+          html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+      }
+      
+      html += `
+        <li class="page-item ${surveyDetailPage === totalPages ? 'disabled' : ''}">
+          <button class="page-link" onclick="changeSurveyDetailPage(${surveyDetailPage + 1})" ${surveyDetailPage === totalPages ? 'disabled' : ''}>›</button>
+        </li>
+      `;
+      
+      return html;
+    }
+
+    // 匯入問卷資料
+    async function handleImportFile(input) {
+      const file = input.files?.[0];
+      input.value = '';
+      if (!file) return;
+
+      // 先要求輸入建立者名稱
+      const creator = prompt('請輸入建立者名稱：');
+      if (!creator || !creator.trim()) {
+        alert('必須輸入建立者名稱才能上傳');
+        return;
+      }
+
+      if (typeof XLSX === 'undefined') {
+        alert('載入 Excel 解析工具失敗，請重新整理頁面後再試。');
+        return;
+      }
+
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (!ext || !['xlsx', 'xls', 'csv'].includes(ext)) {
+          alert('僅支援 Excel (.xlsx, .xls) 或 CSV 檔案');
+          return;
+        }
+
+        const mode = ext === 'csv' ? 'text' : 'arrayBuffer';
+        const fileData = await readFileAsync(file, mode);
+
+        let workbook;
+        if (ext === 'csv') {
+          workbook = XLSX.read(fileData, { type: 'string' });
+        } else {
+          workbook = XLSX.read(new Uint8Array(fileData), { type: 'array' });
+        }
+
+        if (!workbook.SheetNames || !workbook.SheetNames.length) {
+          alert('檔案中找不到任何工作表');
+          return;
+        }
+
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+        processImportedData(rows, creator.trim(), file.name);
+      } catch (error) {
+        console.error(error);
+        alert('匯入失敗：' + (error.message || '請確認檔案格式'));
+      }
+    }
+
+    // 讀取檔案
+    function readFileAsync(file, mode) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = event => resolve(event.target.result);
+        reader.onerror = () => reject(new Error('檔案讀取失敗'));
+        if (mode === 'text') {
+          reader.readAsText(file, 'utf-8');
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      });
+    }
+
+    // 處理匯入的資料
+    function processImportedData(rows, creator, fileName) {
+      if (!rows || !rows.length) {
+        alert('檔案內沒有資料');
+        return;
+      }
+
+      const headers = rows[0].map((cell, index) => {
+        const text = String(cell ?? '').trim();
+        return text || `欄位${index + 1}`;
+      });
+
+      const dataRows = rows.slice(1).filter(row => 
+        Array.isArray(row) && row.some(cell => String(cell ?? '').trim() !== '')
+      );
+
+      if (!dataRows.length) {
+        alert('沒有可匯入的資料列');
+        return;
+      }
+
+      const isGlobal = currentSurvey.isGlobal || currentSurvey.belongsTo === 'global';
+
+      // 檢查是否有統一編號欄位（用於全局問卷批量匯入）
+      const taxIdFieldIndex = headers.findIndex(h => 
+        h.includes('統一編號') || h.includes('統編') || h === 'taxId'
+      );
+      
+      // 找出企業名稱欄位（僅用於錯誤訊息顯示）
+      const companyNameFieldIndex = headers.findIndex(h =>
+        h.includes('企業名稱') || h.includes('公司名稱') || h === '公司' || h === 'companyName'
+      );
+
+      const fields = headers.map((label, index) => ({
+        id: `field-${index}`,
+        label: label,
+        group: '匯入資料',
+        summary: true,
+        type: 'text'
+      }));
+
+      const baseTime = Date.now();
+      const responses = [];
+      let unmatchedCount = 0;
+      const unmatchedRows = [];
+
+      // 載入所有公司資料（用於批量匯入時比對）
+      const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+      const companies = companiesRaw ? JSON.parse(companiesRaw) : [];
+
+      dataRows.forEach((row, index) => {
+        const values = {};
+        headers.forEach((header, colIdx) => {
+          values[`field-${colIdx}`] = row[colIdx] ?? '';
+        });
+
+        const submittedAt = new Date(baseTime + index * 1000).toISOString();
+        values.submittedAt = submittedAt;
+
+        const response = {
+          id: `${currentSurvey.id.toUpperCase()}-${String(index + 1).padStart(4, '0')}`,
+          submittedAt: submittedAt,
+          values
+        };
+
+        // 如果是全局問卷，嘗試用統一編號比對公司
+        if (isGlobal) {
+          let matchedCompany = null;
+          
+          // 只使用統一編號比對（不自動匹配公司名稱）
+          if (taxIdFieldIndex !== -1) {
+            const taxId = String(row[taxIdFieldIndex] ?? '').trim();
+            if (taxId) {
+              matchedCompany = companies.find(c => c.taxId === taxId);
+            }
+          }
+          
+          if (matchedCompany) {
+            // 加上公司標記
+            response._companyId = matchedCompany.id;
+            response._companyName = matchedCompany.name;
+          } else {
+            // 未匹配的資料標記為待配對
+            response._companyId = 'unmatched';
+            response._companyName = '未配對';
+            unmatchedCount++;
+            const taxId = taxIdFieldIndex !== -1 ? String(row[taxIdFieldIndex] ?? '').trim() : '';
+            const companyName = companyNameFieldIndex !== -1 ? String(row[companyNameFieldIndex] ?? '').trim() : '';
+            unmatchedRows.push({ index: index + 2, taxId, companyName }); // +2 因為 Excel 從1開始，且有標題行
+            console.warn(`第 ${index + 2} 行資料無法比對：統編=${taxId}，公司名稱=${companyName}`);
+          }
+        }
+
+        responses.push(response);
+      });
+
+      // 如果是批量匯入但有資料無法比對，顯示提示
+      if (isGlobal && unmatchedCount > 0) {
+        let infoMsg = `匯入資訊：\n\n`;
+        infoMsg += `✓ 成功配對：${responses.length - unmatchedCount} 筆\n`;
+        infoMsg += `⚠ 待手動配對：${unmatchedCount} 筆\n\n`;
+        
+        if (unmatchedRows.length > 0) {
+          infoMsg += '待配對的資料（前5筆）：\n';
+          unmatchedRows.slice(0, 5).forEach(row => {
+            infoMsg += `- 第 ${row.index} 行`;
+            if (row.taxId) {
+              infoMsg += `（統編：${row.taxId}）`;
+            }
+            if (row.companyName) {
+              infoMsg += `（公司：${row.companyName}）`;
+            }
+            infoMsg += '\n';
+          });
+          if (unmatchedRows.length > 5) {
+            infoMsg += `... 以及其他 ${unmatchedRows.length - 5} 筆\n`;
+          }
+        }
+        
+        infoMsg += '\n這些資料已匯入，您可以使用篩選功能查看「未配對」資料，並手動選擇公司進行配對。';
+        
+        alert(infoMsg);
+      }
+
+      // 初始化匯入歷史（如果不存在）
+      if (!currentSurvey.importHistory) {
+        currentSurvey.importHistory = [];
+      }
+
+      // 記錄本次匯入
+      const importRecord = {
+        id: `import-${Date.now()}`,
+        fileName: fileName,
+        uploadedBy: creator,
+        uploadedAt: new Date().toISOString(),
+        recordCount: responses.length,
+        fieldCount: fields.length
+      };
+      currentSurvey.importHistory.unshift(importRecord);
+
+      // 更新問卷
+      currentSurvey.fields = fields;
+      currentSurvey.responses = responses;
+      currentSurvey.status = '進行中';
+      currentSurvey.creator = creator;
+      currentSurvey.lastUploadAt = new Date().toISOString();
+      currentSurvey.lastUploadBy = creator;
+
+      saveSurvey();
+      
+      if (isGlobal) {
+        // 批量匯入成功訊息
+        const matchedCount = responses.filter(r => r._companyId && r._companyId !== 'unmatched').length;
+        const unmatchedCount = responses.filter(r => r._companyId === 'unmatched').length;
+        const companyCount = new Set(responses.filter(r => r._companyId && r._companyId !== 'unmatched').map(r => r._companyId)).size;
+        
+        let msg = `批量匯入完成！\n\n`;
+        msg += `✓ 成功配對：${matchedCount} 筆（涉及 ${companyCount} 家公司）\n`;
+        if (unmatchedCount > 0) {
+          msg += `⚠ 待手動配對：${unmatchedCount} 筆\n`;
+        }
+        msg += `\n總計：${responses.length} 筆資料，${fields.length} 個欄位\n`;
+        msg += `\n資料已自動分配到各公司${unmatchedCount > 0 ? '，未配對資料保留在此問卷中' : ''}。`;
+        
+        alert(msg);
+      } else {
+        alert(`匯入完成：已導入 ${responses.length} 筆資料，共 ${fields.length} 個欄位`);
+      }
+      
+      // 重新載入資料以顯示更新
+      loadSurveyData();
+    }
+
+    // 儲存問卷資料
+    function saveSurvey() {
+      const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+      if (!companiesRaw) return;
+
+      try {
+        const companies = JSON.parse(companiesRaw);
+        const isGlobal = currentSurvey.isGlobal || currentSurvey.belongsTo === 'global';
+        
+        // 如果是全局問卷且有回答資料，需要根據回答中的公司資訊分配到各公司
+        if (isGlobal && currentSurvey.responses && currentSurvey.responses.length > 0) {
+          // 按公司分組回答（只處理已配對的）
+          const responsesByCompany = new Map();
+          const unmatchedResponses = [];
+          
+          currentSurvey.responses.forEach(response => {
+            const companyId = response._companyId;
+            // 區分已配對和未配對
+            if (companyId && companyId !== 'unmatched') {
+              if (!responsesByCompany.has(companyId)) {
+                responsesByCompany.set(companyId, []);
+              }
+              responsesByCompany.get(companyId).push(response);
+            } else if (companyId === 'unmatched') {
+              // 保留未配對的資料
+              unmatchedResponses.push(response);
+            }
+          });
+
+          // 將問卷和對應的回答加入到各公司
+          companies.forEach(company => {
+            const surveys = company.surveys || [];
+            const surveyIndex = surveys.findIndex(s => s.id === currentSurvey.id);
+            
+            // 取得屬於這家公司的回答
+            const companyResponses = responsesByCompany.get(company.id) || [];
+            
+            if (companyResponses.length > 0) {
+              // 建立或更新這家公司的問卷
+              const companySurvey = {
+                ...currentSurvey,
+                responses: companyResponses.map(r => {
+                  // 移除公司標記（因為已經在公司內了）
+                  const { _companyId, _companyName, ...cleanResponse } = r;
+                  return cleanResponse;
+                })
+              };
+              
+              if (surveyIndex !== -1) {
+                // 更新現有問卷
+                surveys[surveyIndex] = companySurvey;
+              } else {
+                // 新增問卷到公司
+                surveys.push(companySurvey);
+              }
+              
+              company.surveys = surveys;
+            }
+          });
+
+          // 保存更新後的公司資料
+          localStorage.setItem(COMPANIES_STORAGE_KEY, JSON.stringify(companies));
+
+          // 更新全局問卷列表（保留未配對的 responses）
+          const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+          if (globalSurveysRaw) {
+            let globalSurveys = JSON.parse(globalSurveysRaw);
+            const globalIndex = globalSurveys.findIndex(s => s.id === currentSurvey.id);
+            if (globalIndex !== -1) {
+              // 保留問卷定義，只保留未配對的回答
+              globalSurveys[globalIndex] = {
+                ...currentSurvey,
+                responses: unmatchedResponses
+              };
+              localStorage.setItem('globalSurveysStore', JSON.stringify(globalSurveys));
+            }
+          }
+        } else {
+          // 單一公司問卷的保存邏輯（原有邏輯）
+          let updated = false;
+          companies.forEach(company => {
+            const surveys = company.surveys || [];
+            const surveyIndex = surveys.findIndex(s => s.id === currentSurvey.id);
+            if (surveyIndex !== -1) {
+              surveys[surveyIndex] = currentSurvey;
+              updated = true;
+            }
+          });
+
+          if (updated) {
+            localStorage.setItem(COMPANIES_STORAGE_KEY, JSON.stringify(companies));
+          }
+
+          // 如果是全局問卷（但沒有回答），也更新全局問卷列表
+          if (isGlobal) {
+            const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+            if (globalSurveysRaw) {
+              let globalSurveys = JSON.parse(globalSurveysRaw);
+              const globalIndex = globalSurveys.findIndex(s => s.id === currentSurvey.id);
+              if (globalIndex !== -1) {
+                globalSurveys[globalIndex] = currentSurvey;
+                localStorage.setItem('globalSurveysStore', JSON.stringify(globalSurveys));
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('儲存失敗', e);
+        alert('儲存失敗：' + e.message);
+      }
+    }
+
+    // 匯出資料
+    function exportData(format) {
+      if (typeof XLSX === 'undefined') {
+        alert('載入 Excel 工具失敗，請重新整理頁面後再試。');
+        return;
+      }
+
+      const survey = currentSurvey;
+      const fields = survey.fields || [];
+      const responses = survey.responses || [];
+
+      if (!responses.length) {
+        alert('此問卷尚無回覆資料可匯出');
+        return;
+      }
+
+      const isGlobal = survey.isGlobal || survey.belongsTo === 'global';
+
+      // 建立標題列
+      const headers = ['#', '問卷編號', '提交時間'];
+      if (isGlobal) {
+        headers.push('所屬公司');
+      }
+      headers.push(...fields.map(f => f.label));
+
+      // 建立資料列
+      const data = responses.map((response, index) => {
+        const row = [
+          index + 1,
+          response.id,
+          formatDateTime(response.submittedAt)
+        ];
+
+        if (isGlobal) {
+          row.push(response._companyName || '-');
+        }
+
+        fields.forEach(field => {
+          const value = response.values[field.id];
+          if (Array.isArray(value)) {
+            row.push(value.join(', '));
+          } else if (value == null) {
+            row.push('');
+          } else {
+            row.push(String(value));
+          }
+        });
+
+        return row;
+      });
+
+      if (format === 'csv') {
+        // 匯出 CSV
+        const csvContent = [headers, ...data]
+          .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+          .join('\n');
+        
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${survey.name}_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // 匯出 Excel
+        const wsData = [headers, ...data];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // 設定欄位寬度
+        const colWidths = headers.map((_, i) => {
+          if (i === 0) return { wch: 5 };
+          if (i === 1) return { wch: 15 };
+          if (i === 2) return { wch: 20 };
+          if (i === 3 && isGlobal) return { wch: 20 };
+          return { wch: 25 };
+        });
+        ws['!cols'] = colWidths;
+
+        // 建立工作簿
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '問卷回覆');
+
+        // 下載檔案
+        const fileName = `${survey.name}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+      }
+
+      alert(`已匯出 ${responses.length} 筆資料`);
+    }
+
+    // 刪除匯入記錄
+    function deleteImportRecord(importId) {
+      if (!confirm('確定要刪除此匯入記錄嗎？\n注意：這不會刪除問卷資料，只是刪除記錄。')) {
+        return;
+      }
+      
+      if (!currentSurvey.importHistory) {
+        return;
+      }
+      
+      // 找到並刪除記錄
+      const index = currentSurvey.importHistory.findIndex(record => record.id === importId);
+      if (index !== -1) {
+        currentSurvey.importHistory.splice(index, 1);
+        saveSurvey();
+        renderSurveyDetail();
+        alert('匯入記錄已刪除');
+      }
+    }
+
+    // 打開篩選 Modal
+    function openFilterModal() {
+      const fields = currentSurvey.fields || [];
+      const responses = currentSurvey.responses || [];
+      const isGlobal = currentSurvey.isGlobal || currentSurvey.belongsTo === 'global';
+
+      if (fields.length === 0) {
+        alert('此問卷尚無欄位資料');
+        return;
+      }
+
+      const modalBody = document.getElementById('filterModalBody');
+      let html = '<div class="row g-3">';
+      
+      // 如果是全局問卷，增加配對狀態篩選
+      if (isGlobal) {
+        const currentMatchFilter = filterConditions['_matchStatus'] || [];
+        html += `
+          <div class="col-md-6">
+            <div class="card border-primary">
+              <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">配對狀態</h6>
+              </div>
+              <div class="card-body">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="filter-match-matched" 
+                    data-field-id="_matchStatus" data-value="matched" ${currentMatchFilter.includes('matched') ? 'checked' : ''}>
+                  <label class="form-check-label" for="filter-match-matched">
+                    <span class="badge bg-success">已配對</span>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="filter-match-unmatched" 
+                    data-field-id="_matchStatus" data-value="unmatched" ${currentMatchFilter.includes('unmatched') ? 'checked' : ''}>
+                  <label class="form-check-label" for="filter-match-unmatched">
+                    <span class="badge bg-warning text-dark">未配對</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      fields.forEach(field => {
+        // 收集此欄位的所有可能值
+        const uniqueValues = new Set();
+        responses.forEach(response => {
+          const value = response.values[field.id];
+          if (value != null && value !== '') {
+            if (Array.isArray(value)) {
+              value.forEach(v => uniqueValues.add(String(v)));
+            } else {
+              uniqueValues.add(String(value));
+            }
+          }
+        });
+
+        const values = Array.from(uniqueValues).sort();
+        if (values.length === 0) return;
+
+        const currentFilter = filterConditions[field.id] || [];
+
+        html += `
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">${escapeHtml(field.label)}</h6>
+              </div>
+              <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+        `;
+
+        values.forEach(value => {
+          const checked = currentFilter.includes(value) ? 'checked' : '';
+          const valueId = `filter-${field.id}-${Math.random().toString(36).substr(2, 9)}`;
+          html += `
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="${valueId}" 
+                data-field-id="${field.id}" data-value="${escapeHtml(value)}" ${checked}>
+              <label class="form-check-label" for="${valueId}">
+                ${escapeHtml(value)}
+              </label>
+            </div>
+          `;
+        });
+
+        html += `
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      modalBody.innerHTML = html;
+
+      if (!filterModal) {
+        filterModal = new bootstrap.Modal(document.getElementById('filterModal'));
+      }
+      filterModal.show();
+    }
+
+    // 套用篩選
+    function applyFilters() {
+      const checkboxes = document.querySelectorAll('#filterModalBody input[type="checkbox"]');
+      filterConditions = {};
+      activeFilterCount = 0;
+
+      checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+          const fieldId = checkbox.dataset.fieldId;
+          const value = checkbox.dataset.value;
+          
+          if (!filterConditions[fieldId]) {
+            filterConditions[fieldId] = [];
+          }
+          filterConditions[fieldId].push(value);
+          activeFilterCount++;
+        }
+      });
+
+      if (filterModal) {
+        filterModal.hide();
+      }
+
+      surveyDetailPage = 1;
+      renderSurveyDetail();
+    }
+
+    // 清除所有篩選
+    function clearAllFilters() {
+      filterConditions = {};
+      activeFilterCount = 0;
+      
+      if (filterModal) {
+        filterModal.hide();
+      }
+      
+      surveyDetailPage = 1;
+      renderSurveyDetail();
+    }
+
+    // 全選/取消全選未配對項目
+    function toggleAllUnmatched(checked) {
+      const checkboxes = document.querySelectorAll('.unmatched-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = checked;
+      });
+    }
+
+    // 智能儲存所有配對（批量 + 個別）
+    function saveAllMatches() {
+      if (!currentSurvey || !currentSurvey.responses) {
+        alert('無法儲存：問卷資料不存在');
+        return;
+      }
+
+      // 載入公司資料
+      const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+      const companies = companiesRaw ? JSON.parse(companiesRaw) : [];
+
+      const matches = [];
+      let batchCount = 0;
+      let individualCount = 0;
+
+      // 1. 處理批量配對（勾選的項目）
+      const companySelect = document.getElementById('batchMatchCompany');
+      const batchCompanyId = companySelect ? companySelect.value : '';
+      
+      if (batchCompanyId) {
+        const checkedBoxes = document.querySelectorAll('.unmatched-checkbox:checked');
+        const batchCompany = companies.find(c => c.id === batchCompanyId);
+        
+        if (checkedBoxes.length > 0 && batchCompany) {
+          checkedBoxes.forEach(checkbox => {
+            const responseId = checkbox.dataset.responseId;
+            matches.push({ 
+              responseId, 
+              companyId: batchCompanyId,
+              companyName: batchCompany.name,
+              source: 'batch'
+            });
+            batchCount++;
+          });
+        }
+      }
+
+      // 2. 處理個別配對（下拉選單）
+      const matchers = document.querySelectorAll('.company-matcher');
+      matchers.forEach(select => {
+        const responseId = select.dataset.responseId;
+        const selectedCompanyId = select.value;
+        
+        // 檢查這筆資料是否已經在批量配對中
+        const alreadyMatched = matches.some(m => m.responseId === responseId);
+        
+        if (selectedCompanyId && !alreadyMatched) {
+          const company = companies.find(c => c.id === selectedCompanyId);
+          if (company) {
+            matches.push({ 
+              responseId, 
+              companyId: selectedCompanyId,
+              companyName: company.name,
+              source: 'individual'
+            });
+            individualCount++;
+          }
+        }
+      });
+
+      // 檢查是否有任何配對
+      if (matches.length === 0) {
+        alert('請至少配對一筆資料：\n\n• 勾選資料並選擇批量配對公司\n• 或使用下拉選單進行個別配對');
+        return;
+      }
+
+      // 顯示確認訊息
+      let confirmMsg = '確定要儲存以下配對嗎？\n\n';
+      if (batchCount > 0) {
+        const batchCompany = companies.find(c => c.id === batchCompanyId);
+        confirmMsg += `批量配對：${batchCount} 筆 → ${batchCompany.name}\n`;
+      }
+      if (individualCount > 0) {
+        confirmMsg += `個別配對：${individualCount} 筆\n`;
+      }
+      confirmMsg += `\n總計：${matches.length} 筆資料`;
+
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      // 更新回覆資料
+      matches.forEach(match => {
+        const response = currentSurvey.responses.find(r => r.id === match.responseId);
+        if (response) {
+          response._companyId = match.companyId;
+          response._companyName = match.companyName;
+        }
+      });
+
+      // 儲存問卷
+      saveSurvey();
+
+      // 成功訊息
+      let successMsg = '✓ 配對成功並已儲存\n\n';
+      if (batchCount > 0) {
+        successMsg += `批量配對：${batchCount} 筆\n`;
+      }
+      if (individualCount > 0) {
+        successMsg += `個別配對：${individualCount} 筆\n`;
+      }
+      successMsg += `\n總計：${matches.length} 筆資料已分配到各公司`;
+
+      alert(successMsg);
+      
+      // 重新載入頁面以顯示更新
+      loadSurveyData();
+    }
+
+    // 返回問卷資料庫
+    function goBack() {
+      window.location.href = 'a08-surveys.html';
+    }
+
+    // 工具函數
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      loadSurveyData();
+    });
+  </script>
+</body>
+</html>

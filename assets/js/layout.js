@@ -1,14 +1,15 @@
 // 共用的後台佈局組件，支援角色權限控制
 
 const ROLE_PERMISSIONS = {
-  '系統管理員': ['companies', 'guidance', 'users'],
-  '輔導顧問': ['companies', 'guidance'],
-  '分析人員': ['companies']
+  '系統管理員': ['companies', 'surveys', 'guidance', 'users'],
+  '輔導顧問': ['companies', 'surveys', 'guidance'],
+  '分析人員': ['companies', 'surveys']
 };
 
 const NAV_ITEMS = [
   // { key: 'dashboard', label: '儀表板', href: 'a04-dashboard.html', icon: 'dashboard' },
   { key: 'companies', label: '所有公司', href: 'a02-companies.html', icon: 'business' },
+  { key: 'surveys', label: '問卷資料庫', href: 'a08-surveys.html', icon: 'poll' },
   { key: 'guidance', label: '輔導紀錄', href: 'a05-guidance-records.html', icon: 'history_edu' },
   { key: 'users', label: '使用者管理', href: 'a07-users.html', icon: 'people' }
 ];

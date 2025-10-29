@@ -557,25 +557,28 @@
                   <tr>
                     <th style="width: 50px;">#</th>
                     <th>問卷名稱</th>
+                    <th>類型</th>
                     <th>狀態</th>
                     <th>負責單位</th>
                     <th>建立者</th>
                     <th>建立日期</th>
                     <th>欄位數</th>
                     <th>回覆數</th>
-                    <th style="width: 200px;">操作</th>
+                    <th style="width: 200px; vertical-align: middle;">操作</th>
                   </tr>
                 </thead>
                 <tbody>
       `;
 
       if (surveys.length === 0) {
-        html += '<tr><td colspan="9" class="text-center py-4 text-muted">尚無問卷資料</td></tr>';
+        html += '<tr><td colspan="10" class="text-center py-4 text-muted">尚無問卷資料</td></tr>';
       } else {
         surveys.forEach((survey, index) => {
           const fieldCount = survey.fields?.length || 0;
           const responseCount = survey.responses?.length || 0;
           const statusClass = survey.status === '進行中' ? 'bg-primary' : 'bg-secondary';
+          const isGlobal = survey.isGlobal || survey.belongsTo === 'global';
+          const typeLabel = isGlobal ? '<span class="badge" style="background-color: #D2691E; color: white;" title="此問卷為混合問卷，可由多家公司填寫">混合問卷</span>' : '<span class="badge bg-secondary" title="此問卷僅限本公司填寫">單一</span>';
 
           html += `
             <tr>
@@ -584,21 +587,22 @@
                 <strong>${escapeHtml(survey.name || '未命名')}</strong><br>
                 <small class="text-muted">${escapeHtml(survey.description || '')}</small>
               </td>
+              <td>${typeLabel}</td>
               <td><span class="badge ${statusClass}">${survey.status || '草稿'}</span></td>
               <td>${escapeHtml(survey.owner || '-')}</td>
               <td>${escapeHtml(survey.creator || '-')}</td>
               <td>${formatDate(survey.createdAt)}</td>
               <td>${fieldCount}</td>
               <td>${responseCount}</td>
-              <td style="white-space: nowrap;">
+              <td style="white-space: nowrap; vertical-align: middle;">
                 <button class="btn btn-sm btn-outline-primary me-2" onclick="viewSurvey('${survey.id}')">
                   <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">visibility</span>
                   查看
                 </button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteSurvey(${index})">
+                ${!isGlobal ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteSurvey(${index})">
                   <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">delete</span>
                   刪除
-                </button>
+                </button>` : ''}
               </td>
             </tr>
           `;
@@ -653,11 +657,13 @@
           </div>
           <div class="d-flex gap-2 align-items-center">
             <span class="badge ${survey.status === '進行中' ? 'bg-primary' : 'bg-secondary'} fs-6">${survey.status || '草稿'}</span>
+            ${survey.isGlobal || survey.belongsTo === 'global' ? '' : `
             <input type="file" id="importFile-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
             <button class="btn btn-primary btn-sm" onclick="document.getElementById('importFile-${survey.id}').click()">
               <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
               匯入
             </button>
+            `}
             <div class="btn-group">
               <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">
               <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">upload</span>
@@ -788,6 +794,7 @@
       }
 
       if (fields.length === 0) {
+        const isGlobalSurvey = survey.isGlobal || survey.belongsTo === 'global';
         html += `
         <div class="card">
           <div class="card-body text-center py-5">
@@ -796,11 +803,13 @@
             </div>
             <h5>尚無問卷資料</h5>
             <p class="text-muted mb-3">此問卷尚未匯入任何欄位定義和回覆資料</p>
+            ${isGlobalSurvey ? '<p class="text-muted"><small>混合問卷請至問卷資料庫進行批量匯入</small></p>' : `
             <input type="file" id="importFileEmpty-${survey.id}" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)">
             <button class="btn btn-primary" onclick="document.getElementById('importFileEmpty-${survey.id}').click()">
               <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">download</span>
               立即匯入
             </button>
+            `}
           </div>
         </div>
         `;

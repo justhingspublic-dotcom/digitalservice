@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>問卷資料庫 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">poll</span>
+          <h4 class="mb-0">問卷資料庫</h4>
+        </div>
+
+        <!-- 搜尋與篩選 -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">搜尋</label>
+                <input type="search" class="form-control" id="keyword" placeholder="輸入問卷名稱" oninput="filterSurveys()">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">狀態</label>
+                <select class="form-select" id="statusFilter" onchange="filterSurveys()">
+                  <option value="">全部</option>
+                  <option value="草稿">草稿</option>
+                  <option value="進行中">進行中</option>
+                  <option value="已結束">已結束</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">問卷類型</label>
+                <select class="form-select" id="typeFilter" onchange="filterSurveys()">
+                  <option value="">全部</option>
+                  <option value="global">全局問卷</option>
+                  <option value="single">單一公司</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 問卷列表 -->
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">問卷列表（<span id="surveyCount">0</span> 份）</h5>
+            <button class="btn btn-primary btn-sm" onclick="showCreateSurveyModal()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
+              新增問卷
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>問卷名稱</th>
+                    <th>狀態</th>
+                    <th>類型</th>
+                    <th>參與公司/所屬公司</th>
+                    <th>回答數</th>
+                    <th>建立時間</th>
+                    <th style="width: 180px; vertical-align: middle;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="surveysTableBody">
+                  <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">載入中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 新增全局問卷 Modal -->
+  <div class="modal fade" id="createSurveyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">新增問卷</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">問卷名稱 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="modalSurveyName" placeholder="例如：2025 Q1 餐飲業調查">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">問卷說明</label>
+            <textarea class="form-control" id="modalSurveyDescription" rows="3" placeholder="請簡述此問卷的調查目的與範圍"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">負責單位</label>
+            <input type="text" class="form-control" id="modalSurveyOwner" placeholder="例如：餐飲專案組">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">建立者 <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="modalSurveyCreator" placeholder="請輸入您的姓名">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="createGlobalSurvey()">建立問卷</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin('surveys');
+    initLayout('surveys');
+
+    const COMPANIES_STORAGE_KEY = 'companiesStore';
+    let allSurveys = [];
+    let createSurveyModal = null;
+
+    // 載入所有問卷（從公司資料和全局問卷列表中提取）
+    function loadAllSurveys() {
+      try {
+        const surveyMap = new Map();
+
+        // 1. 先載入全局問卷列表（尚未關聯到公司的問卷）
+        const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+        if (globalSurveysRaw) {
+          const globalSurveys = JSON.parse(globalSurveysRaw);
+          globalSurveys.forEach(survey => {
+            surveyMap.set(survey.id, {
+              id: survey.id,
+              name: survey.name || '未命名問卷',
+              status: survey.status || '草稿',
+              owner: survey.owner || '-',
+              creator: survey.creator || '-',
+              createdAt: survey.createdAt || survey.createdTime || '-',
+              description: survey.description || '',
+              isGlobal: true,
+              belongsTo: 'global',
+              companyCount: 0,
+              companies: [],
+              responseCount: (survey.responses || []).length,
+              companyName: null
+            });
+          });
+        }
+
+        // 2. 從公司資料中提取問卷
+        const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+        if (companiesRaw) {
+          const companies = JSON.parse(companiesRaw);
+
+          companies.forEach(company => {
+            const surveys = company.surveys || [];
+            surveys.forEach(survey => {
+              const isGlobal = survey.isGlobal || survey.belongsTo === 'global';
+              const surveyId = survey.id;
+
+              if (surveyMap.has(surveyId)) {
+                // 已存在，累加統計
+                const existing = surveyMap.get(surveyId);
+                existing.responseCount += (survey.responses || []).length;
+                if (isGlobal) {
+                  existing.companyCount += 1;
+                  existing.companies.push({
+                    id: company.id,
+                    name: company.name
+                  });
+                }
+              } else {
+                // 首次加入（單一公司問卷）
+                surveyMap.set(surveyId, {
+                  id: surveyId,
+                  name: survey.name || '未命名問卷',
+                  status: survey.status || '草稿',
+                  owner: survey.owner || '-',
+                  creator: survey.creator || '-',
+                  createdAt: survey.createdAt || survey.createdTime || '-',
+                  description: survey.description || '',
+                  isGlobal: isGlobal,
+                  belongsTo: survey.belongsTo || company.id,
+                  companyCount: isGlobal ? 1 : 0,
+                  companies: isGlobal ? [{ id: company.id, name: company.name }] : [],
+                  responseCount: (survey.responses || []).length,
+                  companyName: isGlobal ? null : company.name
+                });
+              }
+            });
+          });
+        }
+
+        return Array.from(surveyMap.values());
+      } catch (e) {
+        console.error('載入問卷資料失敗', e);
+        return [];
+      }
+    }
+
+    // 篩選問卷
+    function filterSurveys() {
+      const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const typeFilter = document.getElementById('typeFilter').value;
+
+      const filtered = allSurveys.filter(survey => {
+        const matchKeyword = !keyword || survey.name.toLowerCase().includes(keyword);
+        const matchStatus = !statusFilter || survey.status === statusFilter;
+        const matchType = !typeFilter || 
+          (typeFilter === 'global' && survey.isGlobal) ||
+          (typeFilter === 'single' && !survey.isGlobal);
+
+        return matchKeyword && matchStatus && matchType;
+      });
+
+      renderSurveys(filtered);
+    }
+
+    // 渲染問卷列表
+    function renderSurveys(surveys) {
+      const tbody = document.getElementById('surveysTableBody');
+      const countSpan = document.getElementById('surveyCount');
+
+      countSpan.textContent = surveys.length;
+
+      if (surveys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">找不到符合條件的問卷</td></tr>';
+        return;
+      }
+
+      let html = '';
+      surveys.forEach((survey, index) => {
+        const statusColor = getStatusColor(survey.status);
+        const typeLabel = survey.isGlobal ? 
+          `<span class="badge" style="background-color: #D2691E; color: white;">混合問卷</span>` : 
+          `<span class="badge bg-secondary">單一公司</span>`;
+        
+        const companyInfo = survey.isGlobal ? 
+          `${survey.companyCount} 家公司` : 
+          escapeHtml(survey.companyName || '-');
+
+        html += `
+          <tr>
+            <td class="text-center">${index + 1}</td>
+            <td><strong>${escapeHtml(survey.name)}</strong></td>
+            <td><span class="badge ${statusColor}">${escapeHtml(survey.status)}</span></td>
+            <td>${typeLabel}</td>
+            <td>${companyInfo}</td>
+            <td><span class="badge bg-info">${survey.responseCount}</span></td>
+            <td>${formatDate(survey.createdAt)}</td>
+            <td style="white-space: nowrap; vertical-align: middle;">
+              <a href="a09-survey-detail.html?id=${survey.id}" class="btn btn-sm btn-outline-primary me-1" title="查看詳情">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">visibility</span>
+              </a>
+              ${survey.isGlobal ? `
+                <button class="btn btn-sm btn-outline-success me-1" onclick="showBatchImportModal('${survey.id}')" title="批量匯入">
+                  <span class="material-icons" style="font-size: 16px; vertical-align: middle;">file_upload</span>
+                </button>
+              ` : ''}
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteSurvey('${survey.id}', '${escapeHtml(survey.name)}')" title="刪除">
+                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">delete</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // 取得狀態顏色
+    function getStatusColor(status) {
+      switch(status) {
+        case '草稿': return 'bg-secondary';
+        case '進行中': return 'bg-success';
+        case '已結束': return 'bg-danger';
+        default: return 'bg-light text-dark';
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr || dateStr === '-') return '-';
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 顯示新增問卷 Modal
+    function showCreateSurveyModal() {
+      document.getElementById('modalSurveyName').value = '';
+      document.getElementById('modalSurveyDescription').value = '';
+      document.getElementById('modalSurveyOwner').value = '';
+      document.getElementById('modalSurveyCreator').value = '';
+
+      if (!createSurveyModal) {
+        createSurveyModal = new bootstrap.Modal(document.getElementById('createSurveyModal'));
+      }
+      createSurveyModal.show();
+    }
+
+    // 建立全局問卷
+    function createGlobalSurvey() {
+      const name = document.getElementById('modalSurveyName').value.trim();
+      const description = document.getElementById('modalSurveyDescription').value.trim();
+      const owner = document.getElementById('modalSurveyOwner').value.trim();
+      const creator = document.getElementById('modalSurveyCreator').value.trim();
+
+      if (!name) {
+        alert('請輸入問卷名稱');
+        return;
+      }
+      if (!creator) {
+        alert('請輸入建立者');
+        return;
+      }
+
+      // 建立全局問卷（先不關聯任何公司，由批量匯入時自動關聯）
+      const surveyId = `survey-global-${Date.now()}`;
+      const newSurvey = {
+        id: surveyId,
+        name: name,
+        description: description,
+        status: '草稿',
+        owner: owner,
+        creator: creator,
+        createdAt: new Date().toISOString(),
+        createdTime: new Date().toISOString(),
+        isGlobal: true,
+        belongsTo: 'global',
+        definition: {
+          fields: []
+        },
+        responses: []
+      };
+
+      // 將問卷資訊存儲到一個全局問卷列表（可選）
+      // 或者暫時不存，等第一次批量匯入時再關聯到公司
+      // 這裡我們選擇創建一個全局問卷存儲
+      const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+      let globalSurveys = [];
+      if (globalSurveysRaw) {
+        try {
+          globalSurveys = JSON.parse(globalSurveysRaw);
+        } catch (e) {
+          globalSurveys = [];
+        }
+      }
+
+      globalSurveys.push(newSurvey);
+      localStorage.setItem('globalSurveysStore', JSON.stringify(globalSurveys));
+
+      if (createSurveyModal) {
+        createSurveyModal.hide();
+      }
+
+      alert('問卷已建立，您可以點擊「查看詳情」來查看或使用「批量匯入」功能匯入資料。');
+      
+      // 重新載入列表
+      allSurveys = loadAllSurveys();
+      filterSurveys();
+    }
+
+    // 刪除問卷
+    function deleteSurvey(surveyId, surveyName) {
+      if (!confirm(`確定要刪除問卷「${surveyName}」嗎？\n\n此操作將刪除所有相關回答資料，無法復原。`)) {
+        return;
+      }
+
+      // 從所有公司中移除此問卷
+      const companiesRaw = localStorage.getItem(COMPANIES_STORAGE_KEY);
+      if (companiesRaw) {
+        try {
+          const companies = JSON.parse(companiesRaw);
+          companies.forEach(company => {
+            company.surveys = (company.surveys || []).filter(s => s.id !== surveyId);
+          });
+          localStorage.setItem(COMPANIES_STORAGE_KEY, JSON.stringify(companies));
+        } catch (e) {
+          console.error('刪除問卷失敗', e);
+        }
+      }
+
+      // 從全局問卷列表中移除
+      const globalSurveysRaw = localStorage.getItem('globalSurveysStore');
+      if (globalSurveysRaw) {
+        try {
+          let globalSurveys = JSON.parse(globalSurveysRaw);
+          globalSurveys = globalSurveys.filter(s => s.id !== surveyId);
+          localStorage.setItem('globalSurveysStore', JSON.stringify(globalSurveys));
+        } catch (e) {
+          console.error('刪除全局問卷失敗', e);
+        }
+      }
+
+      alert('問卷已刪除');
+      allSurveys = loadAllSurveys();
+      filterSurveys();
+    }
+
+    // 顯示批量匯入 Modal（暫時跳轉到詳情頁）
+    function showBatchImportModal(surveyId) {
+      window.location.href = `a09-survey-detail.html?id=${surveyId}`;
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      allSurveys = loadAllSurveys();
+      filterSurveys();
+    });
+  </script>
+</body>
+</html>
+
