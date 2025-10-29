@@ -130,22 +130,11 @@
         <div class="mt-4 test-account-box">
           <div class="d-flex align-items-center mb-2">
             <span class="material-icons" style="font-size: 18px; color: var(--color-primary); margin-right: 6px;">info</span>
-            <strong style="color: var(--color-text-primary); font-size: 14px;">示範帳號</strong>
-          </div>
-          <div class="mb-3">
-            <small class="text-muted d-block">系統管理員：admin / admin123</small>
-            <small class="text-muted d-block">輔導顧問：consultant / consult123</small>
-            <small class="text-muted d-block">分析人員：analyst / analyst123</small>
+            <strong style="color: var(--color-text-primary); font-size: 14px;">試用申請</strong>
           </div>
           <div class="btn-group w-100" role="group">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('admin')">
-              系統管理員
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('consultant')">
-              輔導顧問
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillTestAccount('analyst')">
-              分析人員
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showTrialAlert()">
+              申請試用帳號
             </button>
           </div>
         </div>
@@ -176,33 +165,16 @@
 
     const demoUsers = {
       admin: {
-        username: 'admin',
-        password: 'admin123',
+        username: 'justhings',
+        password: '123456',
         displayName: '系統管理員',
         role: '系統管理員'
-      },
-      consultant: {
-        username: 'consultant',
-        password: 'consult123',
-        displayName: '李顧問',
-        role: '輔導顧問'
-      },
-      analyst: {
-        username: 'analyst',
-        password: 'analyst123',
-        displayName: '張分析',
-        role: '分析人員'
       }
     };
 
-    // 快速填入測試帳號
-    function fillTestAccount(key = 'admin') {
-      const account = demoUsers[key];
-      if (!account) return;
-
-      document.getElementById('username').value = account.username;
-      document.getElementById('password').value = account.password;
-      document.getElementById('username').focus();
+    // 顯示試用提示
+    function showTrialAlert() {
+      alert('目前不開放試用');
     }
 
     document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -254,12 +226,26 @@
       if (loginData) {
         try {
           const parsed = JSON.parse(loginData);
-          const modules = parsed.accessibleModules || [];
-          const defaultModule = modules[0] || 'dashboard';
-          const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.dashboard;
-          window.location.href = redirectUrl;
+          // 驗證登入帳號是否為有效帳號（只允許 justhings）
+          const validAccount = Object.values(demoUsers).find(user => user.username === parsed.username);
+          
+          if (validAccount) {
+            // 帳號有效，自動登入
+            const modules = parsed.accessibleModules || [];
+            const defaultModule = modules[0] || 'dashboard';
+            const redirectUrl = NAV_ROUTES[defaultModule] || NAV_ROUTES.dashboard;
+            window.location.href = redirectUrl;
+          } else {
+            // 帳號無效（舊的示範帳號），清除登入資訊
+            sessionStorage.removeItem('adminLogin');
+            localStorage.removeItem('adminLogin');
+            console.log('舊的登入資訊已清除');
+          }
         } catch (err) {
           console.error('登入資訊解析失敗', err);
+          // 解析失敗也清除登入資訊
+          sessionStorage.removeItem('adminLogin');
+          localStorage.removeItem('adminLogin');
         }
       }
     });
