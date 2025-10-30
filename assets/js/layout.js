@@ -50,6 +50,10 @@ function renderTopbar(user) {
           <strong>商業服務業數位應用資料庫</strong>
         </a>
         <div class="ms-auto d-flex align-items-center gap-3">
+          <a href="../多公司問卷範例_2025Q4餐飲業調查_2025-10-29-2.xlsx" download="示範資料.xlsx" class="btn btn-success btn-sm">
+            <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">download</span>
+            下載示範資料
+          </a>
           <div class="d-flex flex-column align-items-end text-white">
             <small><strong>${displayName}</strong></small>
             <small class="text-white-50">${roleLabel}</small>
