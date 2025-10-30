@@ -263,7 +263,7 @@
     const STORAGE_KEY = 'companiesStore';
     let allCompanies = [];
 
-    // 取得預設示範公司資料
+    // 取得預設示範公司資料（完整版 - 18家公司）
     function getDefaultCompanies() {
       return [
         {
@@ -361,7 +361,9 @@
           joinedAt: '2025-10-05T10:15:00',
           createdAt: '2025-10-05T10:15:00',
           surveys: [
-            { id: 'survey-004', name: '餐飲業數位化需求調查', status: '進行中', owner: '餐飲組', creator: '陳美玲', createdAt: '2025-10-12', description: '餐飲業數位化現況與需求', fields: [], responses: [] }
+            { id: 'survey-004', name: '餐飲業數位化需求調查', status: '進行中', owner: '餐飲組', creator: '陳美玲', createdAt: '2025-10-12', description: '餐飲業數位化現況與需求', fields: [], responses: [] },
+            { id: 'survey-005', name: '外送平台整合調查', status: '草稿', owner: '資訊組', creator: '陳美玲', createdAt: '2025-10-13', description: '多平台訂單整合需求評估', fields: [], responses: [] },
+            { id: 'survey-006', name: '數位支付使用情況', status: '進行中', owner: '財務組', creator: '陳美玲', createdAt: '2025-10-14', description: '數位支付工具使用狀況', fields: [], responses: [] }
           ],
           guidanceRecords: [
             {
@@ -372,8 +374,544 @@
               title: '餐飲業數位化轉型規劃',
               content: '討論多店面管理系統、外送平台整合、數位行銷等需求。建議優先導入 POS 系統整合方案。',
               consultant: '陳美玲'
+            },
+            {
+              id: 'guidance-005',
+              date: '2025-10-14T16:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '外送平台系統整合建議',
+              content: '評估多個外送平台整合方案，推薦採用第三方整合系統，可節省人力成本。',
+              consultant: '陳美玲'
             }
           ]
+        },
+        {
+          id: 'company-004',
+          name: '台中批發貿易行',
+          taxId: '45678901',
+          city: '台中市',
+          district: '西屯區',
+          address: '台灣大道三段789號1樓',
+          contactPerson: '吳建國',
+          contactPhone: '04-2315-8899',
+          contactEmail: 'tcwholesale@gmail.com',
+          fax: '04-2315-8898',
+          website: '',
+          capital: '500萬',
+          industry: '批發及零售業',
+          employeeRange: '6-20人',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-09-28T16:20:00',
+          createdAt: '2025-09-28T16:20:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-013',
+              date: '2025-09-29T10:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '批發業數位轉型初步評估',
+              content: '了解傳統批發業營運模式，主要痛點為庫存管理效率低、訂單處理人工化。建議優先導入進銷存系統。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-005',
+          name: '高雄顧問管理公司',
+          taxId: '56789012',
+          city: '高雄市',
+          district: '前鎮區',
+          address: '中華五路101號8樓之3',
+          contactPerson: '鄭雅文',
+          contactPhone: '07-7225-999',
+          contactEmail: 'contact@khconsult.com',
+          fax: '07-7225-998',
+          website: 'https://www.khconsult.com',
+          capital: '1000萬',
+          industry: '專業、科學及技術服務業',
+          employeeRange: '21-50人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2025-10-07T11:45:00',
+          createdAt: '2025-10-07T11:45:00',
+          surveys: [
+            { id: 'survey-007', name: '顧問服務數位化評估', status: '進行中', owner: '服務組', creator: '張志明', createdAt: '2025-10-09', description: '顧問服務流程數位化評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-006',
+              date: '2025-10-09T09:30:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '顧問業數位化需求評估',
+              content: '討論顧問服務流程數位化需求，包含案件管理系統、客戶關係管理、線上諮詢平台等。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-006',
+          name: '台南紡織工業股份有限公司',
+          taxId: '67890123',
+          city: '台南市',
+          district: '永康區',
+          address: '中華路888號',
+          contactPerson: '謝文雄',
+          contactPhone: '06-2435-777',
+          contactEmail: 'tn.textile@company.com',
+          fax: '06-2435-778',
+          website: 'http://www.tntextile.com.tw',
+          capital: '3億',
+          industry: '製造業',
+          employeeRange: '201人以上',
+          digitalStage: '持續優化階段',
+          joinedAt: '2025-09-25T08:30:00',
+          createdAt: '2025-09-25T08:30:00',
+          surveys: [
+            { id: 'survey-008', name: '生產線自動化調查', status: '進行中', owner: '生產部', creator: '王大明', createdAt: '2025-09-30', description: '評估生產線自動化需求', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-007',
+              date: '2025-09-28T14:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '智慧製造解決方案評估',
+              content: '針對紡織生產線進行智慧製造評估，建議導入 IoT 感測器進行品質監控，預估可提升 15% 生產效率。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-008',
+              date: '2025-10-05T10:00:00',
+              type: '追蹤輔導',
+              status: '中期',
+              title: 'IoT 設備導入進度追蹤',
+              content: '確認設備採購進度，協助解決系統整合問題。預計下月開始試運行。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-007',
+          name: '基隆物流運輸有限公司',
+          taxId: '78901234',
+          city: '基隆市',
+          district: '仁愛區',
+          address: '孝一路25號',
+          contactPerson: '劉建宏',
+          contactPhone: '02-2428-5566',
+          contactEmail: 'kl.logistics@gmail.com',
+          fax: '02-2428-5567',
+          website: '',
+          capital: '3000萬',
+          industry: '運輸及倉儲業',
+          employeeRange: '51-100人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-10T13:00:00',
+          createdAt: '2025-10-10T13:00:00',
+          surveys: [
+            { id: 'survey-009', name: '物流追蹤系統調查', status: '進行中', owner: '物流組', creator: '李小華', createdAt: '2025-10-11', description: '物流追蹤系統需求評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-009',
+              date: '2025-10-11T15:30:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '物流數位化需求訪談',
+              content: '了解現有物流管理流程，主要痛點為車輛調度效率不佳、貨物追蹤困難。建議導入 GPS 追蹤系統與智慧調度平台。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-008',
+          name: '新竹電子科技公司',
+          taxId: '89012345',
+          city: '新竹市',
+          district: '東區',
+          address: '光復路二段101號',
+          contactPerson: '徐志強',
+          contactPhone: '03-5713-888',
+          contactEmail: 'info@hcelectronics.com',
+          fax: '03-5713-889',
+          website: 'https://www.hcelectronics.com',
+          capital: '1.5億',
+          industry: '製造業',
+          employeeRange: '101-200人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2024-12-15T10:00:00',
+          createdAt: '2024-12-15T10:00:00',
+          surveys: [
+            { id: 'survey-010', name: '智慧製造評估', status: '進行中', owner: '技術部', creator: '張志明', createdAt: '2024-12-20', description: '智慧製造導入評估', fields: [], responses: [] },
+            { id: 'survey-011', name: 'AI 應用調查', status: '進行中', owner: '研發部', creator: '張志明', createdAt: '2025-01-10', description: 'AI 技術應用現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-010',
+              date: '2024-12-18T13:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'AI 視覺檢測系統導入',
+              content: '協助評估 AI 視覺檢測系統導入可行性，建議從 PCB 板檢測開始試點。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-011',
+              date: '2025-01-15T10:30:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 系統試運行檢討',
+              content: '檢討 AI 視覺檢測系統試運行成果，準確率達 98.5%，建議擴大應用範圍。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-009',
+          name: '宜蘭農產加工社',
+          taxId: '90123456',
+          city: '宜蘭縣',
+          district: '員山鄉',
+          address: '員山路三段66號',
+          contactPerson: '陳阿發',
+          contactPhone: '03-9225-123',
+          contactEmail: '',
+          fax: '',
+          website: '',
+          capital: '200萬',
+          industry: '製造業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-12T15:30:00',
+          createdAt: '2025-10-12T15:30:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-014',
+              date: '2025-10-13T14:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '農產加工業數位化諮詢',
+              content: '評估小型農產加工業數位化需求，建議從基礎電腦化開始，包含簡易記帳、產品標籤列印等。',
+              consultant: '陳美玲'
+            }
+          ]
+        },
+        {
+          id: 'company-010',
+          name: '彰化金融服務公司',
+          taxId: '01234567',
+          city: '彰化縣',
+          district: '彰化市',
+          address: '中山路一段150號6樓',
+          contactPerson: '蔡宗憲',
+          contactPhone: '04-7285-111',
+          contactEmail: 'service@chfinance.com.tw',
+          fax: '04-7285-112',
+          website: 'https://www.chfinance.com.tw',
+          capital: '5000萬',
+          industry: '金融及保險業',
+          employeeRange: '51-100人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2024-08-20T09:15:00',
+          createdAt: '2024-08-20T09:15:00',
+          surveys: [
+            { id: 'survey-012', name: '金融科技應用調查', status: '進行中', owner: '金融組', creator: '張志明', createdAt: '2024-09-01', description: 'FinTech 應用評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-015',
+              date: '2024-08-25T10:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'FinTech 系統整合建議',
+              content: '協助評估金融科技解決方案，包含行動支付、線上開戶、數位簽章等功能整合。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-016',
+              date: '2024-11-10T14:30:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: '數位金融服務成效檢討',
+              content: '檢討數位金融服務導入成效，客戶滿意度提升 30%，建議持續擴充服務項目。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        {
+          id: 'company-011',
+          name: '雲林食品加工廠',
+          taxId: '11223344',
+          city: '雲林縣',
+          district: '斗六市',
+          address: '工業路88號',
+          contactPerson: '張麗華',
+          contactPhone: '05-5325-789',
+          contactEmail: 'yunlin.food@yahoo.com.tw',
+          fax: '05-5325-788',
+          website: '',
+          capital: '1500萬',
+          industry: '製造業',
+          employeeRange: '21-50人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-08T14:20:00',
+          createdAt: '2025-10-08T14:20:00',
+          surveys: [
+            { id: 'survey-013', name: '食安追溯系統調查', status: '進行中', owner: '品管部', creator: '陳美玲', createdAt: '2025-10-09', description: '食品安全追溯系統需求', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-012',
+              date: '2025-10-09T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '食品安全追溯系統規劃',
+              content: '評估食品安全追溯系統需求，建議採用區塊鏈技術確保資料不可篡改性，從原料進貨到成品出貨全程追蹤。',
+              consultant: '陳美玲'
+            }
+          ]
+        },
+        {
+          id: 'company-012',
+          name: '嘉義觀光旅遊社',
+          taxId: '22334455',
+          city: '嘉義市',
+          district: '東區',
+          address: '中山路288號3樓',
+          contactPerson: '林文欽',
+          contactPhone: '05-2245-888',
+          contactEmail: 'cytravel@hotmail.com',
+          fax: '05-2245-889',
+          website: '',
+          capital: '300萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '6-20人',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-09-30T11:00:00',
+          createdAt: '2025-09-30T11:00:00',
+          surveys: [],
+          guidanceRecords: [
+            {
+              id: 'guidance-017',
+              date: '2025-10-02T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '旅遊業數位行銷需求評估',
+              content: '了解旅遊社營運現況，主要需求為線上訂房系統、社群媒體行銷、客戶管理系統。建議先從官網優化開始。',
+              consultant: '李小華'
+            },
+            {
+              id: 'guidance-018',
+              date: '2025-10-08T15:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '官網改版與 SEO 優化',
+              content: '協助規劃官網改版方案，包含響應式設計、線上詢價功能、SEO 關鍵字優化。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-013',
+          name: '屏東農業科技公司',
+          taxId: '33445566',
+          city: '屏東縣',
+          district: '屏東市',
+          address: '和平路166號',
+          contactPerson: '王俊傑',
+          contactPhone: '08-7335-666',
+          contactEmail: 'pt.agritech@company.com',
+          fax: '08-7335-667',
+          website: 'https://www.pt-agritech.com',
+          capital: '2500萬',
+          industry: '農、林、漁、牧業',
+          employeeRange: '21-50人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2023-05-10T10:30:00',
+          createdAt: '2023-05-10T10:30:00',
+          surveys: [
+            { id: 'survey-014', name: '智慧農業調查', status: '進行中', owner: '農技組', creator: '王大明', createdAt: '2023-06-01', description: '智慧農業技術導入評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-019',
+              date: '2023-05-15T09:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '智慧農業技術導入評估',
+              content: '評估農業科技公司數位轉型需求，討論智慧溫室、自動灌溉系統、農產品溯源等技術應用。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-020',
+              date: '2023-07-20T10:30:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'IoT 感測器系統建置',
+              content: '協助建置 IoT 感測器系統，監控溫度、濕度、土壤狀況等環境參數，提供即時數據分析。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-021',
+              date: '2024-01-10T14:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: '智慧農業系統成效評估',
+              content: '系統運行半年後成效顯著，作物產量提升 20%，水資源節省 35%。建議擴大應用範圍。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-014',
+          name: '花蓮觀光飯店',
+          taxId: '44556677',
+          city: '花蓮縣',
+          district: '花蓮市',
+          address: '中華路555號',
+          contactPerson: '陳淑芬',
+          contactPhone: '03-8225-999',
+          contactEmail: 'hlhotel@service.com.tw',
+          fax: '03-8225-998',
+          website: 'https://www.hlhotel.com.tw',
+          capital: '6000萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '51-100人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2024-03-15T09:00:00',
+          createdAt: '2024-03-15T09:00:00',
+          surveys: [
+            { id: 'survey-015', name: '飯店數位化服務調查', status: '進行中', owner: '服務部', creator: '李小華', createdAt: '2024-04-01', description: '飯店數位化服務現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-022',
+              date: '2024-03-20T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '飯店數位化服務升級規劃',
+              content: '評估飯店數位化服務現況，討論智慧客房、行動入住、數位禮賓服務等升級方案。',
+              consultant: '李小華'
+            },
+            {
+              id: 'guidance-023',
+              date: '2024-05-15T14:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '智慧客房系統導入',
+              content: '協助導入智慧客房控制系統，包含語音助理、智慧燈光、溫度控制等功能，提升住客體驗。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-015',
+          name: '台東綠能科技',
+          taxId: '55667788',
+          city: '台東縣',
+          district: '台東市',
+          address: '更生路777號',
+          contactPerson: '曾志豪',
+          contactPhone: '089-325-123',
+          contactEmail: 'tt.green@energy.com',
+          fax: '089-325-124',
+          website: 'https://www.ttgreen.com.tw',
+          capital: '4000萬',
+          industry: '電力及燃氣供應業',
+          employeeRange: '21-50人',
+          digitalStage: '成熟運用階段',
+          joinedAt: '2023-11-20T14:00:00',
+          createdAt: '2023-11-20T14:00:00',
+          surveys: [
+            { id: 'survey-016', name: '綠能監控系統調查', status: '進行中', owner: '技術部', creator: '張志明', createdAt: '2023-12-01', description: '綠能監控系統評估', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-024',
+              date: '2023-11-25T10:00:00',
+              type: '技術輔導',
+              status: '中期',
+              title: '綠能監控平台優化',
+              content: '協助優化太陽能發電監控平台，增加即時發電效率分析、異常警報、遠端控制等功能。',
+              consultant: '張志明'
+            },
+            {
+              id: 'guidance-025',
+              date: '2024-03-10T15:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 預測維護系統導入',
+              content: '導入 AI 預測維護系統，透過機器學習預測設備故障，降低維護成本 25%，提升系統可用率。',
+              consultant: '張志明'
+            }
+          ]
+        },
+        // 無統編的公司（用於批量匯入配對）
+        {
+          id: 'company-notin-001',
+          name: '小確幸咖啡館',
+          taxId: '',
+          city: '台北市',
+          district: '大安區',
+          address: '和平東路三段88號1樓',
+          contactPerson: '林小美',
+          contactPhone: '02-2366-5566',
+          contactEmail: 'cafe@example.com',
+          fax: '',
+          website: '',
+          capital: '50萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-20T10:00:00',
+          createdAt: '2025-10-20T10:00:00',
+          surveys: [],
+          guidanceRecords: []
+        },
+        {
+          id: 'company-notin-002',
+          name: '巷口小吃店',
+          taxId: '',
+          city: '新北市',
+          district: '三重區',
+          address: '重新路四段168號',
+          contactPerson: '陳大哥',
+          contactPhone: '02-2985-7788',
+          contactEmail: '',
+          fax: '',
+          website: '',
+          capital: '30萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '5人以下',
+          digitalStage: '尚未開始',
+          joinedAt: '2025-10-22T14:30:00',
+          createdAt: '2025-10-22T14:30:00',
+          surveys: [],
+          guidanceRecords: []
+        },
+        {
+          id: 'company-notin-003',
+          name: '美美服飾店',
+          taxId: '',
+          city: '桃園市',
+          district: '中壢區',
+          address: '中央西路299號',
+          contactPerson: '張美美',
+          contactPhone: '03-4567-890',
+          contactEmail: 'fashion@gmail.com',
+          fax: '',
+          website: '',
+          capital: '80萬',
+          industry: '批發及零售業',
+          employeeRange: '6-20人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-18T16:00:00',
+          createdAt: '2025-10-18T16:00:00',
+          surveys: [],
+          guidanceRecords: []
         }
       ];
     }
