@@ -263,20 +263,148 @@
     const STORAGE_KEY = 'companiesStore';
     let allCompanies = [];
 
-    // 載入公司資料（如果沒有則從 dashboard 載入假資料）
+    // 取得預設示範公司資料
+    function getDefaultCompanies() {
+      return [
+        {
+          id: 'company-001',
+          name: '台灣製造股份有限公司',
+          taxId: '12345678',
+          city: '台北市',
+          district: '內湖區',
+          address: '內湖路一段123號5樓',
+          contactPerson: '陳志明',
+          contactPhone: '02-2658-1234',
+          contactEmail: 'contact@twmfg.com.tw',
+          fax: '02-2658-1235',
+          website: 'https://www.twmfg.com.tw',
+          capital: '5000萬',
+          industry: '製造業',
+          employeeRange: '51-100人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-01T09:00:00',
+          createdAt: '2025-10-01T09:00:00',
+          surveys: [
+            { id: 'survey-001', name: '2025 Q1 數位轉型調查', status: '進行中', owner: '輔導組', creator: '王大明', createdAt: '2025-10-05', description: '針對製造業數位轉型需求進行調查', fields: [], responses: [] },
+            { id: 'survey-002', name: '客戶滿意度調查', status: '草稿', owner: '客服組', creator: '李小華', createdAt: '2025-10-10', description: '了解客戶對數位服務的滿意度', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-001',
+              date: '2025-10-08T14:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '數位轉型需求評估',
+              content: '與公司主管進行初次訪談，了解目前營運狀況及數位化需求。主要需求包含：ERP 系統導入、生產線數位化、供應鏈管理優化。',
+              consultant: '王大明'
+            },
+            {
+              id: 'guidance-002',
+              date: '2025-10-12T10:30:00',
+              type: '技術輔導',
+              status: '中期',
+              title: 'ERP 系統選型建議',
+              content: '根據公司規模與需求，建議導入中小企業適用的 ERP 系統。預估導入時間 3-6 個月，需要配合教育訓練。',
+              consultant: '王大明'
+            }
+          ]
+        },
+        {
+          id: 'company-002',
+          name: '新北科技有限公司',
+          taxId: '23456789',
+          city: '新北市',
+          district: '板橋區',
+          address: '文化路二段88號12樓',
+          contactPerson: '林美玲',
+          contactPhone: '02-8965-4321',
+          contactEmail: 'info@nttech.com',
+          fax: '02-8965-4322',
+          website: 'https://www.nttech.com',
+          capital: '2000萬',
+          industry: '資訊及通訊傳播業',
+          employeeRange: '21-50人',
+          digitalStage: '持續優化階段',
+          joinedAt: '2025-10-03T14:30:00',
+          createdAt: '2025-10-03T14:30:00',
+          surveys: [
+            { id: 'survey-003', name: '員工數位技能調查', status: '進行中', owner: '人資部', creator: '張志明', createdAt: '2025-10-08', description: '評估員工數位技能現況', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-003',
+              date: '2025-10-06T15:00:00',
+              type: '追蹤輔導',
+              status: '結案',
+              title: 'AI 工具應用成效檢討',
+              content: '檢視公司導入的 AI 客服系統使用情況，整體滿意度良好，建議持續優化對話腳本。',
+              consultant: '李小華'
+            }
+          ]
+        },
+        {
+          id: 'company-003',
+          name: '桃園餐飲集團',
+          taxId: '34567890',
+          city: '桃園市',
+          district: '中壢區',
+          address: '中央西路二段456號',
+          contactPerson: '黃大維',
+          contactPhone: '03-4225-678',
+          contactEmail: 'service@tyfd.com.tw',
+          fax: '03-4225-679',
+          website: 'https://www.tyfd.com.tw',
+          capital: '8000萬',
+          industry: '住宿及餐飲業',
+          employeeRange: '101-200人',
+          digitalStage: '初步導入階段',
+          joinedAt: '2025-10-05T10:15:00',
+          createdAt: '2025-10-05T10:15:00',
+          surveys: [
+            { id: 'survey-004', name: '餐飲業數位化需求調查', status: '進行中', owner: '餐飲組', creator: '陳美玲', createdAt: '2025-10-12', description: '餐飲業數位化現況與需求', fields: [], responses: [] }
+          ],
+          guidanceRecords: [
+            {
+              id: 'guidance-004',
+              date: '2025-10-09T11:00:00',
+              type: '初次訪談',
+              status: '初訪',
+              title: '餐飲業數位化轉型規劃',
+              content: '討論多店面管理系統、外送平台整合、數位行銷等需求。建議優先導入 POS 系統整合方案。',
+              consultant: '陳美玲'
+            }
+          ]
+        }
+      ];
+    }
+
+    // 載入公司資料（如果沒有則自動初始化示範資料）
     function loadCompanies() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        // 嘗試觸發 dashboard 初始化，或者直接返回空陣列讓使用者先訪問 dashboard
-        console.log('請先訪問儀表板頁面以初始化假資料');
-        return [];
+        // 自動初始化示範資料
+        console.log('正在初始化示範資料...');
+        const defaultData = getDefaultCompanies();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        return defaultData;
       }
       try {
         let companies = JSON.parse(raw);
         
-        // 檢查公司資料是否有新欄位，如果沒有則可能需要更新
+        // 如果資料是空的，也使用預設示範資料
+        if (!Array.isArray(companies) || companies.length === 0) {
+          console.log('資料為空，正在初始化示範資料...');
+          const defaultData = getDefaultCompanies();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+          return defaultData;
+        }
+        
+        // 檢查資料結構版本，如果是舊版本（沒有 contactPerson 欄位），則重新初始化
         if (companies.length > 0 && !companies[0].hasOwnProperty('contactPerson')) {
-          console.warn('公司資料結構需要更新，請訪問儀表板頁面');
+          console.log('偵測到舊版資料結構，正在更新...');
+          const defaultData = getDefaultCompanies();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+          return defaultData;
         }
         
         // 確保無統編的公司存在（用於批量匯入配對）
@@ -284,7 +412,10 @@
         
         return companies;
       } catch (e) {
-        return [];
+        console.error('載入資料失敗，正在初始化示範資料...', e);
+        const defaultData = getDefaultCompanies();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        return defaultData;
       }
     }
 
