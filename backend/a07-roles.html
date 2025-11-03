@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色與權限 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">admin_panel_settings</span>
+          <h4 class="mb-0">角色與權限</h4>
+        </div>
+
+        <!-- 統計卡片 -->
+        <div class="row mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="h3 mb-0 text-primary" id="totalRoles">0</div>
+                <div class="text-muted small">角色數</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 角色列表 -->
+        <div class="card">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">角色列表</h5>
+            <button class="btn btn-primary btn-sm" onclick="showRoleModal()">
+              <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">add</span>
+              新增角色
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead style="background-color: #fafafa;">
+                  <tr>
+                    <th style="width: 60px;">#</th>
+                    <th>角色名稱</th>
+                    <th>描述</th>
+                    <th>權限資源</th>
+                    <th style="width: 200px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rolesTableBody">
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">載入中...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 新增/編輯角色 Modal -->
+  <div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="roleModalTitle">新增角色</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">角色名稱 <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="modalRoleName" placeholder="例如：系統管理員">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">描述</label>
+              <input type="text" class="form-control" id="modalRoleDesc" placeholder="簡短說明此角色用途">
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <h6 class="mb-3">權限矩陣</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>資源</th>
+                  <th>檢視</th>
+                  <th>新增</th>
+                  <th>編輯</th>
+                  <th>刪除</th>
+                  <th>匯出</th>
+                  <th>管理</th>
+                </tr>
+              </thead>
+              <tbody id="permMatrixBody">
+                <!-- 動態填入 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllPerms(true)">全選</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectAllPerms(false)">全不選</button>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="saveRole()">儲存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin('roles');
+    initLayout('roles');
+
+    const STORAGE_KEY = 'rolesStore';
+    const RESOURCES = [
+      { key: 'users', label: '使用者' },
+      { key: 'roles', label: '角色' },
+      { key: 'departments', label: '部門' },
+      { key: 'companies', label: '公司' },
+      { key: 'surveys', label: '問卷' },
+      { key: 'guidance', label: '輔導紀錄' }
+    ];
+    const ACTIONS = ['view','create','edit','delete','export','manage'];
+
+    let allRoles = [];
+    let editingRoleId = null;
+    let roleModal = null;
+
+    function getDefaultRoles() {
+      return [
+        {
+          id: 'role-admin',
+          name: '系統管理員',
+          description: '擁有系統所有權限',
+          permissions: RESOURCES.map(r => ({ resource: r.key, actions: [...ACTIONS] }))
+        },
+        {
+          id: 'role-data',
+          name: '資料管理員',
+          description: '維護公司與問卷資料',
+          permissions: [
+            { resource: 'companies', actions: ['view','create','edit','delete','export'] },
+            { resource: 'surveys', actions: ['view','create','edit','delete','export'] }
+          ]
+        },
+        {
+          id: 'role-consultant',
+          name: '輔導顧問',
+          description: '處理輔導與問卷作業',
+          permissions: [
+            { resource: 'companies', actions: ['view','edit','export'] },
+            { resource: 'surveys', actions: ['view','edit','export'] },
+            { resource: 'guidance', actions: ['view','create','edit','delete'] }
+          ]
+        },
+        {
+          id: 'role-viewer',
+          name: '查看者',
+          description: '僅可檢視資料',
+          permissions: [
+            { resource: 'companies', actions: ['view','export'] },
+            { resource: 'surveys', actions: ['view','export'] }
+          ]
+        }
+      ];
+    }
+
+    function loadRoles() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        allRoles = getDefaultRoles();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allRoles));
+      } else {
+        try {
+          allRoles = JSON.parse(raw);
+        } catch (e) {
+          allRoles = getDefaultRoles();
+        }
+      }
+    }
+
+    function saveRoles() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allRoles));
+    }
+
+    function renderRoles() {
+      const tbody = document.getElementById('rolesTableBody');
+      const total = document.getElementById('totalRoles');
+      total.textContent = allRoles.length;
+
+      if (allRoles.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">尚無角色，請新增</td></tr>';
+        return;
+      }
+
+      let html = '';
+      allRoles.forEach((role, idx) => {
+        const resourceNames = role.permissions.map(p => RESOURCES.find(r => r.key === p.resource)?.label || p.resource);
+        html += `
+          <tr>
+            <td class="text-center">${idx + 1}</td>
+            <td><strong>${escapeHtml(role.name)}</strong></td>
+            <td>${escapeHtml(role.description || '')}</td>
+            <td>
+              ${resourceNames.length ? resourceNames.map(n => `<span class=\"badge bg-primary me-1\">${escapeHtml(n)}</span>`).join('') : '<span class="text-muted">無</span>'}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="editRole('${role.id}')">
+                <span class="material-icons" style="font-size: 16px;">edit</span>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteRole('${role.id}')">
+                <span class="material-icons" style="font-size: 16px;">delete</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function showRoleModal() {
+      editingRoleId = null;
+      document.getElementById('roleModalTitle').textContent = '新增角色';
+      document.getElementById('modalRoleName').value = '';
+      document.getElementById('modalRoleDesc').value = '';
+      buildPermissionMatrix();
+      if (!roleModal) roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+      roleModal.show();
+    }
+
+    function editRole(roleId) {
+      const role = allRoles.find(r => r.id === roleId);
+      if (!role) return;
+      editingRoleId = roleId;
+      document.getElementById('roleModalTitle').textContent = '編輯角色';
+      document.getElementById('modalRoleName').value = role.name;
+      document.getElementById('modalRoleDesc').value = role.description || '';
+      buildPermissionMatrix(role.permissions);
+      if (!roleModal) roleModal = new bootstrap.Modal(document.getElementById('roleModal'));
+      roleModal.show();
+    }
+
+    function buildPermissionMatrix(existingPerms = []) {
+      const tbody = document.getElementById('permMatrixBody');
+      const map = {};
+      existingPerms.forEach(p => { map[p.resource] = new Set(p.actions); });
+      let html = '';
+      RESOURCES.forEach(res => {
+        html += '<tr>' +
+          `<td>${escapeHtml(res.label)}</td>` +
+          ACTIONS.map(action => {
+            const checked = map[res.key]?.has(action) ? 'checked' : '';
+            return `<td class=\"text-center\"><input type=\"checkbox\" data-resource=\"${res.key}\" data-action=\"${action}\" ${checked}></td>`;
+          }).join('') +
+          '</tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function selectAllPerms(checked) {
+      document.querySelectorAll('#permMatrixBody input[type="checkbox"]').forEach(cb => cb.checked = !!checked);
+    }
+
+    function saveRole() {
+      const name = document.getElementById('modalRoleName').value.trim();
+      const description = document.getElementById('modalRoleDesc').value.trim();
+      if (!name) {
+        alert('請輸入角色名稱');
+        return;
+      }
+
+      // 讀取矩陣
+      const permsByResource = {};
+      document.querySelectorAll('#permMatrixBody input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) {
+          const res = cb.getAttribute('data-resource');
+          const act = cb.getAttribute('data-action');
+          if (!permsByResource[res]) permsByResource[res] = new Set();
+          permsByResource[res].add(act);
+        }
+      });
+      const permissions = Object.keys(permsByResource).map(res => ({ resource: res, actions: Array.from(permsByResource[res]) }));
+
+      if (editingRoleId) {
+        const role = allRoles.find(r => r.id === editingRoleId);
+        if (role) {
+          role.name = name;
+          role.description = description;
+          role.permissions = permissions;
+        }
+      } else {
+        const newRole = { id: `role-${Date.now()}`, name, description, permissions };
+        allRoles.push(newRole);
+      }
+
+      saveRoles();
+      renderRoles();
+      if (roleModal) roleModal.hide();
+      alert(editingRoleId ? '角色已更新' : '角色已新增');
+    }
+
+    function deleteRole(roleId) {
+      const role = allRoles.find(r => r.id === roleId);
+      if (!role) return;
+      if (role.name === '系統管理員') {
+        alert('無法刪除內建的系統管理員角色');
+        return;
+      }
+      if (!confirm(`確定要刪除角色「${role.name}」嗎？此操作無法復原。`)) return;
+      allRoles = allRoles.filter(r => r.id !== roleId);
+      saveRoles();
+      renderRoles();
+      alert('角色已刪除');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    window.addEventListener('load', function() {
+      loadRoles();
+      renderRoles();
+      buildPermissionMatrix();
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,7 +1,7 @@
 // 共用的後台佈局組件，支援角色權限控制
 
 const ROLE_PERMISSIONS = {
-  '系統管理員': ['companies', 'surveys', 'guidance', 'users'],
+  '系統管理員': ['companies', 'surveys', 'guidance', 'users', 'roles', 'departments'],
   '輔導顧問': ['companies', 'surveys', 'guidance'],
   '分析人員': ['companies', 'surveys']
 };
@@ -10,8 +10,21 @@ const NAV_ITEMS = [
   // { key: 'dashboard', label: '儀表板', href: 'a04-dashboard.html', icon: 'dashboard' },
   { key: 'companies', label: '所有公司', href: 'a02-companies.html', icon: 'business' },
   { key: 'surveys', label: '問卷資料庫', href: 'a08-surveys.html', icon: 'poll' },
-  { key: 'guidance', label: '輔導紀錄', href: 'a05-guidance-records.html', icon: 'history_edu' },
-  { key: 'users', label: '使用者管理', href: 'a07-users.html', icon: 'people' }
+  { key: 'guidance', label: '輔導紀錄', href: 'a05-guidance-records.html', icon: 'history_edu' }
+];
+
+// 側欄下拉群組（將使用者管理相關集中在一起）
+const NAV_GROUPS = [
+  {
+    key: 'user_mgmt',
+    label: '使用者管理',
+    icon: 'groups',
+    children: [
+      { key: 'users', label: '使用者設定', href: 'a07-users.html', icon: 'people' },
+      { key: 'roles', label: '角色與權限', href: 'a07-roles.html', icon: 'admin_panel_settings' },
+      { key: 'departments', label: '部門設定', href: 'a07-departments.html', icon: 'apartment' }
+    ]
+  }
 ];
 
 function getStoredLoginData() {
@@ -73,6 +86,12 @@ function renderSidebar(activePage, user) {
   const role = user?.role;
   const links = NAV_ITEMS.filter(item => hasModuleAccess(role, item.key));
 
+  // 準備群組（若群組中至少一個子項可見才顯示）
+  const groups = NAV_GROUPS.map(group => {
+    const visibleChildren = group.children.filter(child => hasModuleAccess(role, child.key));
+    return { ...group, children: visibleChildren };
+  }).filter(g => g.children.length > 0);
+
   return `
     <aside class="sidebar ${isCollapsed ? 'collapsed' : ''}" id="mainSidebar" style="height: 100%; overflow-y: auto;">
       <div class="sidebar-toggle" onclick="toggleSidebar()" title="${isCollapsed ? '展開側邊欄' : '收起側邊欄'}">
@@ -85,6 +104,30 @@ function renderSidebar(activePage, user) {
             <span class="nav-link-text">${item.label}</span>
           </a>
         `).join('')}
+
+        ${groups.map(group => {
+          const hasActiveChild = group.children.some(c => c.key === activePage);
+          const stored = localStorage.getItem(`submenu_${group.key}_open`);
+          const isOpen = stored === null ? hasActiveChild : stored === 'true';
+          const iconName = isOpen ? 'expand_more' : 'chevron_right';
+          return `
+            <div class="nav-group">
+              <a class="nav-link" href="javascript:void(0)" onclick="toggleSubmenu('${group.key}')" title="${group.label}">
+                <span class="material-icons" style="font-size: 20px;">${group.icon}</span>
+                <span class="nav-link-text">${group.label}</span>
+                <span class="material-icons" id="submenu-icon-${group.key}" style="margin-left:auto; font-size: 18px;">${iconName}</span>
+              </a>
+              <div class="submenu" id="submenu-${group.key}" style="display:${isOpen ? 'block' : 'none'};">
+                ${group.children.map(child => `
+                  <a class="nav-link ${activePage === child.key ? 'active' : ''}" href="${child.href}" title="${child.label}" style="margin-left: 32px;">
+                    <span class="material-icons" style="font-size: 18px;">${child.icon}</span>
+                    <span class="nav-link-text">${child.label}</span>
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('')}
       </nav>
     </aside>
   `;
@@ -168,5 +211,22 @@ function toggleSidebar() {
   const toggleBtn = sidebar.querySelector('.sidebar-toggle');
   if (toggleBtn) {
     toggleBtn.title = isCollapsed ? '收起側邊欄' : '展開側邊欄';
+  }
+}
+
+// 切換次選單開合
+function toggleSubmenu(groupKey) {
+  const container = document.getElementById(`submenu-${groupKey}`);
+  const icon = document.getElementById(`submenu-icon-${groupKey}`);
+  if (!container) return;
+  const isOpen = container.style.display !== 'none';
+  if (isOpen) {
+    container.style.display = 'none';
+    if (icon) icon.textContent = 'chevron_right';
+    localStorage.setItem(`submenu_${groupKey}_open`, 'false');
+  } else {
+    container.style.display = 'block';
+    if (icon) icon.textContent = 'expand_more';
+    localStorage.setItem(`submenu_${groupKey}_open`, 'true');
   }
 }

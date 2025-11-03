@@ -371,6 +371,16 @@ body {
   transition: opacity 0.2s ease;
 }
 
+/* 側欄次選單（下拉群組） */
+.sidebar .nav-group .submenu {
+  margin: 0 8px 4px 8px;
+  border-left: 2px solid rgba(0, 0, 0, 0.06);
+}
+
+.sidebar.collapsed .nav-group .submenu {
+  display: none !important;
+}
+
 .sidebar-toggle {
   position: absolute;
   top: 12px;
