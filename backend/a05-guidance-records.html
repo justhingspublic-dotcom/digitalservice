@@ -791,9 +791,13 @@
         return;
       }
 
+      // 使用對數縮放來減少大小差異，讓較小項目也能清楚顯示
+      // 加上基礎值確保最小項目也有足夠面積
+      const minSize = 10;
       const data = sortedTopics.map(([topic, count]) => ({
         topic: topic,
-        count: count,
+        v: Math.log10(count + 1) * 10 + minSize,  // 對數縮放 + 基礎大小
+        originalCount: count,                      // 保留原始數值供顯示用
         color: getHeatColor(count)
       }));
 
@@ -805,11 +809,11 @@
         type: 'treemap',
         data: {
           datasets: [{
+            label: '輔導主題',
             tree: data,
-            key: 'count',
-            groups: ['topic'],
+            key: 'v',
             backgroundColor: (ctx) => {
-              if (ctx.type !== 'data') return 'transparent';
+              if (ctx.type !== 'data' || !ctx.raw || !ctx.raw._data) return 'transparent';
               return ctx.raw._data.color;
             },
             borderColor: '#ffffff',
@@ -825,15 +829,15 @@
                 weight: 'bold'
               },
               formatter: (ctx) => {
-                if (ctx.type !== 'data') return '';
+                if (ctx.type !== 'data' || !ctx.raw || !ctx.raw._data) return '';
                 const topic = ctx.raw._data.topic;
-                const count = ctx.raw._data.count;
+                const count = ctx.raw._data.originalCount;  // 使用原始數值
                 // 如果區塊太小，只顯示數字
-                if (ctx.raw.w < 80 || ctx.raw.h < 40) {
+                if (ctx.raw.w < 60 || ctx.raw.h < 30) {
                   return count;
                 }
                 // 截斷過長的主題名稱
-                const maxLen = Math.floor(ctx.raw.w / 14);
+                const maxLen = Math.floor(ctx.raw.w / 12);
                 const displayTopic = topic.length > maxLen ? topic.substring(0, maxLen) + '...' : topic;
                 return [displayTopic, count + '次'];
               }
@@ -850,11 +854,12 @@
             tooltip: {
               callbacks: {
                 title: (items) => {
-                  if (items.length === 0) return '';
+                  if (items.length === 0 || !items[0].raw || !items[0].raw._data) return '';
                   return items[0].raw._data.topic;
                 },
                 label: (item) => {
-                  const count = item.raw._data.count;
+                  if (!item.raw || !item.raw._data) return '';
+                  const count = item.raw._data.originalCount;  // 使用原始數值
                   const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
                   return `出現 ${count} 次 (${percentage}%)`;
                 }
@@ -862,7 +867,7 @@
             }
           },
           onClick: (event, elements) => {
-            if (elements.length > 0) {
+            if (elements.length > 0 && elements[0].raw && elements[0].raw._data) {
               const topic = elements[0].raw._data.topic;
               // 切換到資料列表並搜尋該主題
               document.getElementById('guidance-list-tab').click();
