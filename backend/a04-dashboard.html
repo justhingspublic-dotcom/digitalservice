@@ -22,280 +22,189 @@
         <!-- 標題 -->
         <div class="d-flex align-items-center gap-2 mb-4">
           <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">dashboard</span>
-          <h4 class="mb-0">儀表板與視覺化分析</h4>
+          <h4 class="mb-0">儀表板</h4>
         </div>
 
-        <!-- 統計卡片 -->
-        <div class="row mb-4">
-          <div class="col-md-3 mb-3">
-            <div class="stat-card">
-              <div class="stat-number" style="color: var(--primary-color);">0</div>
+        <!-- 統計卡片 - 簡潔風格 -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3">
+            <div class="stat-card-minimal">
+              <div class="stat-value" id="statTotal">0</div>
               <div class="stat-label">總公司數</div>
             </div>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="stat-card">
-              <div class="stat-number" style="color: var(--success-color);">0</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card-minimal">
+              <div class="stat-value text-success" id="statWeekly">0</div>
               <div class="stat-label">本週新增</div>
             </div>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="stat-card">
-              <div class="stat-number" style="color: #ff9800;">0</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card-minimal">
+              <div class="stat-value text-warning" id="statMonthly">0</div>
               <div class="stat-label">本月新增</div>
             </div>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="stat-card">
-              <div class="stat-number" style="color: #2196F3;">0</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card-minimal">
+              <div class="stat-value text-info" id="statActive">0</div>
               <div class="stat-label">活躍公司數</div>
             </div>
           </div>
         </div>
 
-        <!-- 視覺化圖表區域 -->
-        <div class="card mb-4">
-          <div class="card-header bg-white">
-            <h5 class="mb-0">視覺化圖表</h5>
-          </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <!-- 圓餅圖 -->
-              <div class="col-md-6">
-                <div class="border rounded p-3">
-                  <h6 class="mb-3 fw-bold text-center">產業別分布</h6>
-                  <canvas id="pieChart" style="max-height: 350px;"></canvas>
+        <!-- 雙欄主視覺區 - 圓餅圖 & 橫條圖 左右並排 -->
+        <div class="row g-4 mb-4">
+          <!-- 左側：產業別分布圓餅圖 -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                  <span class="material-icons me-2" style="font-size: 20px; color: #4472C4;">pie_chart</span>
+                  產業別分布
+                </h6>
+              </div>
+              <div class="card-body pt-2 d-flex flex-column">
+                <div class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height: 300px;">
+                  <canvas id="pieChart" style="max-height: 300px;"></canvas>
+                </div>
+                <div class="mt-auto pt-3">
+                  <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+                    <table class="table table-sm mb-0">
+                      <thead class="sticky-top" style="background: #f8f9fa;">
+                        <tr>
+                          <th class="border-0 py-2" style="font-weight: 600; font-size: 12px;">產業別</th>
+                          <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">數量</th>
+                          <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">佔比</th>
+                        </tr>
+                      </thead>
+                      <tbody id="industryTable">
+                        <tr><td colspan="3" class="text-center text-muted py-3">載入中...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- 橫條圖 -->
-              <div class="col-md-6">
-                <div class="border rounded p-3">
-                  <h6 class="mb-3 fw-bold text-center">年度趨勢分析</h6>
-                  <canvas id="barChart" style="max-height: 350px;"></canvas>
+          <!-- 右側：年度趨勢橫條圖 -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                  <span class="material-icons me-2" style="font-size: 20px; color: #70AD47;">bar_chart</span>
+                  年度趨勢分析
+                </h6>
+              </div>
+              <div class="card-body pt-2 d-flex flex-column">
+                <div class="d-flex align-items-center justify-content-center flex-grow-1" style="min-height: 300px;">
+                  <canvas id="barChart" style="max-height: 300px;"></canvas>
+                </div>
+                <div class="mt-auto pt-3">
+                  <div class="table-responsive" style="max-height: 180px; overflow-y: auto;">
+                    <table class="table table-sm mb-0">
+                      <thead class="sticky-top" style="background: #f8f9fa;">
+                        <tr>
+                          <th class="border-0 py-2" style="font-weight: 600; font-size: 12px;">縣市</th>
+                          <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">數量</th>
+                          <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">佔比</th>
+                        </tr>
+                      </thead>
+                      <tbody id="cityTable">
+                        <tr><td colspan="3" class="text-center text-muted py-3">載入中...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 縣市分布 -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header bg-white">
-                <h5 class="mb-0">縣市分布統計</h5>
+        <!-- 第二排：員工規模 & 數位化階段 左右並排 -->
+        <div class="row g-4 mb-4">
+          <!-- 左側：員工規模分布 -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                  <span class="material-icons me-2" style="font-size: 20px; color: #ED7D31;">groups</span>
+                  員工人數分布
+                </h6>
               </div>
-              <div class="card-body">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>縣市</th>
-                      <th class="text-end">數量</th>
-                      <th class="text-end">佔比</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>台北市</td>
-                      <td class="text-end">68</td>
-                      <td class="text-end">27.4%</td>
-                    </tr>
-                    <tr>
-                      <td>新北市</td>
-                      <td class="text-end">52</td>
-                      <td class="text-end">21.0%</td>
-                    </tr>
-                    <tr>
-                      <td>桃園市</td>
-                      <td class="text-end">38</td>
-                      <td class="text-end">15.3%</td>
-                    </tr>
-                    <tr>
-                      <td>台中市</td>
-                      <td class="text-end">35</td>
-                      <td class="text-end">14.1%</td>
-                    </tr>
-                    <tr>
-                      <td>台南市</td>
-                      <td class="text-end">28</td>
-                      <td class="text-end">11.3%</td>
-                    </tr>
-                    <tr>
-                      <td>高雄市</td>
-                      <td class="text-end">27</td>
-                      <td class="text-end">10.9%</td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr class="table-light">
-                      <th>總計</th>
-                      <th class="text-end">248</th>
-                      <th class="text-end">100%</th>
-                    </tr>
-                  </tfoot>
-                </table>
+              <div class="card-body pt-2">
+                <div class="table-responsive">
+                  <table class="table table-sm mb-0">
+                    <thead style="background: #f8f9fa;">
+                      <tr>
+                        <th class="border-0 py-2" style="font-weight: 600; font-size: 12px;">規模</th>
+                        <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">數量</th>
+                        <th class="border-0 py-2" style="font-weight: 600; font-size: 12px; width: 40%;">分布</th>
+                      </tr>
+                    </thead>
+                    <tbody id="employeeTable">
+                      <tr><td colspan="3" class="text-center text-muted py-3">載入中...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header bg-white">
-                <h5 class="mb-0">產業別分布統計</h5>
+          <!-- 右側：數位化階段分布 -->
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                  <span class="material-icons me-2" style="font-size: 20px; color: #5B9BD5;">trending_up</span>
+                  數位化階段分布
+                </h6>
               </div>
-              <div class="card-body">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>產業別</th>
-                      <th class="text-end">數量</th>
-                      <th class="text-end">佔比</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>製造業</td>
-                      <td class="text-end">78</td>
-                      <td class="text-end">31.5%</td>
-                    </tr>
-                    <tr>
-                      <td>批發及零售業</td>
-                      <td class="text-end">65</td>
-                      <td class="text-end">26.2%</td>
-                    </tr>
-                    <tr>
-                      <td>住宿及餐飲業</td>
-                      <td class="text-end">42</td>
-                      <td class="text-end">16.9%</td>
-                    </tr>
-                    <tr>
-                      <td>資訊及通訊傳播業</td>
-                      <td class="text-end">35</td>
-                      <td class="text-end">14.1%</td>
-                    </tr>
-                    <tr>
-                      <td>專業、科學及技術服務業</td>
-                      <td class="text-end">18</td>
-                      <td class="text-end">7.3%</td>
-                    </tr>
-                    <tr>
-                      <td>其他</td>
-                      <td class="text-end">10</td>
-                      <td class="text-end">4.0%</td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr class="table-light">
-                      <th>總計</th>
-                      <th class="text-end">248</th>
-                      <th class="text-end">100%</th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 企業規模 & 轉型階段 -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header bg-white">
-                <h5 class="mb-0">員工人數分布</h5>
-              </div>
-              <div class="card-body">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>規模</th>
-                      <th class="text-end">數量</th>
-                      <th class="text-end">佔比</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>5人以下</td>
-                      <td class="text-end">38</td>
-                      <td class="text-end">15.3%</td>
-                    </tr>
-                    <tr>
-                      <td>6-20人</td>
-                      <td class="text-end">72</td>
-                      <td class="text-end">29.0%</td>
-                    </tr>
-                    <tr>
-                      <td>21-50人</td>
-                      <td class="text-end">68</td>
-                      <td class="text-end">27.4%</td>
-                    </tr>
-                    <tr>
-                      <td>51-100人</td>
-                      <td class="text-end">45</td>
-                      <td class="text-end">18.2%</td>
-                    </tr>
-                    <tr>
-                      <td>101-200人</td>
-                      <td class="text-end">18</td>
-                      <td class="text-end">7.3%</td>
-                    </tr>
-                    <tr>
-                      <td>201人以上</td>
-                      <td class="text-end">7</td>
-                      <td class="text-end">2.8%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="card">
-              <div class="card-header bg-white">
-                <h5 class="mb-0">數位化階段分布</h5>
-              </div>
-              <div class="card-body">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>階段</th>
-                      <th class="text-end">數量</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="2" class="text-center text-muted">尚無資料</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div class="card-body pt-2">
+                <div class="table-responsive">
+                  <table class="table table-sm mb-0">
+                    <thead style="background: #f8f9fa;">
+                      <tr>
+                        <th class="border-0 py-2" style="font-weight: 600; font-size: 12px;">階段</th>
+                        <th class="border-0 py-2 text-end" style="font-weight: 600; font-size: 12px;">數量</th>
+                        <th class="border-0 py-2" style="font-weight: 600; font-size: 12px; width: 40%;">分布</th>
+                      </tr>
+                    </thead>
+                    <tbody id="stageTable">
+                      <tr><td colspan="3" class="text-center text-muted py-3">載入中...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 最新加入公司 -->
-        <div class="card">
-          <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">最新加入公司（最近5家）</h5>
-            <a href="a02-list.html" class="btn btn-sm btn-outline-primary">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+            <h6 class="fw-semibold mb-0 d-flex align-items-center">
+              <span class="material-icons me-2" style="font-size: 20px; color: #9c27b0;">schedule</span>
+              最新加入公司
+            </h6>
+            <a href="a02-companies.html" class="btn btn-sm btn-outline-primary">
               <span class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">business</span>
-              查看全部公司
+              查看全部
             </a>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover mb-0">
-                <thead style="background-color: #fafafa;">
+                <thead style="background-color: #f8f9fa;">
                   <tr>
-                    <th>公司名稱</th>
-                    <th>統一編號</th>
-                    <th>縣市</th>
-                    <th>產業別</th>
-                    <th>加入時間</th>
-                    <th>問卷數</th>
-                    <th>操作</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">公司名稱</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">統一編號</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">縣市</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">產業別</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">加入時間</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">問卷數</th>
+                    <th class="border-0" style="font-weight: 600; font-size: 12px;">操作</th>
                   </tr>
                 </thead>
                 <tbody id="recentCompaniesTable">
@@ -1082,32 +991,29 @@
       const stats = calculateStats();
       
       // 更新統計卡片
-      const statCards = document.querySelectorAll('.stat-card .stat-number');
-      if (statCards.length >= 4) {
-        statCards[0].textContent = stats.totalCount;
-        statCards[1].textContent = stats.weeklyCount;
-        statCards[2].textContent = stats.monthlyCount;
-        statCards[3].textContent = stats.activeCount;
-      }
+      document.getElementById('statTotal').textContent = stats.totalCount;
+      document.getElementById('statWeekly').textContent = stats.weeklyCount;
+      document.getElementById('statMonthly').textContent = stats.monthlyCount;
+      document.getElementById('statActive').textContent = stats.activeCount;
+      
+      // 更新產業別表格
+      updateIndustryTable(stats.industryCount, stats.totalCount);
       
       // 更新縣市分布表格
-      updateTable('.row:nth-of-type(2) .col-md-6:nth-child(1) tbody', stats.cityCount, stats.totalCount);
-      
-      // 更新產業別分布表格
-      updateTable('.row:nth-of-type(3) .col-md-6:nth-child(2) tbody', stats.industryCount, stats.totalCount);
+      updateCityTable(stats.cityCount, stats.totalCount);
       
       // 更新員工規模表格
-      updateTable('.row:nth-of-type(4) .col-md-6:nth-child(1) tbody', stats.employeeCount, stats.totalCount, false);
+      updateEmployeeTable(stats.employeeCount, stats.totalCount);
       
       // 更新數位化階段表格
-      updateTable('.row:nth-of-type(4) .col-md-6:nth-child(2) tbody', stats.stageCount, stats.totalCount, false);
+      updateStageTable(stats.stageCount, stats.totalCount);
       
       // 更新最新公司列表
       updateRecentCompanies();
     }
 
-    function updateTable(selector, dataCount, total, showPercentage = true) {
-      const tbody = document.querySelector(selector);
+    function updateIndustryTable(dataCount, total) {
+      const tbody = document.getElementById('industryTable');
       if (!tbody) return;
       
       const sortedData = Object.entries(dataCount)
@@ -1119,23 +1025,110 @@
         const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
         html += `
           <tr>
-            <td>${name}</td>
-            <td class="text-end">${count}</td>
-            ${showPercentage ? `<td class="text-end">${percentage}%</td>` : ''}
+            <td style="font-size: 13px;">${escapeHtml(name)}</td>
+            <td class="text-end" style="font-size: 13px;">${count}</td>
+            <td class="text-end" style="font-size: 13px;">${percentage}%</td>
           </tr>
         `;
       });
       
-      const totalSum = sortedData.reduce((sum, [, count]) => sum + count, 0);
-      html += `
-        <tr class="table-light">
-          <th>總計</th>
-          <th class="text-end">${totalSum}</th>
-          ${showPercentage ? `<th class="text-end">100%</th>` : ''}
-        </tr>
-      `;
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">暫無資料</td></tr>';
+    }
+
+    function updateCityTable(dataCount, total) {
+      const tbody = document.getElementById('cityTable');
+      if (!tbody) return;
       
-      tbody.innerHTML = html;
+      const sortedData = Object.entries(dataCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+      
+      let html = '';
+      sortedData.forEach(([name, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        html += `
+          <tr>
+            <td style="font-size: 13px;">${escapeHtml(name)}</td>
+            <td class="text-end" style="font-size: 13px;">${count}</td>
+            <td class="text-end" style="font-size: 13px;">${percentage}%</td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">暫無資料</td></tr>';
+    }
+
+    function updateEmployeeTable(dataCount, total) {
+      const tbody = document.getElementById('employeeTable');
+      if (!tbody) return;
+      
+      const employeeOrder = ['5人以下', '6-20人', '21-50人', '51-100人', '101-200人', '201人以上'];
+      const maxCount = Math.max(...Object.values(dataCount), 1);
+      
+      let html = '';
+      employeeOrder.forEach(range => {
+        const count = dataCount[range] || 0;
+        if (count > 0) {
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+          const barWidth = (count / maxCount) * 100;
+          html += `
+            <tr>
+              <td style="font-size: 13px;">${escapeHtml(range)}</td>
+              <td class="text-end" style="font-size: 13px;">${count}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="progress flex-grow-1" style="height: 6px;">
+                    <div class="progress-bar" style="width: ${barWidth}%; background-color: #ED7D31;"></div>
+                  </div>
+                  <small class="text-muted" style="width: 40px; font-size: 11px;">${percentage}%</small>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+      });
+      
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">暫無資料</td></tr>';
+    }
+
+    function updateStageTable(dataCount, total) {
+      const tbody = document.getElementById('stageTable');
+      if (!tbody) return;
+      
+      const stageOrder = ['尚未開始', '初步導入階段', '持續優化階段', '成熟運用階段'];
+      const stageColors = {
+        '尚未開始': '#9ca3af',
+        '初步導入階段': '#3b82f6',
+        '持續優化階段': '#22c55e',
+        '成熟運用階段': '#f59e0b'
+      };
+      const maxCount = Math.max(...Object.values(dataCount), 1);
+      
+      let html = '';
+      stageOrder.forEach(stage => {
+        const count = dataCount[stage] || 0;
+        if (count > 0) {
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+          const barWidth = (count / maxCount) * 100;
+          const color = stageColors[stage] || '#6b7280';
+          html += `
+            <tr>
+              <td style="font-size: 13px;">${escapeHtml(stage)}</td>
+              <td class="text-end" style="font-size: 13px;">${count}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="progress flex-grow-1" style="height: 6px;">
+                    <div class="progress-bar" style="width: ${barWidth}%; background-color: ${color};"></div>
+                  </div>
+                  <small class="text-muted" style="width: 40px; font-size: 11px;">${percentage}%</small>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+      });
+      
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">暫無資料</td></tr>';
     }
 
     function updateRecentCompanies() {
@@ -1170,7 +1163,7 @@
             <td>${formatDateTime(joinedDate)}</td>
             <td><span class="badge bg-info">${surveyCount}</span></td>
             <td>
-              <a href="a02-list.html?companyId=${company.id}" class="btn btn-sm btn-outline-primary">
+              <a href="a03-company-detail.html?id=${company.id}" class="btn btn-sm btn-outline-primary">
                 <span class="material-icons" style="font-size: 16px; vertical-align: middle;">visibility</span>
               </a>
             </td>
@@ -1233,10 +1226,10 @@
       const industryLabels = allIndustries.length > 0 ? allIndustries : ['暫無資料'];
       const pieData = allIndustries.length > 0 ? allIndustries.map(ind => industryCount[ind]) : [1];
       
-      // 圓餅圖
+      // 圓餅圖（環狀圖）
       const pieCtx = document.getElementById('pieChart').getContext('2d');
       pieChart = new Chart(pieCtx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
           labels: industryLabels,
           datasets: [{
@@ -1244,18 +1237,21 @@
             backgroundColor: [
               '#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5',
               '#70AD47', '#264478', '#9E480E', '#636363', '#997300', '#255E91'
-            ]
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: true,
+          cutout: '55%',
           plugins: {
             legend: {
               position: 'right',
               labels: {
-                boxWidth: 12,
-                padding: 10,
+                boxWidth: 10,
+                padding: 8,
                 font: { size: 11 }
               }
             },
@@ -1265,7 +1261,7 @@
                   if (allIndustries.length === 0) return '暫無資料';
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
                   const percentage = ((context.parsed / total) * 100).toFixed(1);
-                  return `${context.label}: ${context.parsed} (${percentage}%)`;
+                  return `${context.label}: ${context.parsed} 家 (${percentage}%)`;
                 }
               }
             }
@@ -1274,7 +1270,7 @@
       });
 
       // 橫條圖
-      const barLabels = allIndustries.length > 0 ? allIndustries : ['暫無資料'];
+      const barLabels = allIndustries.length > 0 ? allIndustries.slice(0, 6) : ['暫無資料'];
       const barCtx = document.getElementById('barChart').getContext('2d');
       barChart = new Chart(barCtx, {
         type: 'bar',
@@ -1283,18 +1279,21 @@
           datasets: [
             {
               label: '2023',
-              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2023][ind] || 0) : [0],
-              backgroundColor: '#5470C6'
+              data: allIndustries.length > 0 ? barLabels.map(ind => yearData[2023][ind] || 0) : [0],
+              backgroundColor: '#5470C6',
+              borderRadius: 2
             },
             {
               label: '2024',
-              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2024][ind] || 0) : [0],
-              backgroundColor: '#91CC75'
+              data: allIndustries.length > 0 ? barLabels.map(ind => yearData[2024][ind] || 0) : [0],
+              backgroundColor: '#91CC75',
+              borderRadius: 2
             },
             {
               label: '2025',
-              data: allIndustries.length > 0 ? allIndustries.map(ind => yearData[2025][ind] || 0) : [0],
-              backgroundColor: '#FAC858'
+              data: allIndustries.length > 0 ? barLabels.map(ind => yearData[2025][ind] || 0) : [0],
+              backgroundColor: '#FAC858',
+              borderRadius: 2
             }
           ]
         },
@@ -1305,20 +1304,31 @@
           scales: {
             x: {
               stacked: true,
-              beginAtZero: true
+              beginAtZero: true,
+              grid: {
+                display: false
+              }
             },
             y: {
-              stacked: true
+              stacked: true,
+              grid: {
+                display: false
+              }
             }
           },
           plugins: {
             legend: {
               position: 'top',
+              labels: {
+                boxWidth: 10,
+                padding: 12,
+                font: { size: 11 }
+              }
             },
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.x}`;
+                  return `${context.dataset.label}: ${context.parsed.x} 家`;
                 }
               }
             }

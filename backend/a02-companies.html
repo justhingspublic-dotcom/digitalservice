@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div id="topbar"></div>
@@ -22,7 +23,181 @@
           <h4 class="mb-0">所有公司</h4>
         </div>
 
-        <!-- 搜尋與篩選 -->
+        <!-- Tab 導航 -->
+        <ul class="nav nav-tabs mb-4" id="companyTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts-pane" type="button" role="tab" aria-controls="charts-pane" aria-selected="true">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">bar_chart</span>
+              統計圖表
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab" aria-controls="list-pane" aria-selected="false">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">list</span>
+              資料列表
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab 內容 -->
+        <div class="tab-content" id="companyTabsContent">
+          <!-- 統計圖表 Tab -->
+          <div class="tab-pane fade show active" id="charts-pane" role="tabpanel" aria-labelledby="charts-tab">
+            <!-- 統計概覽卡片 - 簡潔風格 -->
+            <div class="row g-3 mb-4">
+              <div class="col-6 col-lg-3">
+                <div class="stat-card-minimal">
+                  <div class="stat-value" id="statTotalCompanies">0</div>
+                  <div class="stat-label">總公司數</div>
+                </div>
+              </div>
+              <div class="col-6 col-lg-3">
+                <div class="stat-card-minimal">
+                  <div class="stat-value text-success" id="statTotalCities">0</div>
+                  <div class="stat-label">涵蓋縣市</div>
+                </div>
+              </div>
+              <div class="col-6 col-lg-3">
+                <div class="stat-card-minimal">
+                  <div class="stat-value text-warning" id="statTotalIndustries">0</div>
+                  <div class="stat-label">產業類別</div>
+                </div>
+              </div>
+              <div class="col-6 col-lg-3">
+                <div class="stat-card-minimal">
+                  <div class="stat-value text-info" id="statActiveCompanies">0</div>
+                  <div class="stat-label">活躍公司</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 雙欄主視覺區 -->
+            <div class="row g-4">
+              <!-- 左側：台灣熱度地圖 + 縣市表格 -->
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                    <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                      <span class="material-icons me-2" style="font-size: 20px; color: #43a047;">map</span>
+                      公司縣市分布熱度圖
+                    </h6>
+                  </div>
+                  <div class="card-body pt-2">
+                    <div class="row g-3">
+                      <!-- 台灣地圖 SVG - 放大版 -->
+                      <div class="col-lg-7">
+                        <div id="taiwanMapContainer" class="map-container-bordered">
+                          <!-- 縮放控制按鈕 - 膠囊組（固定位置） -->
+                          <div class="map-zoom-controls">
+                            <button type="button" class="zoom-btn" onclick="zoomMap(1.2)" title="放大">
+                              <span class="material-icons">add</span>
+                            </button>
+                            <div class="zoom-divider"></div>
+                            <button type="button" class="zoom-btn" onclick="zoomMap(0.8)" title="縮小">
+                              <span class="material-icons">remove</span>
+                            </button>
+                            <div class="zoom-divider"></div>
+                            <button type="button" class="zoom-btn" onclick="resetMapZoom()" title="重置">
+                              <span class="material-icons">refresh</span>
+                            </button>
+                          </div>
+                          <div class="map-svg-wrapper" id="mapSvgWrapper">
+                          <svg id="taiwanMap" baseprofile="tiny" fill="#6f9c76" height="100%" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width=".5" version="1.2" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; min-height: 480px; display: block; transition: width 0.35s ease, min-width 0.35s ease, transform 0.35s ease;">
+                            <g id="features">
+                              <path d="M181.2 423.5l0 0.1-1.1-0.4-0.3-0.4 0.2-0.4 0.4-0.8-1.3-0.9-0.2-0.3-0.1-0.1-2.5-1.9-1.8-1.9-2.7 1-1.3 1.6 0.2 0.7-0.1 0.6-0.3 0.2-0.3-0.1-0.4 2.4-5 5.9-11.4-4.1 0.2 1-0.2 1-0.3 0.1 1.1 1.1-0.4 8.2-3.3 2.6 2.5 2.7-1.4-0.6-1.9-0.2-1.7-0.7-0.9-1.5 0.3-0.6 1.6-1.9 0.5-1 0.1-1.4 0-1.8-0.6-3.1-1.2-3-0.2-1.6 1.1-0.6 5.5-2.7 7.2 4.7 5-0.6 0.8-6.3 1.7-3.9 5.3-1.1 5.2 4.7 2 5.3z m0.2 10.5l0.3-2.1 0.3 0-0.2 1.7-0.4 0.4z m0.9-5l-1-3 0.1-0.7 0.3-0.4 0.8 2.4-0.2 1.7z" id="TWKIN" data-name="金門縣"></path>
+                              <path d="M471.2 47.6l0.1 0.6-0.3 0-0.7 0.1-0.5 0.1-0.1-0.9 0.3-0.4 0.1-0.1-0.1-0.3-0.1 0-0.1-0.1 0.4-0.5 0.2-0.1 0.4-0.2 0.2-0.3 0.6 1.3-0.6 0.7 0.2 0.1z m-12.4 22.5l-0.1-0.3-0.2 0.5 0.2 0.7 0.3 0.3 0.3 0.1 0.4 0.1 0.3 0 0.5 0.1 0.3 0.2 0.1 0.5 0.2-0.3 0.6-0.1 0.4-0.3 0.3-0.2 0-0.5 0.1-0.5 0.6-0.7 0.1 0 0.2-0.1 0.6 0.1 0.5 0 0.3 0.1 0.1 0 0.5 0 0.7 0.1 0.8-0.5 0 0.3-0.3 0.3-0.2 0.4-0.3 0-0.2 0.2-0.2 0.4 0 0.5-0.1 0.3 0 0.1-0.3 0.4-0.3 0.5-0.1 0.1-0.3 0.2-0.2-0.4-0.2 0-0.7 0.1-0.2 0.3-0.4 0.6-1 1-0.2 0-0.4-0.3-0.7-0.1-0.6 0.1-0.2 1.2-0.2 0.1-0.7 0.1-0.1-0.3-0.4-0.5-0.2-0.2-0.5 0.1-0.6 0.1-0.9-0.3-0.3-1 0.3-0.6 0.4-0.3 0.4-0.4 0.3-0.7-0.7-0.5 0.4-0.5 0.4 0 0.2 0 0.1-0.5-0.5-0.8 0-0.8 0.3-0.4 0.4 0 0.3 0.4 0.3 0.1 0.1 0 0.1 0 0.5 0.3-0.3 0.9-0.1 0.2z m12.6-10.9l-0.4 0-0.6 0-1.1-0.3-0.4 0.7-0.4 0.1-0.2 0.2-0.3 0.4 0 0.7 0.2 0.7 0 0.6-0.2 0.9 0.1 0.4 0.3 0.1 0.1 0.3-0.5 0.2-0.9-0.2-0.5 0.2 0-1 0.1-1.5 0.3-1.4 0.3-0.5-0.2-0.4 0-0.6 0.1-0.2 1.1-0.1 0.5-0.6 0.5-0.2 0.6-0.3 1-0.9 0.3-1 0.5-0.3 0.6-0.1 0.4-0.3 0.6 0.1 0.1 0.5 0.3 0.4 0.1 0 0.3 0 0 0.9 0 0.9 0.7-0.7 0.2 0 0.6 0 0.1 0.1 0 0.3 0 0.9-0.7 0.2 0.1 0.5 0.3 0.2 0 0.3 0 0.7-0.5-0.7-0.2-0.7-0.5-0.7-0.7 0-0.5 0-0.3 0.2-0.4 0.3-0.5 0.1-0.4 0.6z m2.1-5.6l-0.4 0.2-0.3 0-0.7 0 0.1-0.7 0.7-0.2 0.1-0.4 0.7-0.1 0.7-0.2-0.9 1.4z" id="TWLIE" data-name="連江縣"></path>
+                              <path d="M409.7 611.6l0.9 2.9-0.4 2.2-1.4-1.4-1.9-1.3-2-0.4-2.8 1.6-2.1 0.3-1 0.5-0.5 1.1-0.8 2.9-0.5 0.9-3.4 2-3.4 0.5-3.5-1.4-3.5-3.5 0.9-1.8 1.9 2.3 2.9 0.6 3.1-0.8 2.6-2.1-1.8-0.7-1.4-0.8-1.1-1.2-1-1.6-0.4 0.7 0 0.2-0.2 0.2-0.7 0.4-0.2-2.9 0.2-2.9 1.3 0 1.5 0.4 5.3-3.4 3.4-1.1-0.9 3.2-0.4 0.9 2.9-0.9 2.2 0.3 1.6-0.2 1.2-1.9 3.4 6.2z m-35.8-6.2l2.3-7.5 2.3-2.2 3 2.6-1.8 1.1-1.2 2.6-2 6.1-0.1 1.6 0.5 1.4-0.2 1-2.2 0.3-1.6 0.1-1.1 0.2-0.9 0.4-0.9 0.8-2.7 0 0.5-1.5 0.9-0.9 1.3-0.5 1.8-0.1 1.6-0.6 0.4-1.5 0.1-3.4z m18.1-5l-0.6-2.5-1.5-2.1-3.1-3.1 4-3 2.4 1.3 2.3 2 1 2.1-1.8 1.7 0.7 2.5-1 1.7-1.6 0.5-0.8-1.1z" id="TWPEN" data-name="澎湖縣"></path>
+                              <path d="M657.2 325.1l6.4-10.3 5-5.9 5.2-4.4 13.2-4.4 3.1-1.9 2.7-2.4 3.3-1.8 6.4-2.3 14.5-2.6 3 3.3 4.6 2.2 3.4 2.2 2.3 2.1 2.9 0.7 3.1 1.6 3.7 5.4 0.3 2.9-0.7 3-2.4 2.5-9.4 2.8-2.7 2.9 0.2 4.5-0.8 4.1 0.8 3.7 3.8 3.7 0.8 3.7-1 4.8 3.7 2.1 5.3-0.3 3.7 1.4 6 8.9-1 3.8-2.3 2.7 0.6 3.7 1 4.1 6.4 6 1.8 4-2.2 0.6-3.9 2.8 2.3 9-1.6 2.7-2.5 1-2.3-0.5-2.9 1.1-0.3 1.1-3.5-1.5-5.2-3-2.9-2.1-4-0.7-4.5-2.6-3.7-2.9-0.4-3.1 3.3-4.7 1.4-5.6-1.2-5.2-0.2-3.6-2.5-1.9-3.1-1.6-1.9-3.3-2.4-2.5-2.8 0.2-2.8-0.5-2.2-2.2-3-2.2-4.8-1.5-2.4-2.7 0.8-4.2-2.6-3-4.9-1.6-3-1.4-3.1-0.9-3.6-1.4-2.9-6.3-3.3-2.2-9.8 0.7-2.3-0.8z" id="TWTAO" data-name="桃園市"></path>
+                              <path d="M657.2 325.1l2.3 0.8 9.8-0.7 3.3 2.2 2.9 6.3 3.6 1.4 3.1 0.9 3 1.4 4.9 1.6 2.6 3-0.8 4.2 2.4 2.7 4.8 1.5 3 2.2 2.2 2.2 2.8 0.5 2.8-0.2 2.4 2.5 1.9 3.3 3.1 1.6 2.5 1.9 0.2 3.6 1.2 5.2-1.4 5.6-3.3 4.7 0.4 3.1 3.7 2.9 4.5 2.6 4 0.7 2.9 2.1 5.2 3 3.5 1.5-1.7 4.7-1 3.4 0.4 3.2-2.7 4.2-10.1 10.2-3.1 7.5-2-0.5-7.7 0.7-0.5 0.4-0.5-3.5-3.3-5.6-2.3-2.4-1-3.1-3.6-2.9-9.1 2.3-3.4-0.4-4.9 0.4-5.5 1.5-3-0.7 0.7-3.7 0.9-3.3-0.7-2.9-0.7-2.1 0.7-2.3 0.5-2.4 0.3-2.8-0.6-3.8-2.7-2.4-8.8-4.2-4.3-3.2-2.8-3.2-3.2-8 1.8-2.2 1.6-4.1 2.5-3.1 4.2-1.7 3.7-0.6 1.7-1 0.7-2.7-1.3-2.6-2.8-2.8-3.9-2-10.9-3.5-6-2.6 0.1-0.1 1.1-1.6 0.4-2.7 0.6-2.1 1.5-2.1 1.9-1.6 1.8-0.6-0.1-0.9 0.5-2.1 1.6-4.4 1.5-2.3z" id="TWHSQ" data-name="新竹縣"></path>
+                              <path d="M646.3 345.6l6 2.6 10.9 3.5 3.9 2 2.8 2.8 1.3 2.6-0.7 2.7-1.7 1-3.7 0.6-4.2 1.7-2.5 3.1-1.6 4.1-1.8 2.2-0.2 0.2-3.3 0.8-3.1-1.3-2-2.7-3-1.9-5-1.9 0.8-3 4-8.2 1.6-2.1 0.5-1.2 0-1.2-0.5-1.3-0.8-1.6 1.1-2.2 1.2-1.3z" id="TWHSZ" data-name="新竹市"></path>
+                              <path d="M655 374.5l3.2 8 2.8 3.2 4.3 3.2 8.8 4.2 2.7 2.4 0.6 3.8-0.3 2.8-0.5 2.4-0.7 2.3 0.7 2.1 0.7 2.9-0.9 3.3-0.7 3.7 3 0.7 5.5-1.5 4.9-0.4 3.4 0.4 9.1-2.3 3.6 2.9 1 3.1 2.3 2.4 3.3 5.6 0.5 3.5-2.7 1.9-1.3 4-3.5 1.5-3.9-0.1-3 2.2-3.3 3.1-4.2 2.4-8.4 6.6-4.9 2-6.4 3.5-3.9-1.6-3.6-4-4.4-1.7-7.1-0.6-4 2.4-0.6 5.3-3.7 2-8.8 0.5-8.4-4.8-4.7-0.9-5.3-2.6-10.9-8-4.5-3.9-3.4-3.6-6.6-10.3 5.2-5.8 1.3-2.9 0.7-4.8 1.5-4 4.3-7.5 1.2-4.5 1.1-2 4.8-1.4 1.4-1.5 0.8-1.9 1-1.8 3-3.2 3.4-2.4 4-1.1 5.2 1-0.7-3.9 1.9-2.7 2.7-2.7 1.3-4.2 0.6-1.3 2.6-1.3 0.3-0.9 5 1.9 3 1.9 2 2.7 3.1 1.3 3.3-0.8 0.2-0.2z" id="TWMIA" data-name="苗栗縣"></path>
+                              <path d="M712.3 433.2l0.5-0.4 7.7-0.7 2 0.5 2.6 0.8-0.5 4 1.1 2.6 3.5 0.8 3.2 1.9 2.7 1.8 2.8-0.4 3.4-1.7 3.6 0 4.2 3.4-3.4 3.5-0.3 3-1.7 4.5-5.4 3.4-2.2 3.6-0.9 3.7-2.2 2.7-2.5 1.3-0.9 1.4-2 1.5-9.6-0.9-3.4-0.8-3.4 0.2-8 3.2-4.5 0.7-4.4 0.2-6.4 3.3-3.2 0.6-3.6 2.1-5.7 5.5-3.6 1.4-4.8-0.1-3.4 2.8-1.9 3.9-2.5 0.7-6.4-4.8-2.2 1.4-4.2 5.5-4.3 0.2-7.3-1.1-4.6 2.2-2.7 6.1-5.4 10.4-3.6 3.4-3 0.5-13-1.8-3-0.1-0.1-1-3.9-2.6-3.1-0.5-0.9-2.5 0-2.8-1.4-2.9-2.3-3.6-3.2-2.6-8.5-2.5-3.3-3.9-0.7-5.5-1.9-4.6-2.9-2.5-4.2-1.3 0.5-0.6 0.5-2.4 2.4-1.9 1.6-4.7 1.9-8.8 6.7-11.7 2.1-7.1 2.4-4 9.6-10.6 6.6 10.3 3.4 3.6 4.5 3.9 10.9 8 5.3 2.6 4.7 0.9 8.4 4.8 8.8-0.5 3.7-2 0.6-5.3 4-2.4 7.1 0.6 4.4 1.7 3.6 4 3.9 1.6 6.4-3.5 4.9-2 8.4-6.6 4.2-2.4 3.3-3.1 3-2.2 3.9 0.1 3.5-1.5 1.3-4 2.7-1.9z" id="TWTXG" data-name="台中市"></path>
+                              <path d="M563.1 480.3l4.2 1.3 2.9 2.5 1.9 4.6 0.7 5.5 3.3 3.9 8.5 2.5 3.2 2.6 2.3 3.6 1.4 2.9 0 2.8 0.9 2.5 3.1 0.5 3.9 2.6 0.1 1 0 2.6-3.1 1.1-0.9 2.1 0.4 2.9-1.4 3.3-1.2 3.9-0.1 4.1-0.8 4.7-0.7 9.7 1.5 4.5 2.6 2.4 2.8 1 4.1 2.1-0.7 2.5-2.8 1.1-1.8 1.7-1.7 1.1-0.7 0.5-8.7-1.7-4.2 0.1-8.7-4.4-14.2-1.6-8.4-3.2-4.8-1.3-5.4-0.3-15.9 1.9-5.5-3.2 0.6-1 1.1-5.1 0.9-2.1 5.1-4.9 1.5-2.1 1.9-5.6 3-5.6 4.2-11.6 1.9-3.3 2.2-2.2 1.8-1.2 1.5-0.8 1.2-1 0.4-2.2 0.9-2 3.7-2.9 0.8-2.2 0.4-7.2 0.7-2 1.9-1.9 8.2-9.5z" id="TWCHA" data-name="彰化縣"></path>
+                              <path d="M519.2 556.7l5.5 3.2 15.9-1.9 5.4 0.3 4.8 1.3 8.4 3.2 14.2 1.6 8.7 4.4 4.2-0.1 8.7 1.7 0.7-0.5 1.4 5.2-1.5 3.4-0.7 5.2 0.7 5.5-1.3 3.7-0.7 4.2 2.8 3.4 4.2 1.8 4.9-1.5 6-0.6 1.9 2.5-0.4 0-0.3 3.6 0 2.5-2.8 0.9-8.4 1.7-4.6 0.5-1.7-2.9-3.4-2.4-6 1.7-2.7 0.4-9.1-3.3-3.6-4.2-3.8-3.4-4.9 0.3-9.1 1.7-5.2 1.4-11.8 6.8-2.7 2.7-3.2 1.7-5 4.1-3.9 0.6-1.4 2.2-1.3 3.5-2.8 2.3-4.4-0.1-6-3.3-7.6 0.8-0.1 0.1-0.7 0 3.4-3.7-0.2-11.8 0.5-8.9 2-7 3.2-5.6 0.9-7.2 1.7-6.3 0.9-2.2 4.4-5.8 0.7-2 0.6-1.1 4-3.1 0.6-1.2z" id="TWYUN" data-name="雲林縣"></path>
+                              <path d="M496.5 622.6l0.7 0 0.1-0.1 7.6-0.8 6 3.3 4.4 0.1 2.8-2.3 1.3-3.5 1.4-2.2 3.9-0.6 5-4.1 3.2-1.7 2.7-2.7 11.8-6.8 5.2-1.4 9.1-1.7 4.9-0.3 3.8 3.4 3.6 4.2 9.1 3.3 2.7-0.4 6-1.7 3.4 2.4 1.7 2.9 4.6-0.5 8.4-1.7 2.8-0.9 0-2.5 0.3-3.6 0.4 0 4.4 0.5 4.8 1.9 3 0.8 3.7 2.1-0.3 3.8-2.1 3.7 0.9 3.4 1.9 4.7 0.3 4.2 0.8 2.8 5.5 1 18.4 0.1 0.6 0.2-13.3 6.8-6.1 4.8-2.5 4.9-3.1 3.7-5.5 3.1-5.8 4.4-3.2 3.8-8.9 5.3-4.2 0.4-4.9-0.5-2.6 2.6-0.1 3.5 1 3.3 0.7 4.8-6-0.7-2.7-0.8-3.6 0.5-3.8 1.7-2.7 0-3.3-2.5-1.1-3.3 1.2-10.3-0.7-5.4-7.1-7.3-1.3-3.6-1.5-3.1-2.9-1.7-5.1-1.7-6.1 0.3-11 2.1-5.6 2.5-4.4 3.3-3.4 3.4-4.8 3.7-4.1 2.6-1.8 3.6-4.5 2-5.3-1.3-6.3-1-3.8-1.4 2.8-0.2 2.3-1 1 0.3-0.6-2.3-1.6 1.2-1.3-0.4-1.8-0.1 0-2.3 1.8-4.1 2.6-0.2 3.9 0-2.6-7.5-3.1-5.8 1.4-2.6 0-1.4-2.2-1.1 0.3-1.2 1.3-1.5 0.6-1.9 3-3.8-6.2 0.4-0.2-6.3z m62.7 15.5l4.9-2 3.2-0.4 2.2-1.6-1.9-4.9-1.7-2.9-3-1.6-4-1.5-5.7 0.5-6.7 1.2-2.7 2.9 0.6 4.1 4.4 1.7 5.1 3.3 5.3 1.2z m-82.1-1.3l10.1-10.2 7.6-9.7 1.8-0.5-6.5 10.5-3.2 3.2-2.1 2.6-2.7 2.7-2.2 1.5-3.2 2.6-2.2 1.2 2.6-3.9z" id="TWCYQ" data-name="嘉義縣"></path>
+                              <path d="M495.1 664.4l3.8 1.4 6.3 1 5.3 1.3 4.5-2 1.8-3.6 4.1-2.6 4.8-3.7 3.4-3.4 4.4-3.3 5.6-2.5 11-2.1 6.1-0.3 5.1 1.7 2.9 1.7 1.5 3.1 1.3 3.6 7.1 7.3 0.7 5.4-1.2 10.3 1.1 3.3 3.3 2.5 2.7 0 3.8-1.7 3.6-0.5 2.7 0.8 6 0.7-1.6 4.8-7.5 10.9-7.2 12.2-4.7 6-5.4 5.3-4.6 3.9-4.5 4.6-3.8 5.1-2.1 3.7-1.7 4-4.6 3.2-4.6 1.9-2.6 1.8-3 1.1-6.1-0.7-5.9 0.6-11.3-1.6-3.5-1.8-2.8-6.2-0.1-0.3-4.5 2.6-0.7-4.5-1.3-2.6-2.8-2.8 3.5-2.5 1.9-4.3-0.8-3.8-4.6-0.7-0.8 1.4-0.8 2.4-1.3 1.9-2.4-0.1-0.9-1.6 0.3-5-0.5-1.8-3-1.3-1.6 1.5-1.4 2.1-1.9 0.5-2.1-1.8-0.6-2.5 0.5-2.4 0.9-1.7 2.1-1.1 2.7-0.4 2.2-0.7 0.7-2.2-1-1.1-6.7-1.7 0-1.4 5.6 0-0.5-1.9-3.1-2.7-2-2.3 0.5-2.9 1.8-1 1.9-0.7 1-1.8-0.6-2.8-1-2.3 0.7-2.2 1-2.6 1.6-1.9-0.3-1.7 0.3-1.6 2.4-6.5 1.2-1.2 1.8-0.5-2.7-1.8 1.2-2.9z" id="TWTNN" data-name="台南市"></path>
+                              <path d="M596.8 682.8l-0.7-4.8-1-3.3 0.1-3.5 2.6-2.6 4.9 0.5 4.2-0.4 8.9-5.3 3.2-3.8 5.8-4.4 5.5-3.1 3.1-3.7 2.5-4.9 6.1-4.8 13.3-6.8 3.2 0.7 4.2 1.6 3 4.2 0.5 1.5 1.4 4.2-2.2 3.5-4 1.8-1 2.3 0.7 2.9 4 2.6 4.6 3.7 2 5.5 0.2 1.8-11.2 2.8-4.7 2.9-2.9 2.8-5.6 3.7-0.6 4.1 1.6 4.3-1.9 3.5-5.3 2.9-0.7 5 1.6 7.1-2.2 9.5 0 8.1-3.1 4.2-6.2 5.3-1.7 7 1 5.9 2.2 3.3 4.4 4.6 0.9 3.5-2.8 0.4-3.8-0.7-3.1 0.2-6.1 4.8-4.3-4-5.4-6.4-5.2 1.3-4.8 4.3-9.4-4.8-6.8 3.2-4.6 5.1-5.7 2.1-12.9-0.8-1.3 3.5-0.9 5.2-1.9 5.7 0.4 5-0.1 6.9-4 15.3-0.2 5.1 2 5.4 0.3 5.9-5.8 14.8-1.9-0.8-1.1 0-1.4 0.5-1.5 0.1-9.4-7.4-8.8-12.4 9.2 11.1-1-5.2-1.6-2.9-1.2-2.3-3.8-4.4-6.5-6-2.5-3.1-1.2-3.4 1.6-3.3 0.8-3-1.1-4.1-1.9-4.1-3.6-5.5-3.3-7.4-0.7-3.3 0-2.1 1.1-2.6 0.3-1.7-0.4-0.9-1-0.7-0.9-0.9-0.4-1.7-2.1-3.5-0.5-1.4-1.6-9.9 4.5-2.6 0.1 0.3 2.8 6.2 3.5 1.8 11.3 1.6 5.9-0.6 6.1 0.7 3-1.1 2.6-1.8 4.6-1.9 4.6-3.2 1.7-4 2.1-3.7 3.8-5.1 4.5-4.6 4.6-3.9 5.4-5.3 4.7-6 7.2-12.2 7.5-10.9 1.6-4.8z" id="TWKHH" data-name="高雄市"></path>
+                              <path d="M551.1 836.2l5.8-14.8-0.3-5.9-2-5.4 0.2-5.1 4-15.3 0.1-6.9-0.4-5 1.9-5.7 0.9-5.2 1.3-3.5 12.9 0.8 5.7-2.1 4.6-5.1 6.8-3.2 9.4 4.8 4.8-4.3 5.2-1.3 5.4 6.4 4.3 4 6.1-4.8 3.1-0.2 3.8 0.7 2.5 4.7 0.5 3.5 3.9 1 4 2.6-2 9.9-0.1 3.8-1.5 3.5-7 3-3.5 2-5.5 1.2-3.9 3.2-1.7 4.7-2.6 4.8-2.2 5.4-0.6 10.6 0.9 4.7 1.4 4.4 0.8 5.1 0 3.8 1.9 3.7 3.3 4-1.8 2.7-3.8 2.3-1.5 2.8-0.4 3.3 2 2.8 2.4 1.2 2.3 3.2-0.1 4.1 0.4 4.4 2.3 4.3 3.3 3.5 7.4 3.4 3.2-0.3 0.6 37.2-1.1 5.3-1.8 4.3-2.4 1.8-2.9 2.7 0.1 6 1 6.6-0.2 4.2-3.3-4.9-4.9-3.7-5.7-2.5-5.7-1.4-0.2 4.7-1.7 1.7-2.4-0.6-2.7-2.2-0.1-1.7 0.9-5-4-6.7-0.3-1.8 0-1.4 0.3-2.4 0-7.7 0.4-2.3 1.8-2.5 0.4-2.2-14.4-37.2-1.1-2.1-4-4.9-3.2-7.1-1.4-2.1-5.9-4.6-2.3-1.3-0.8-0.3-0.8-0.6-0.7-2.6-0.5-1-3.1-2.1-7.3-3.4-3.2-2.3-3.5-3-1.6-1-0.2-0.1z" id="TWPIF" data-name="屏東縣"></path>
+                              <path d="M634.7 759.1l2.8-0.4-0.9-3.5-4.4-4.6-2.2-3.3-1-5.9 1.7-7 6.2-5.3 3.1-4.2 0-8.1 2.2-9.5-1.6-7.1 0.7-5 5.3-2.9 1.9-3.5-1.6-4.3 0.6-4.1 5.6-3.7 2.9-2.8 4.7-2.9 11.2-2.8 0.8 5.3 3.7 5.9 5.6 2 4.4 2.1 3.6 3.4 4.5 0.7 4.1 1.1 6.6 11.5 8.5 7 5.9 0.8 4.7-2.7 0.6-4.4 0-4.9 2.2-4.3 3.5-9.6 2.6-5.5 1.8-6.1 1.9-4.8 2.5-3.7 2.6-5-0.4-4.9-1.3-5 2.8-3.9 7.8-3.8 2.5 0.8-3.3 19-1.6 3.5-5.1 6.8-1.9 3.5-1.5 4.4-1 8.3 0.1 7.3-0.8 6.9-3.5 7.2-1.5 1.6-3.4 2.5-1.5 1.6-0.8 1.6-1.2 4.2-3.5 6.1-2.1 9.4-1.5 4.2-7.4 10.7-0.9 2-10 8.4-2.4 2.8-0.4 1.9 0.5 4.5-0.1 2-0.9 2.3-1.6 2.6-3.4 4.3-3.4 3.2-11.6 7.8-7.8 8.5-1.9 1-1.5 2-3.8 9.7-1.8 3.6-5.8 7.3-2.4 4.3-1.3 8.8-3.5 12.1-6.9 12.1-1 4.1-1.2 11.6 0.2 10.5-3.2 0.3-7.4-3.4-3.3-3.5-2.3-4.3-0.4-4.4 0.1-4.1-2.3-3.2-2.4-1.2-2-2.8 0.4-3.3 1.5-2.8 3.8-2.3 1.8-2.7-3.3-4-1.9-3.7 0-3.8-0.8-5.1-1.4-4.4-0.9-4.7 0.6-10.6 2.2-5.4 2.6-4.8 1.7-4.7 3.9-3.2 5.5-1.2 3.5-2 7-3 1.5-3.5 0.1-3.8 2-9.9-4-2.6-3.9-1-0.5-3.5-2.5-4.7z m134.6 166.8l3.3 2.6 1.5 1.7-0.2 2-3.9 1.3-5.3-2.2-4.9-3.4-2.8-2.7 0.8-1.9 0-1.9-0.7-1.6-1.3-1.5 14.1 0 0 1.2-0.4 0.8-0.6 1.7-0.2 2.1 0.6 1.8z m-19.5-125.9l-1-3 0.4-0.4 7.3-0.6 0.8 0.5 0.5 1.4-0.6 2.8-0.6 1.2-0.3 1.2 0.3 1.1-0.1 0.8-0.5-0.1-1.3 0-0.6-0.2-0.3-0.4-1.9-0.7-2.1-3.6z" id="TWTTT" data-name="台東縣"></path>
+                              <path d="M727.6 474.4l2-1.5 0.9-1.4 2.5-1.3 2.2-2.7 0.9-3.7 2.2-3.6 5.4-3.4 1.7-4.5 0.3-3 3.4-3.5 1.8 1.5 4.7 2.2 10.8 2.8 6 2.3 4.7 0 3.5-3.3 1.7-4.3 2.7-0.6 13.4 7.9 8 1.3 0.8 0 0.5 0.5 0.6 1.1 0.5 1.1 0.2 0.7-1 1.7-4.2 4.1-4.6 6.3-3.3 2.7-1 1.4 0.5 1.5-0.6 1.1-4.9 3.6-1.8 1.8-2 4.3-2 8.8-5.4 7.8-1.1 3.2 0.2 3.4 1.3 3.8 1.1 1.6 0.9 0.7 0.6 1 0.1 2.3-0.8 2.7-2.7 4.1-0.5 2.5-0.3 4.6-2.3 11.7-4.6 12.4-5.8 28.8-3.4 7.1-8 46.2-2.5-0.8-7.8 3.8-2.8 3.9 1.3 5 0.4 4.9-2.6 5-2.5 3.7-1.9 4.8-1.8 6.1-2.6 5.5-3.5 9.6-2.2 4.3 0 4.9-0.6 4.4-4.7 2.7-5.9-0.8-8.5-7-6.6-11.5-4.1-1.1-4.5-0.7-3.6-3.4-4.4-2.1-5.6-2-3.7-5.9-0.8-5.3-0.2-1.8-2-5.5-4.6-3.7-4-2.6-0.7-2.9 1-2.3 4-1.8 2.2-3.5-1.4-4.2 4.3-2.5 2.2-2.1-1.2-4.4 1.1-1.9 1.1-3 3.7-2.7 5.4-1.2 5.3-0.2 3.8-3.4 1-6.2 2.8-3.7 5.5-2 3.3-2.3 1.1-3.6 2.3-9.1 0.9-6-0.7-5.2-0.8-3.9-2.3-2.9-1.5-2.9 4.1-6.8 0.1-2.7 1.8-5.1 2.8-6.1 2.2-6.3 1.1-7.2 0.5-5.4-1.3-3.2-1.5-2.4 1.7-5.5 3.7-7.7 5.8-7.6 0.1-2.7-1-3.3-3.8-2.4-2-2.2-0.2-7.2 2.7-2.1 4.7-1.6 3.8-1.7-0.2-2.6-1-4.5z" id="TWHUA" data-name="花蓮縣"></path>
+                              <path d="M740.7 399.4l0.3-1.1 2.9-1.1 2.3 0.5 2.5-1 1.6-2.7-2.3-9 3.9-2.8 2.2-0.6 4.2-1.2 3.5-1.3 2.7-2.4 3.6-2.5 4.8-2.3 2.8-2-0.3-1.4-0.7-2.3-0.1-3 1.4-3.6 3.4-2.9 2.7-1.6 9.4-3.8 9.7-5.9 4.5-1.3 3.6-2.6 2.3-3.7 2.3-2.9 2.7-1.4 2.5-0.9 3.3-2.1 1.2-2.8-1.8-2.5 1-2.2 8.1-1.6 2.6-1.8 6-3.2 4.3-0.9 2.4 1.4 0.6 0.8-8.6 4.3-4 3.4-13.5 16.4-2.1 3.5-1.7 4.8-1.1 5.6-0.4 5.5 0.2 5.3 2.4 11.2-0.2 2.9-1 2.8 0.2 5.8 2.4 4.5 4.7 2.9 5.5 1.1 0 1.2-2.3-0.2-2.2 0.2-1.9 0.6-1.3 1 1.9 3.6 0.9 4.7-0.6 4.1-4.3 2.4-0.3 1.8 0.6 2.1 1.2 2 0.4 2-1.8 1.7-4.5 2.6-5 5.8-0.2 2.3 0.3 5-0.8 2-1 1.6-0.6 2.3-0.3 4.6-0.4 1.2-0.7 0.9-0.4 1 0.7 1.2 0.2 0.2-0.8 0-8-1.3-13.4-7.9-2.7 0.6-1.7 4.3-3.5 3.3-4.7 0-6-2.3-10.8-2.8-4.7-2.2-1.8-1.5-4.2-3.4-3.6 0-3.4 1.7-2.8 0.4-2.7-1.8-3.2-1.9-3.5-0.8-1.1-2.6 0.5-4-2.6-0.8 3.1-7.5 10.1-10.2 2.7-4.2-0.4-3.2 1-3.4 1.7-4.7z" id="TWILA" data-name="宜蘭縣"></path>
+                              <path d="M754.1 381.6l-1.8-4-6.4-6-1-4.1-0.6-3.7 2.3-2.7 1-3.8-6-8.9-3.7-1.4-5.3 0.3-3.7-2.1 1-4.8-0.8-3.7-3.8-3.7-0.8-3.7 0.8-4.1-0.2-4.5 2.7-2.9 9.4-2.8 2.4-2.5 0.7-3-0.3-2.9-3.7-5.4-3.1-1.6-2.9-0.7-2.3-2.1-3.4-2.2-4.6-2.2-3-3.3 8.1-1.5 3.4-1.3 4.5-3.7 1.3-0.7 1.6-0.3 2.2 0 2.6 0.8 1.3 1.9 0.9 2 1.1 1.1 2.5-1-2.6-4.1-4.2-4.2-2.2-1.4 0.7-1.9 1.3-1.1 1.3-0.7 0.6-0.6 1.5-3.8 2.3-4.2 4.7-4.3 7-3.5 7.9-1.8 7.8 0.9 3.2 2.5 7.3 10.1 2.5 5.4 0.9-0.3 1.9-0.6 2.3-0.2 1.5 0.4-0.1 0.7-0.7 0.9-0.7 1.3 0 1.5 0.8 0.9 1.6 1.2-3.1 2.1-5.2 2.3-2.3 1.5 0.4 2.1 2.1 2.7 1.2 2.5 2.1 2.5 2.6 2.5 2.2 1.6 7.6 3.1 3.7 0.5 2.9-1.1 1.8-1.3 0.3-1.8-2.7-2.8-0.1-2.2 0.2-8.6 24.9 6.1 2.4 1.5-1.2 2.6-0.3 2.1 0.5 3.8 1.7 6.2 1.9 3 1.6 0.7 5-0.8 2.6 0.3 3 0.8 2.7 1.3 1.5 1.9-6.3 3.1-0.6-0.8-2.4-1.4-4.3 0.9-6 3.2-2.6 1.8-8.1 1.6-1 2.2 1.8 2.5-1.2 2.8-3.3 2.1-2.5 0.9-2.7 1.4-2.3 2.9-2.3 3.7-3.6 2.6-4.5 1.3-9.7 5.9-9.4 3.8-2.7 1.6-3.4 2.9-1.4 3.6 0.1 3 0.7 2.3 0.3 1.4-2.8 2-4.8 2.3-3.6 2.5-2.7 2.4-3.5 1.3-4.2 1.2z m22.7-60.5l3-1.2 5.5-7 1.4-3-2.7-2.3-3.3-1.9-0.1-3.6 1.1-4.8-1.1-3.2-2.8-2.5-1.8-7.2-1.2-2.6-1.1-2.4-0.3-2.4 0.4-2.6-1.5-1.6-2.8-0.9-2.9 1.4-2.1 1.8-7.8 4.7-2.6 2.9-1.5 3.3-1.3 1.7-1.2 2.1 2.7 3.1 4.2 4 0.8 4.5-1.1 5.3 2.9 4.9 4.1 3.2 2.8 3.2 2.6 2.3 3.5 0.8 4.2 0z" id="TWNWT" data-name="新北市"></path>
+                              <path d="M806.8 285.1l-0.2 8.6 0.1 2.2 2.7 2.8-0.3 1.8-1.8 1.3-2.9 1.1-3.7-0.5-7.6-3.1-2.2-1.6-2.6-2.5-2.1-2.5-1.2-2.5-2.1-2.7-0.4-2.1 2.3-1.5 5.2-2.3 3.1-2.1 1.1 0.7 0.5 0.8 1.2 1.1 2.8 1.1 8.1 1.9z" id="TWKEE" data-name="基隆市"></path>
+                              <path d="M599.5 519.1l3 0.1 13 1.8 3-0.5 3.6-3.4 5.4-10.4 2.7-6.1 4.6-2.2 7.3 1.1 4.3-0.2 4.2-5.5 2.2-1.4 6.4 4.8 2.5-0.7 1.9-3.9 3.4-2.8 4.8 0.1 3.6-1.4 5.7-5.5 3.6-2.1 3.2-0.6 6.4-3.3 4.4-0.2 4.5-0.7 8-3.2 3.4-0.2 3.4 0.8 9.6 0.9 1 4.5 0.2 2.6-3.8 1.7-4.7 1.6-2.7 2.1 0.2 7.2 2 2.2 3.8 2.4 1 3.3-0.1 2.7-5.8 7.6-3.7 7.7-1.7 5.5 1.5 2.4 1.3 3.2-0.5 5.4-1.1 7.2-2.2 6.3-2.8 6.1-1.8 5.1-0.1 2.7-4.1 6.8 1.5 2.9 2.3 2.9 0.8 3.9 0.7 5.2-0.9 6-2.3 9.1-1.1 3.6-3.3 2.3-5.5 2-2.8 3.7-1 6.2-3.8 3.4-5.3 0.2-5.4 1.2-3.7 2.7-1.1 3-1.1 1.9 1.2 4.4-2.2 2.1-4.3 2.5-0.5-1.5-3-4.2-4.2-1.6-3.2-0.7-0.6-0.2-18.4-0.1-5.5-1-0.8-2.8-0.3-4.2-1.9-4.7-0.9-3.4 2.1-3.7 0.3-3.8-3.7-2.1-3-0.8-4.8-1.9-4.4-0.5-1.9-2.5-6 0.6-4.9 1.5-4.2-1.8-2.8-3.4 0.7-4.2 1.3-3.7-0.7-5.5 0.7-5.2 1.5-3.4-1.4-5.2 1.7-1.1 1.8-1.7 2.8-1.1 0.7-2.5-4.1-2.1-2.8-1-2.6-2.4-1.5-4.5 0.7-9.7 0.8-4.7 0.1-4.1 1.2-3.9 1.4-3.3-0.4-2.9 0.9-2.1 3.1-1.1 0-2.6z" id="TWNAN" data-name="南投縣"></path>
+                              <path d="M776.8 321.1l-4.2 0-3.5-0.8-2.6-2.3-2.8-3.2-4.1-3.2-2.9-4.9 1.1-5.3-0.8-4.5-4.2-4-2.7-3.1 1.2-2.1 1.3-1.7 1.5-3.3 2.6-2.9 7.8-4.7 2.1-1.8 2.9-1.4 2.8 0.9 1.5 1.6-0.4 2.6 0.3 2.4 1.1 2.4 1.2 2.6 1.8 7.2 2.8 2.5 1.1 3.2-1.1 4.8 0.1 3.6 3.3 1.9 2.7 2.3-1.4 3-5.5 7-3 1.2z" id="TWTPE" data-name="台北市"></path>
+                              <path d="M559.2 638.1l-5.3-1.2-5.1-3.3-4.4-1.7-0.6-4.1 2.7-2.9 6.7-1.2 5.7-0.5 4 1.5 3 1.6 1.7 2.9 1.9 4.9-2.2 1.6-3.2 0.4-4.9 2z" id="TWCYI" data-name="嘉義市"></path>
+                            </g>
+                          </svg>
+                          </div>
+                          <!-- 地圖圖例 - 毛玻璃懸浮（固定位置） -->
+                          <div class="map-legend">
+                            <span class="legend-item"><span class="legend-dot" style="background: #e53935;"></span>500+</span>
+                            <span class="legend-item"><span class="legend-dot" style="background: #fb8c00;"></span>300-499</span>
+                            <span class="legend-item"><span class="legend-dot" style="background: #fdd835;"></span>100-299</span>
+                            <span class="legend-item"><span class="legend-dot" style="background: #43a047;"></span>&lt;100</span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- 縣市分布表格 -->
+                      <div class="col-lg-5">
+                        <div class="table-responsive city-table-container" id="cityTableContainer">
+                          <table class="table table-sm mb-0">
+                            <thead class="sticky-top" style="background: #f8f9fa;">
+                              <tr>
+                                <th class="border-0 py-2" style="font-weight: 600;">縣市</th>
+                                <th class="border-0 py-2 text-end" style="font-weight: 600;">家數</th>
+                                <th class="border-0 py-2" style="width: 45%; font-weight: 600;">分布</th>
+                              </tr>
+                            </thead>
+                            <tbody id="cityDistributionTable">
+                              <tr><td colspan="3" class="text-center text-muted py-4">載入中...</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右側：產業分布環狀圖 -->
+              <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                    <h6 class="fw-semibold mb-0 d-flex align-items-center">
+                      <span class="material-icons me-2" style="font-size: 20px; color: #4472C4;">donut_large</span>
+                      產業別分布
+                    </h6>
+                  </div>
+                  <div class="card-body pt-2 d-flex flex-column">
+                    <div class="d-flex align-items-center justify-content-center" style="min-height: 280px;">
+                      <canvas id="industryDonutChart" style="max-height: 280px;"></canvas>
+                    </div>
+                    <div class="mt-auto pt-3">
+                      <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-sm mb-0">
+                          <thead class="sticky-top" style="background: #f8f9fa;">
+                            <tr>
+                              <th class="border-0 py-2" style="font-weight: 600;">產業別</th>
+                              <th class="border-0 py-2 text-end" style="font-weight: 600;">家數</th>
+                              <th class="border-0 py-2 text-end" style="font-weight: 600;">佔比</th>
+                            </tr>
+                          </thead>
+                          <tbody id="industryDistributionTable">
+                            <tr><td colspan="3" class="text-center text-muted py-4">載入中...</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 資料列表 Tab -->
+          <div class="tab-pane fade" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
+            <!-- 搜尋與篩選 -->
         <div class="card mb-4">
           <div class="card-body">
             <div class="row g-3">
@@ -122,6 +297,8 @@
             </div>
           </div>
         </div>
+          </div><!-- /list-pane -->
+        </div><!-- /tab-content -->
       </div>
     </main>
   </div>
@@ -1584,10 +1761,466 @@
       alert('公司已刪除');
     }
 
+    // ==================== 圖表相關函數 ====================
+    let industryDonutChart = null;
+
+    // 縣市名稱對照 SVG ID
+    const CITY_TO_SVG_ID = {
+      '台北市': 'TWTPE', '臺北市': 'TWTPE',
+      '新北市': 'TWNWT',
+      '基隆市': 'TWKEE',
+      '桃園市': 'TWTAO',
+      '新竹市': 'TWHSZ',
+      '新竹縣': 'TWHSQ',
+      '苗栗縣': 'TWMIA',
+      '台中市': 'TWTXG', '臺中市': 'TWTXG',
+      '彰化縣': 'TWCHA',
+      '南投縣': 'TWNAN',
+      '雲林縣': 'TWYUN',
+      '嘉義市': 'TWCYI',
+      '嘉義縣': 'TWCYQ',
+      '台南市': 'TWTNN', '臺南市': 'TWTNN',
+      '高雄市': 'TWKHH',
+      '屏東縣': 'TWPIF',
+      '宜蘭縣': 'TWILA',
+      '花蓮縣': 'TWHUA',
+      '台東縣': 'TWTTT', '臺東縣': 'TWTTT',
+      '澎湖縣': 'TWPEN',
+      '金門縣': 'TWKIN',
+      '連江縣': 'TWLIE'
+    };
+
+    // SVG ID 對照縣市名稱
+    const SVG_ID_TO_CITY = {};
+    Object.entries(CITY_TO_SVG_ID).forEach(([city, id]) => {
+      if (!SVG_ID_TO_CITY[id]) SVG_ID_TO_CITY[id] = city;
+    });
+
+    // 取得熱度地圖顏色
+    function getHeatmapColor(count) {
+      if (count >= 500) return '#e53935'; // 紅色
+      if (count >= 300) return '#fb8c00'; // 橙色
+      if (count >= 100) return '#fdd835'; // 黃色
+      return '#43a047'; // 綠色
+    }
+
+    // 初始化統計圖表
+    function initCompanyCharts() {
+      const companies = allCompanies;
+      const totalCompanies = companies.length;
+
+      // 統計縣市分布
+      const cityCount = {};
+      companies.forEach(c => {
+        const city = c.city || '未填寫';
+        cityCount[city] = (cityCount[city] || 0) + 1;
+      });
+
+      // 統計產業分布
+      const industryCount = {};
+      companies.forEach(c => {
+        const industry = c.industry || '未填寫';
+        industryCount[industry] = (industryCount[industry] || 0) + 1;
+      });
+
+      // 活躍公司（有問卷的）
+      const activeCompanies = companies.filter(c => (c.surveys || []).length > 0).length;
+
+      // 更新統計卡片
+      document.getElementById('statTotalCompanies').textContent = totalCompanies;
+      document.getElementById('statTotalCities').textContent = Object.keys(cityCount).filter(k => k !== '未填寫').length;
+      document.getElementById('statTotalIndustries').textContent = Object.keys(industryCount).filter(k => k !== '未填寫').length;
+      document.getElementById('statActiveCompanies').textContent = activeCompanies;
+
+      // 更新台灣地圖顏色
+      updateTaiwanMap(cityCount);
+
+      // 更新縣市分布表格
+      updateCityDistributionTable(cityCount, totalCompanies);
+
+      // 更新產業分布環狀圖
+      updateIndustryDonutChart(industryCount, totalCompanies);
+
+      // 更新產業分布表格
+      updateIndustryDistributionTable(industryCount, totalCompanies);
+    }
+
+    // 地圖縮放相關變數
+    let currentMapZoom = 0.8;
+    const MIN_ZOOM = 0.8;
+    const MAX_ZOOM = 3;
+    const BASE_WIDTH = 100; // 基準寬度百分比
+
+    // 縮放地圖
+    function zoomMap(factor) {
+      const newZoom = currentMapZoom * factor;
+      // 允許稍微有誤差的比較
+      if (newZoom >= MIN_ZOOM - 0.01 && newZoom <= MAX_ZOOM + 0.01) {
+        currentMapZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+        applyMapZoom();
+      }
+    }
+
+    // 套用地圖縮放
+    function applyMapZoom() {
+      const mapSvg = document.getElementById('taiwanMap');
+      const wrapper = document.getElementById('mapSvgWrapper');
+      
+      if (mapSvg && wrapper) {
+        // 使用 width 變化實現縮放（CSS transition 會處理動畫 0.35s）
+        const newWidth = BASE_WIDTH * currentMapZoom;
+        mapSvg.style.width = newWidth + '%';
+        mapSvg.style.minWidth = (newWidth * 5) + 'px';
+        
+        // 調整地圖垂直位置（稍微往上移動以避免被圖例遮擋）
+        // 當縮放比例較小時往上移，放大時恢復置中
+        if (currentMapZoom <= 1) {
+          mapSvg.style.transform = 'translateY(-20px)';
+        } else {
+          mapSvg.style.transform = 'translateY(0)';
+        }
+
+        // 控制滾動條與拖曳功能
+        if (currentMapZoom <= MIN_ZOOM + 0.01) {
+          wrapper.style.overflow = 'hidden';
+          wrapper.classList.remove('can-drag');
+          wrapper.scrollLeft = 0;
+          wrapper.scrollTop = 0;
+        } else {
+          wrapper.style.overflow = 'auto';
+          wrapper.classList.add('can-drag');
+        }
+      }
+    }
+
+    // 重置地圖縮放
+    function resetMapZoom() {
+      currentMapZoom = MIN_ZOOM;
+      applyMapZoom();
+    }
+
+    // 初始化地圖拖曳功能
+    function initMapDrag() {
+      const wrapper = document.getElementById('mapSvgWrapper');
+      if (!wrapper) return;
+      
+      let isDragging = false;
+      let startX, startY, scrollLeft, scrollTop;
+      
+      wrapper.addEventListener('mousedown', (e) => {
+        // 只有在允許拖曳且使用滑鼠左鍵時啟用
+        if (!wrapper.classList.contains('can-drag') || e.button !== 0) return;
+        
+        isDragging = true;
+        wrapper.classList.add('dragging');
+        startX = e.pageX - wrapper.offsetLeft;
+        startY = e.pageY - wrapper.offsetTop;
+        scrollLeft = wrapper.scrollLeft;
+        scrollTop = wrapper.scrollTop;
+      });
+      
+      wrapper.addEventListener('mouseleave', () => {
+        isDragging = false;
+        wrapper.classList.remove('dragging');
+      });
+      
+      wrapper.addEventListener('mouseup', () => {
+        isDragging = false;
+        wrapper.classList.remove('dragging');
+      });
+      
+      wrapper.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - wrapper.offsetLeft;
+        const y = e.pageY - wrapper.offsetTop;
+        const walkX = (x - startX) * 1.5; // 拖曳速度倍數
+        const walkY = (y - startY) * 1.5;
+        wrapper.scrollLeft = scrollLeft - walkX;
+        wrapper.scrollTop = scrollTop - walkY;
+      });
+    }
+
+    // 更新台灣地圖
+    function updateTaiwanMap(cityCount) {
+      const mapSvg = document.getElementById('taiwanMap');
+      if (!mapSvg) return;
+
+      const featuresGroup = mapSvg.getElementById('features');
+      if (!featuresGroup) return;
+
+      const paths = featuresGroup.querySelectorAll('path');
+      
+      paths.forEach(path => {
+        const svgId = path.getAttribute('id');
+        const cityName = path.getAttribute('data-name') || SVG_ID_TO_CITY[svgId] || '';
+        
+        // 計算此縣市的公司數（需考慮台/臺的差異）
+        let count = 0;
+        Object.entries(cityCount).forEach(([city, cnt]) => {
+          const normalizedCity = city.replace(/臺/g, '台');
+          const normalizedCityName = cityName ? cityName.replace(/臺/g, '台') : '';
+          if (normalizedCity === normalizedCityName || CITY_TO_SVG_ID[city] === svgId) {
+            count += cnt;
+          }
+        });
+        
+        const color = getHeatmapColor(count);
+        
+        // 將資料存到 dataset 以便事件處理器使用
+        path.dataset.cityName = cityName;
+        path.dataset.count = count;
+        
+        path.style.fill = color;
+        path.style.stroke = '#ffffff';
+        path.style.strokeWidth = '0.5';
+        path.style.cursor = 'pointer';
+        path.style.transition = 'all 0.3s ease';
+
+        // 添加互動事件
+        path.onmouseenter = function() {
+          const name = this.dataset.cityName || this.getAttribute('data-name') || SVG_ID_TO_CITY[this.id] || '未知地區';
+          const cnt = this.dataset.count || 0;
+          // 讓其他區域變暗
+          const allPaths = mapSvg.querySelectorAll('path');
+          allPaths.forEach(p => {
+            if (p !== this) {
+              p.style.filter = 'brightness(0.7)';
+            }
+          });
+          // 高亮當前區域
+          this.style.strokeWidth = '2.5';
+          this.style.stroke = '#ffffff';
+          this.style.filter = 'brightness(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.3))';
+          showMapTooltip(this, name, cnt);
+        };
+        path.onmouseleave = function() {
+          // 恢復所有區域
+          const allPaths = mapSvg.querySelectorAll('path');
+          allPaths.forEach(p => {
+            p.style.filter = 'none';
+            p.style.strokeWidth = '0.5';
+            p.style.stroke = '#ffffff';
+          });
+          hideMapTooltip();
+        };
+        path.onclick = function() {
+          const name = this.dataset.cityName || this.getAttribute('data-name');
+          if (name) {
+            document.getElementById('list-tab').click();
+            // 嘗試匹配篩選器中的值
+            const cityFilter = document.getElementById('cityFilter');
+            const options = Array.from(cityFilter.options);
+            const matchOption = options.find(opt => {
+              const optVal = opt.value.replace(/臺/g, '台');
+              const targetCity = name.replace(/臺/g, '台');
+              return optVal === targetCity || optVal.includes(targetCity) || targetCity.includes(optVal);
+            });
+            if (matchOption) {
+              cityFilter.value = matchOption.value;
+            }
+            filterCompanies();
+          }
+        };
+      });
+
+      // 同步表格高度
+      syncTableHeight();
+    }
+
+    // 顯示地圖提示
+    function showMapTooltip(element, city, count) {
+      let tooltip = document.getElementById('mapTooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'mapTooltip';
+        tooltip.style.cssText = 'position: fixed; background: rgba(33,33,33,0.95); color: white; padding: 10px 14px; border-radius: 6px; font-size: 14px; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+        document.body.appendChild(tooltip);
+      }
+      const displayCity = city || '未知地區';
+      const displayCount = count || 0;
+      tooltip.innerHTML = `<div style="font-weight: 600; font-size: 15px; margin-bottom: 4px;">${displayCity}</div><div><span style="color: #fdd835; font-size: 20px; font-weight: bold;">${displayCount}</span> <span style="color: #e0e0e0;">家公司</span></div>`;
+      tooltip.style.display = 'block';
+
+      // 使用 window 的 mousemove 事件來追蹤滑鼠位置
+      window.currentTooltipHandler = positionTooltip;
+      window.addEventListener('mousemove', positionTooltip);
+    }
+
+    function positionTooltip(e) {
+      const tooltip = document.getElementById('mapTooltip');
+      if (tooltip && tooltip.style.display !== 'none') {
+        // 確保提示框不會超出視窗
+        const tooltipRect = tooltip.getBoundingClientRect();
+        let left = e.clientX + 15;
+        let top = e.clientY + 15;
+        
+        if (left + tooltipRect.width > window.innerWidth) {
+          left = e.clientX - tooltipRect.width - 15;
+        }
+        if (top + tooltipRect.height > window.innerHeight) {
+          top = e.clientY - tooltipRect.height - 15;
+        }
+        
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      }
+    }
+
+    function hideMapTooltip() {
+      const tooltip = document.getElementById('mapTooltip');
+      if (tooltip) {
+        tooltip.style.display = 'none';
+      }
+      if (window.currentTooltipHandler) {
+        window.removeEventListener('mousemove', window.currentTooltipHandler);
+        window.currentTooltipHandler = null;
+      }
+    }
+
+    // 同步表格高度與地圖容器
+    function syncTableHeight() {
+      setTimeout(() => {
+        const mapContainer = document.getElementById('taiwanMapContainer');
+        const tableContainer = document.getElementById('cityTableContainer');
+        if (mapContainer && tableContainer) {
+          const mapHeight = mapContainer.offsetHeight;
+          tableContainer.style.maxHeight = mapHeight + 'px';
+          tableContainer.style.height = mapHeight + 'px';
+        }
+      }, 100);
+    }
+
+    // 更新縣市分布表格
+    function updateCityDistributionTable(cityCount, total) {
+      const tbody = document.getElementById('cityDistributionTable');
+      if (!tbody) return;
+
+      const sortedCities = Object.entries(cityCount)
+        .sort((a, b) => b[1] - a[1]);
+
+      const maxCount = sortedCities.length > 0 ? sortedCities[0][1] : 1;
+
+      let html = '';
+      sortedCities.forEach(([city, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const barWidth = (count / maxCount) * 100;
+        const color = getHeatmapColor(count);
+
+        html += `
+          <tr style="cursor: pointer;" onclick="document.getElementById('list-tab').click(); document.getElementById('cityFilter').value='${city}'; filterCompanies();">
+            <td>${escapeHtml(city)}</td>
+            <td class="text-end">${count}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height: 8px;">
+                  <div class="progress-bar" style="width: ${barWidth}%; background-color: ${color};"></div>
+                </div>
+                <small class="text-muted" style="width: 40px;">${percentage}%</small>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted">暫無資料</td></tr>';
+    }
+
+    // 更新產業分布環狀圖
+    function updateIndustryDonutChart(industryCount, total) {
+      const ctx = document.getElementById('industryDonutChart');
+      if (!ctx) return;
+
+      const sortedIndustries = Object.entries(industryCount)
+        .sort((a, b) => b[1] - a[1]);
+
+      const labels = sortedIndustries.map(([name]) => name);
+      const data = sortedIndustries.map(([, count]) => count);
+
+      const colors = [
+        '#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5',
+        '#70AD47', '#264478', '#9E480E', '#636363', '#997300',
+        '#255E91', '#43682B', '#7030A0', '#C00000', '#00B050'
+      ];
+
+      if (industryDonutChart) {
+        industryDonutChart.destroy();
+      }
+
+      industryDonutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, data.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '55%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12,
+                padding: 10,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${context.parsed} 家 (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 更新產業分布表格
+    function updateIndustryDistributionTable(industryCount, total) {
+      const tbody = document.getElementById('industryDistributionTable');
+      if (!tbody) return;
+
+      const sortedIndustries = Object.entries(industryCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+
+      let html = '';
+      sortedIndustries.forEach(([industry, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        html += `
+          <tr style="cursor: pointer;" onclick="document.getElementById('list-tab').click(); document.getElementById('industryFilter').value='${industry}'; filterCompanies();">
+            <td>${escapeHtml(industry)}</td>
+            <td class="text-end">${count}</td>
+            <td class="text-end">${percentage}%</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted">暫無資料</td></tr>';
+    }
+
     // 初始化
     window.addEventListener('load', function() {
       initFilters();
       filterCompanies();
+      initCompanyCharts();
+      initMapDrag();
+      applyMapZoom(); // 套用預設縮放
+      syncTableHeight();
+    });
+
+    // 窗口大小改變時重新同步高度
+    window.addEventListener('resize', function() {
+      syncTableHeight();
     });
   </script>
 </body>

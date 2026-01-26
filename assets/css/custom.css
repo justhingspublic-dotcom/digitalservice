@@ -806,3 +806,473 @@ main {
 .stat-number[style*="color: #9c27b0"] {
   color: #7B1FA2 !important;
 }
+
+/* ==================== 熱度地圖樣式 ==================== */
+.map-region {
+  fill: #43a047;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.map-region:hover {
+  opacity: 0.8;
+  stroke-width: 3;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* 熱度地圖顏色等級 */
+.map-heat-red { fill: #e53935 !important; }
+.map-heat-orange { fill: #fb8c00 !important; }
+.map-heat-yellow { fill: #fdd835 !important; }
+.map-heat-green { fill: #43a047 !important; }
+
+/* 地圖提示框 */
+#mapTooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 200px;
+}
+
+/* ==================== Tab 樣式 ==================== */
+.nav-tabs {
+  border-bottom: 2px solid var(--color-border);
+}
+
+.nav-tabs .nav-link {
+  color: var(--color-text-secondary);
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 20px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--color-primary);
+  border-color: transparent;
+  background-color: var(--color-primary-light);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--color-primary);
+  background-color: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--color-primary);
+}
+
+.nav-tabs .nav-link .material-icons {
+  font-size: 20px;
+}
+
+/* Tab 內容淡入效果 */
+.tab-pane.fade {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.tab-pane.fade:not(.show) {
+  opacity: 0;
+}
+
+/* ==================== Treemap 樣式 ==================== */
+#treemapContainer {
+  position: relative;
+  background-color: #fafafa;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+#treemapContainer canvas {
+  display: block;
+}
+
+/* Treemap 提示框樣式 */
+.treemap-tooltip {
+  background: rgba(0, 0, 0, 0.85) !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
+}
+
+/* ==================== 統計卡片增強 ==================== */
+.card.border-primary {
+  border-left: 4px solid var(--color-primary) !important;
+}
+
+.card.border-success {
+  border-left: 4px solid var(--color-success) !important;
+}
+
+.card.border-warning {
+  border-left: 4px solid var(--color-warning) !important;
+}
+
+.card.border-info {
+  border-left: 4px solid #0288d1 !important;
+}
+
+/* 統計數字動態顏色 */
+.display-4.text-primary { color: var(--color-primary) !important; }
+.display-4.text-success { color: var(--color-success) !important; }
+.display-4.text-warning { color: var(--color-warning) !important; }
+.display-4.text-info { color: #0288d1 !important; }
+
+/* ==================== 進度條顏色覆蓋 ==================== */
+.progress {
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+/* 自定義進度條顏色 */
+.progress-bar[style*="background-color: #e53935"] {
+  background-color: #e53935 !important;
+}
+
+.progress-bar[style*="background-color: #fb8c00"] {
+  background-color: #fb8c00 !important;
+}
+
+.progress-bar[style*="background-color: #fdd835"] {
+  background-color: #fdd835 !important;
+}
+
+.progress-bar[style*="background-color: #43a047"] {
+  background-color: #43a047 !important;
+}
+
+/* ==================== 表格行可點擊樣式 ==================== */
+tr[style*="cursor: pointer"]:hover {
+  background-color: var(--color-primary-light) !important;
+}
+
+tr[style*="cursor: pointer"]:hover td {
+  color: var(--color-primary);
+}
+
+/* ==================== 圖表區域響應式 ==================== */
+@media (max-width: 992px) {
+  .col-lg-7, .col-lg-5, .col-lg-8, .col-lg-4 {
+    margin-bottom: 16px;
+  }
+  
+  #taiwanMapContainer svg {
+    max-height: 300px;
+  }
+  
+  #treemapContainer {
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-tabs .nav-link {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  
+  .nav-tabs .nav-link .material-icons {
+    font-size: 18px;
+  }
+  
+  .display-4 {
+    font-size: 2rem !important;
+  }
+}
+
+/* ==================== 簡潔風格儀表板樣式 ==================== */
+
+/* 簡潔統計卡片 */
+.stat-card-minimal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.stat-card-minimal:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.stat-card-minimal .stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.stat-card-minimal .stat-value.text-success { color: var(--color-success) !important; }
+.stat-card-minimal .stat-value.text-warning { color: #f59e0b !important; }
+.stat-card-minimal .stat-value.text-info { color: #0ea5e9 !important; }
+
+.stat-card-minimal .stat-label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* 地圖圖例簡潔版 */
+.map-legend {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.map-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.map-legend .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* 簡潔卡片 */
+.card.border-0.shadow-sm {
+  border-radius: 12px !important;
+  background: #ffffff;
+}
+
+.card.border-0.shadow-sm:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.card.border-0.shadow-sm .card-header {
+  border-bottom: none !important;
+}
+
+.card.border-0.shadow-sm .card-header h6 {
+  color: #374151;
+  font-size: 14px;
+}
+
+/* 簡潔表格 */
+.table-sm.mb-0 tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table-sm.mb-0 tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.table-sm.mb-0 th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+}
+
+.table-sm.mb-0 td {
+  font-size: 13px;
+  color: #374151;
+  padding: 10px 8px;
+}
+
+/* 圖表容器優化 */
+#industryDonutChart {
+  max-width: 100%;
+}
+
+/* 響應式調整 */
+@media (max-width: 1200px) {
+  .stat-card-minimal .stat-value {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 992px) {
+  .stat-card-minimal {
+    padding: 16px 12px;
+  }
+  
+  .stat-card-minimal .stat-value {
+    font-size: 24px;
+  }
+  
+  .stat-card-minimal .stat-label {
+    font-size: 12px;
+  }
+}
+
+/* ==================== 地圖縮放控制 ==================== */
+.map-container-bordered {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.map-svg-wrapper {
+  overflow: hidden; /* 預設隱藏，由 JS 控制 */
+  position: relative;
+  height: 480px;
+  max-height: 480px;
+  min-height: 480px;
+  border-radius: 12px;
+  cursor: default; /* 預設游標 */
+  background: linear-gradient(180deg, #a8d4e6 0%, #7ec8e3 50%, #5ab4d9 100%);
+  /* 隱藏滾動條但保留功能 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.map-svg-wrapper.can-drag {
+  cursor: grab;
+  overflow: auto; /* 允許拖曳時開啟滾動 */
+}
+
+.map-svg-wrapper.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.map-svg-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+.map-svg-wrapper.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.map-svg-wrapper svg {
+  transition: width 0.35s ease, min-width 0.35s ease;
+  transform-origin: center center;
+  display: block;
+}
+
+.map-svg-wrapper:active {
+  cursor: grabbing;
+}
+
+.map-svg-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.map-svg-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.map-svg-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.map-svg-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.map-zoom-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.zoom-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.zoom-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.zoom-btn:active {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.zoom-btn .material-icons {
+  font-size: 20px;
+  color: #555;
+}
+
+.zoom-btn:hover .material-icons {
+  color: var(--color-primary);
+}
+
+.zoom-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 0 6px;
+}
+
+/* 縣市表格容器自適應高度 */
+.city-table-container {
+  overflow-y: auto;
+  transition: height 0.3s ease;
+}
+
+/* 滾動條美化 */
+.city-table-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.city-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.city-table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.city-table-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

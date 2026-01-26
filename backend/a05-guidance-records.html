@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="../assets/css/custom.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.3.0/dist/chartjs-chart-treemap.min.js"></script>
 </head>
 <body>
   <div id="topbar"></div>
@@ -23,7 +25,161 @@
           <h4 class="mb-0">輔導紀錄</h4>
         </div>
 
-        <!-- 篩選條件 -->
+        <!-- Tab 導航 -->
+        <ul class="nav nav-tabs mb-4" id="guidanceTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="guidance-charts-tab" data-bs-toggle="tab" data-bs-target="#guidance-charts-pane" type="button" role="tab" aria-controls="guidance-charts-pane" aria-selected="true">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">analytics</span>
+              統計圖表
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="guidance-list-tab" data-bs-toggle="tab" data-bs-target="#guidance-list-pane" type="button" role="tab" aria-controls="guidance-list-pane" aria-selected="false">
+              <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">list</span>
+              資料列表
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab 內容 -->
+        <div class="tab-content" id="guidanceTabsContent">
+          <!-- 統計圖表 Tab -->
+          <div class="tab-pane fade show active" id="guidance-charts-pane" role="tabpanel" aria-labelledby="guidance-charts-tab">
+            <!-- 導入與推廣總數量 -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card text-center h-100 border-primary">
+                  <div class="card-body">
+                    <div class="display-4 fw-bold text-primary" id="statTotalRecords">0</div>
+                    <div class="text-muted">總輔導紀錄</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center h-100 border-success">
+                  <div class="card-body">
+                    <div class="display-4 fw-bold text-success" id="statIntroCount">0</div>
+                    <div class="text-muted">導入家數</div>
+                    <small class="text-muted">（技術輔導中）</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center h-100 border-warning">
+                  <div class="card-body">
+                    <div class="display-4 fw-bold text-warning" id="statPromoteCount">0</div>
+                    <div class="text-muted">推廣家數</div>
+                    <small class="text-muted">（結案數）</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center h-100 border-info">
+                  <div class="card-body">
+                    <div class="display-4 fw-bold text-info" id="statConsultants">0</div>
+                    <div class="text-muted">輔導顧問</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- 左側：輔導主題熱力圖 (Treemap) -->
+              <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                      <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">grid_view</span>
+                      輔導主題熱力圖
+                    </h5>
+                    <small class="text-muted">依主題出現次數排序，點擊可篩選</small>
+                  </div>
+                  <div class="card-body">
+                    <div id="treemapContainer" style="height: 400px; position: relative;">
+                      <canvas id="guidanceTreemap"></canvas>
+                    </div>
+                    <!-- 圖例 -->
+                    <div class="mt-3 d-flex justify-content-center gap-3 flex-wrap small">
+                      <span><span class="badge" style="background-color: #e53935;">&nbsp;&nbsp;</span> 高頻（10次以上）</span>
+                      <span><span class="badge" style="background-color: #fb8c00;">&nbsp;&nbsp;</span> 中高頻（5-9次）</span>
+                      <span><span class="badge" style="background-color: #fdd835;">&nbsp;&nbsp;</span> 中頻（3-4次）</span>
+                      <span><span class="badge" style="background-color: #43a047;">&nbsp;&nbsp;</span> 低頻（1-2次）</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右側：輔導類型與狀態統計 -->
+              <div class="col-lg-4 mb-4">
+                <div class="card mb-4">
+                  <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                      <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">category</span>
+                      輔導類型分布
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="typeDonutChart" style="max-height: 200px;"></canvas>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                      <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">flag</span>
+                      輔導狀態統計
+                    </h5>
+                  </div>
+                  <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                      <thead>
+                        <tr>
+                          <th>狀態</th>
+                          <th class="text-end">筆數</th>
+                          <th class="text-end">佔比</th>
+                        </tr>
+                      </thead>
+                      <tbody id="statusDistributionTable">
+                        <tr><td colspan="3" class="text-center text-muted">載入中...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 主題明細表格 -->
+            <div class="card">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">
+                  <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">table_chart</span>
+                  輔導主題明細
+                </h5>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead style="background-color: #fafafa;">
+                      <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>輔導主題</th>
+                        <th class="text-end">出現次數</th>
+                        <th class="text-end">佔比</th>
+                        <th style="width: 40%;">分布</th>
+                      </tr>
+                    </thead>
+                    <tbody id="topicDetailTable">
+                      <tr><td colspan="5" class="text-center text-muted">載入中...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 資料列表 Tab -->
+          <div class="tab-pane fade" id="guidance-list-pane" role="tabpanel" aria-labelledby="guidance-list-tab">
+            <!-- 篩選條件 -->
         <div class="card mb-4">
           <div class="card-header bg-white">
             <h5 class="mb-0">篩選條件</h5>
@@ -119,6 +275,8 @@
             </div>
           </div>
         </div>
+          </div><!-- /guidance-list-pane -->
+        </div><!-- /tab-content -->
       </div>
     </main>
   </div>
@@ -537,6 +695,323 @@
       
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
+
+    // ==================== 圖表相關函數 ====================
+    let treemapChart = null;
+    let typeDonutChart = null;
+
+    // 取得熱力圖顏色
+    function getHeatColor(count) {
+      if (count >= 10) return '#e53935'; // 紅色 - 高頻
+      if (count >= 5) return '#fb8c00';  // 橙色 - 中高頻
+      if (count >= 3) return '#fdd835';  // 黃色 - 中頻
+      return '#43a047';                   // 綠色 - 低頻
+    }
+
+    // 初始化輔導統計圖表
+    function initGuidanceCharts() {
+      // 收集所有輔導紀錄
+      const allRecords = [];
+      const topicCount = {};
+      const typeCount = {};
+      const statusCount = {};
+      const consultants = new Set();
+
+      allCompanies.forEach(company => {
+        const records = company.guidanceRecords || [];
+        records.forEach(record => {
+          allRecords.push({ company, record });
+          
+          // 統計主題（使用 title 作為主題）
+          const topic = record.title || '未命名主題';
+          topicCount[topic] = (topicCount[topic] || 0) + 1;
+          
+          // 統計類型
+          const type = record.type || '一般輔導';
+          typeCount[type] = (typeCount[type] || 0) + 1;
+          
+          // 統計狀態
+          const status = record.status || '未設定';
+          statusCount[status] = (statusCount[status] || 0) + 1;
+
+          // 收集顧問
+          if (record.consultant) {
+            consultants.add(record.consultant);
+          }
+        });
+      });
+
+      const totalRecords = allRecords.length;
+
+      // 計算導入家數（技術輔導中的公司數）
+      const introCompanies = new Set();
+      allRecords.forEach(({ company, record }) => {
+        if (record.type === '技術輔導' && record.status === '中期') {
+          introCompanies.add(company.id);
+        }
+      });
+
+      // 計算推廣家數（結案的公司數）
+      const promoteCompanies = new Set();
+      allRecords.forEach(({ company, record }) => {
+        if (record.status === '結案') {
+          promoteCompanies.add(company.id);
+        }
+      });
+
+      // 更新統計卡片
+      document.getElementById('statTotalRecords').textContent = totalRecords;
+      document.getElementById('statIntroCount').textContent = introCompanies.size;
+      document.getElementById('statPromoteCount').textContent = promoteCompanies.size;
+      document.getElementById('statConsultants').textContent = consultants.size;
+
+      // 更新 Treemap
+      updateTreemap(topicCount, totalRecords);
+
+      // 更新類型環狀圖
+      updateTypeDonutChart(typeCount, totalRecords);
+
+      // 更新狀態分布表格
+      updateStatusTable(statusCount, totalRecords);
+
+      // 更新主題明細表格
+      updateTopicDetailTable(topicCount, totalRecords);
+    }
+
+    // 更新 Treemap
+    function updateTreemap(topicCount, total) {
+      const ctx = document.getElementById('guidanceTreemap');
+      if (!ctx) return;
+
+      const sortedTopics = Object.entries(topicCount)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (sortedTopics.length === 0) {
+        ctx.parentElement.innerHTML = '<div class="text-center py-5 text-muted"><span class="material-icons" style="font-size: 48px;">inbox</span><p>暫無輔導紀錄資料</p></div>';
+        return;
+      }
+
+      const data = sortedTopics.map(([topic, count]) => ({
+        topic: topic,
+        count: count,
+        color: getHeatColor(count)
+      }));
+
+      if (treemapChart) {
+        treemapChart.destroy();
+      }
+
+      treemapChart = new Chart(ctx, {
+        type: 'treemap',
+        data: {
+          datasets: [{
+            tree: data,
+            key: 'count',
+            groups: ['topic'],
+            backgroundColor: (ctx) => {
+              if (ctx.type !== 'data') return 'transparent';
+              return ctx.raw._data.color;
+            },
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            spacing: 1,
+            labels: {
+              display: true,
+              align: 'center',
+              position: 'middle',
+              color: '#ffffff',
+              font: {
+                size: 12,
+                weight: 'bold'
+              },
+              formatter: (ctx) => {
+                if (ctx.type !== 'data') return '';
+                const topic = ctx.raw._data.topic;
+                const count = ctx.raw._data.count;
+                // 如果區塊太小，只顯示數字
+                if (ctx.raw.w < 80 || ctx.raw.h < 40) {
+                  return count;
+                }
+                // 截斷過長的主題名稱
+                const maxLen = Math.floor(ctx.raw.w / 14);
+                const displayTopic = topic.length > maxLen ? topic.substring(0, maxLen) + '...' : topic;
+                return [displayTopic, count + '次'];
+              }
+            }
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  if (items.length === 0) return '';
+                  return items[0].raw._data.topic;
+                },
+                label: (item) => {
+                  const count = item.raw._data.count;
+                  const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                  return `出現 ${count} 次 (${percentage}%)`;
+                }
+              }
+            }
+          },
+          onClick: (event, elements) => {
+            if (elements.length > 0) {
+              const topic = elements[0].raw._data.topic;
+              // 切換到資料列表並搜尋該主題
+              document.getElementById('guidance-list-tab').click();
+              document.getElementById('keywordFilter').value = topic;
+              searchRecords();
+            }
+          }
+        }
+      });
+    }
+
+    // 更新類型環狀圖
+    function updateTypeDonutChart(typeCount, total) {
+      const ctx = document.getElementById('typeDonutChart');
+      if (!ctx) return;
+
+      const sortedTypes = Object.entries(typeCount)
+        .sort((a, b) => b[1] - a[1]);
+
+      const labels = sortedTypes.map(([name]) => name);
+      const data = sortedTypes.map(([, count]) => count);
+
+      const colors = ['#4472C4', '#ED7D31', '#70AD47', '#FFC000', '#5B9BD5'];
+
+      if (typeDonutChart) {
+        typeDonutChart.destroy();
+      }
+
+      typeDonutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors.slice(0, data.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '50%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                padding: 8,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${context.parsed} 筆 (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 更新狀態分布表格
+    function updateStatusTable(statusCount, total) {
+      const tbody = document.getElementById('statusDistributionTable');
+      if (!tbody) return;
+
+      const statusOrder = ['初訪', '中期', '結案', '未設定'];
+      const statusColors = {
+        '初訪': 'bg-info',
+        '中期': 'bg-warning',
+        '結案': 'bg-success',
+        '未設定': 'bg-secondary'
+      };
+
+      let html = '';
+      statusOrder.forEach(status => {
+        const count = statusCount[status] || 0;
+        if (count > 0) {
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+          html += `
+            <tr style="cursor: pointer;" onclick="document.getElementById('guidance-list-tab').click(); document.getElementById('statusFilter').value='${status}'; searchRecords();">
+              <td><span class="badge ${statusColors[status] || 'bg-secondary'}">${status}</span></td>
+              <td class="text-end">${count}</td>
+              <td class="text-end">${percentage}%</td>
+            </tr>
+          `;
+        }
+      });
+
+      // 檢查是否有其他未知狀態
+      Object.entries(statusCount).forEach(([status, count]) => {
+        if (!statusOrder.includes(status) && count > 0) {
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+          html += `
+            <tr>
+              <td><span class="badge bg-secondary">${status}</span></td>
+              <td class="text-end">${count}</td>
+              <td class="text-end">${percentage}%</td>
+            </tr>
+          `;
+        }
+      });
+
+      tbody.innerHTML = html || '<tr><td colspan="3" class="text-center text-muted">暫無資料</td></tr>';
+    }
+
+    // 更新主題明細表格
+    function updateTopicDetailTable(topicCount, total) {
+      const tbody = document.getElementById('topicDetailTable');
+      if (!tbody) return;
+
+      const sortedTopics = Object.entries(topicCount)
+        .sort((a, b) => b[1] - a[1]);
+
+      const maxCount = sortedTopics.length > 0 ? sortedTopics[0][1] : 1;
+
+      let html = '';
+      sortedTopics.forEach(([topic, count], index) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const barWidth = (count / maxCount) * 100;
+        const color = getHeatColor(count);
+
+        html += `
+          <tr style="cursor: pointer;" onclick="document.getElementById('guidance-list-tab').click(); document.getElementById('keywordFilter').value='${escapeHtml(topic)}'; searchRecords();">
+            <td class="text-center">${index + 1}</td>
+            <td>${escapeHtml(topic)}</td>
+            <td class="text-end">${count}</td>
+            <td class="text-end">${percentage}%</td>
+            <td>
+              <div class="progress" style="height: 12px;">
+                <div class="progress-bar" style="width: ${barWidth}%; background-color: ${color};"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted">暫無資料</td></tr>';
+    }
+
+    // 初始化
+    window.addEventListener('load', function() {
+      loadData();
+      initGuidanceCharts();
+    });
   </script>
 </body>
 </html>
