@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>資料匯入工具 - 商業服務業數位應用資料庫</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="../assets/css/custom.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="d-flex" style="height: calc(100vh - 64px);">
+    <div id="sidebar"></div>
+
+    <main class="flex-fill p-4" style="background-color: var(--color-bg-gray); overflow-y: auto; height: 100%;">
+      <div class="container-fluid">
+        <!-- 標題 -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="material-icons" style="font-size: 28px; color: var(--color-primary);">upload_file</span>
+          <h4 class="mb-0">資料匯入工具</h4>
+        </div>
+
+        <div class="row">
+          <!-- 公司資料匯入 -->
+          <div class="col-md-6 mb-4">
+            <div class="card h-100">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">
+                  <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">business</span>
+                  公司資料匯入
+                </h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted mb-3">上傳「公司報表」Excel 檔案，將自動解析並匯入系統。</p>
+                <div class="mb-3">
+                  <label class="form-label">選擇公司報表 Excel 檔案</label>
+                  <input type="file" class="form-control" id="companyFile" accept=".xlsx,.xls">
+                </div>
+                <div id="companyPreview" class="mb-3" style="display: none;">
+                  <div class="alert alert-info">
+                    <strong>預覽：</strong> 共 <span id="companyCount">0</span> 筆公司資料
+                  </div>
+                  <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-sm table-bordered" id="companyPreviewTable">
+                      <thead class="sticky-top bg-light"></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="importCompanyBtn" disabled onclick="importCompanyData()">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">save</span>
+                  匯入公司資料
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 輔導紀錄匯入 -->
+          <div class="col-md-6 mb-4">
+            <div class="card h-100">
+              <div class="card-header bg-white">
+                <h5 class="mb-0">
+                  <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">history_edu</span>
+                  輔導紀錄匯入
+                </h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted mb-3">上傳「輔導紀錄報表」Excel 檔案，將自動解析並匯入對應公司。</p>
+                <div class="mb-3">
+                  <label class="form-label">選擇輔導紀錄報表 Excel 檔案</label>
+                  <input type="file" class="form-control" id="guidanceFile" accept=".xlsx,.xls">
+                </div>
+                <div id="guidancePreview" class="mb-3" style="display: none;">
+                  <div class="alert alert-info">
+                    <strong>預覽：</strong> 共 <span id="guidanceCount">0</span> 筆輔導紀錄
+                  </div>
+                  <div class="alert alert-warning" id="guidanceFieldsAlert" style="display: none;">
+                    <strong>偵測到欄位：</strong>
+                    <div id="guidanceFieldsList" class="small mt-1"></div>
+                    <div class="mt-2">
+                      <strong>公司名稱欄位：</strong>
+                      <select class="form-select form-select-sm d-inline-block w-auto" id="guidanceCompanyField">
+                        <option value="">自動偵測</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-sm table-bordered" id="guidancePreviewTable">
+                      <thead class="sticky-top bg-light"></thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="importGuidanceBtn" disabled onclick="importGuidanceData()">
+                  <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">save</span>
+                  匯入輔導紀錄
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 目前資料狀態 -->
+        <div class="card mb-4">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">storage</span>
+              目前資料狀態
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <div class="display-4 fw-bold text-primary" id="currentCompanyCount">0</div>
+                <div class="text-muted">公司數量</div>
+              </div>
+              <div class="col-md-4">
+                <div class="display-4 fw-bold text-success" id="currentGuidanceCount">0</div>
+                <div class="text-muted">輔導紀錄數</div>
+              </div>
+              <div class="col-md-4">
+                <div class="display-4 fw-bold text-warning" id="currentSurveyCount">0</div>
+                <div class="text-muted">問卷數量</div>
+              </div>
+            </div>
+            <hr>
+            <div class="d-flex gap-2 justify-content-center">
+              <button class="btn btn-outline-danger" onclick="clearAllData()">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">delete_forever</span>
+                清除所有資料
+              </button>
+              <button class="btn btn-outline-secondary" onclick="refreshStatus()">
+                <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">refresh</span>
+                重新整理狀態
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 匯入日誌 -->
+        <div class="card">
+          <div class="card-header bg-white">
+            <h5 class="mb-0">
+              <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">article</span>
+              匯入日誌
+            </h5>
+          </div>
+          <div class="card-body">
+            <div id="importLog" style="max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 13px; background: #f8f9fa; padding: 12px; border-radius: 6px;">
+              <div class="text-muted">尚無匯入記錄</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    checkLogin('import');
+    initLayout('companies');
+
+    const STORAGE_KEY = 'companiesStore';
+    let parsedCompanyData = [];
+    let parsedGuidanceData = [];
+
+    // 初始化
+    window.addEventListener('load', function() {
+      refreshStatus();
+      
+      document.getElementById('companyFile').addEventListener('change', handleCompanyFile);
+      document.getElementById('guidanceFile').addEventListener('change', handleGuidanceFile);
+    });
+
+    // 處理公司檔案
+    function handleCompanyFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          if (jsonData.length < 2) {
+            alert('Excel 檔案沒有資料');
+            return;
+          }
+
+          const headers = jsonData[0];
+          const rows = jsonData.slice(1).filter(row => row.length > 0 && row.some(cell => cell));
+
+          log(`[公司] 讀取到 ${rows.length} 筆資料，欄位：${headers.join(', ')}`);
+
+          // 解析資料
+          parsedCompanyData = rows.map((row, index) => {
+            const obj = {};
+            headers.forEach((header, i) => {
+              obj[header] = row[i] || '';
+            });
+            return obj;
+          });
+
+          // 顯示預覽
+          showCompanyPreview(headers, rows);
+          document.getElementById('importCompanyBtn').disabled = false;
+
+        } catch (err) {
+          log(`[錯誤] 解析公司報表失敗：${err.message}`);
+          alert('解析檔案失敗：' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // 處理輔導紀錄檔案
+    function handleGuidanceFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          if (jsonData.length < 2) {
+            alert('Excel 檔案沒有資料');
+            return;
+          }
+
+          const headers = jsonData[0];
+          const rows = jsonData.slice(1).filter(row => row.length > 0 && row.some(cell => cell));
+
+          log(`[輔導] 讀取到 ${rows.length} 筆資料，欄位：${headers.join(', ')}`);
+
+          // 解析資料
+          parsedGuidanceData = rows.map((row, index) => {
+            const obj = {};
+            headers.forEach((header, i) => {
+              obj[header] = row[i] || '';
+            });
+            return obj;
+          });
+
+          // 顯示預覽
+          showGuidancePreview(headers, rows);
+          document.getElementById('importGuidanceBtn').disabled = false;
+
+        } catch (err) {
+          log(`[錯誤] 解析輔導紀錄報表失敗：${err.message}`);
+          alert('解析檔案失敗：' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // 顯示公司預覽
+    function showCompanyPreview(headers, rows) {
+      document.getElementById('companyPreview').style.display = 'block';
+      document.getElementById('companyCount').textContent = rows.length;
+
+      const table = document.getElementById('companyPreviewTable');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+
+      thead.innerHTML = '<tr>' + headers.slice(0, 8).map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr>';
+      tbody.innerHTML = rows.slice(0, 10).map(row => 
+        '<tr>' + row.slice(0, 8).map(cell => `<td>${escapeHtml(cell || '')}</td>`).join('') + '</tr>'
+      ).join('');
+
+      if (rows.length > 10) {
+        tbody.innerHTML += `<tr><td colspan="${Math.min(headers.length, 8)}" class="text-center text-muted">... 還有 ${rows.length - 10} 筆資料</td></tr>`;
+      }
+    }
+
+    // 顯示輔導紀錄預覽
+    function showGuidancePreview(headers, rows) {
+      document.getElementById('guidancePreview').style.display = 'block';
+      document.getElementById('guidanceCount').textContent = rows.length;
+      
+      // 顯示欄位資訊
+      document.getElementById('guidanceFieldsAlert').style.display = 'block';
+      document.getElementById('guidanceFieldsList').innerHTML = headers.map(h => 
+        `<span class="badge bg-secondary me-1 mb-1">${escapeHtml(h)}</span>`
+      ).join('');
+      
+      // 填充公司欄位選擇
+      const companyFieldSelect = document.getElementById('guidanceCompanyField');
+      companyFieldSelect.innerHTML = '<option value="">自動偵測</option>';
+      headers.forEach(h => {
+        const option = document.createElement('option');
+        option.value = h;
+        option.textContent = h;
+        // 自動選中可能的公司名稱欄位
+        if (h.includes('公司') || h.includes('企業') || h.includes('受輔')) {
+          option.selected = true;
+        }
+        companyFieldSelect.appendChild(option);
+      });
+
+      const table = document.getElementById('guidancePreviewTable');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+
+      thead.innerHTML = '<tr>' + headers.slice(0, 8).map(h => `<th>${escapeHtml(h)}</th>`).join('') + '</tr>';
+      tbody.innerHTML = rows.slice(0, 10).map(row => 
+        '<tr>' + row.slice(0, 8).map(cell => `<td>${escapeHtml(cell || '')}</td>`).join('') + '</tr>'
+      ).join('');
+
+      if (rows.length > 10) {
+        tbody.innerHTML += `<tr><td colspan="${Math.min(headers.length, 8)}" class="text-center text-muted">... 還有 ${rows.length - 10} 筆資料</td></tr>`;
+      }
+    }
+
+    // 匯入公司資料
+    function importCompanyData() {
+      if (parsedCompanyData.length === 0) {
+        alert('沒有可匯入的公司資料');
+        return;
+      }
+
+      const companies = loadCompanies();
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      parsedCompanyData.forEach((row, index) => {
+        // 嘗試識別欄位（根據常見的欄位名稱）
+        const companyName = row['公司名稱'] || row['企業名稱'] || row['名稱'] || row['company_name'] || '';
+        const taxId = row['統一編號'] || row['統編'] || row['tax_id'] || '';
+        const city = row['縣市'] || row['所在縣市'] || row['city'] || '';
+        const district = row['區域'] || row['鄉鎮市區'] || row['district'] || '';
+        const address = row['地址'] || row['公司地址'] || row['address'] || '';
+        const contactPerson = row['聯絡人'] || row['負責人'] || row['contact_person'] || '';
+        const contactPhone = row['電話'] || row['聯絡電話'] || row['phone'] || '';
+        const contactEmail = row['Email'] || row['電子郵件'] || row['email'] || '';
+        const industry = row['產業別'] || row['行業別'] || row['industry'] || '';
+        const employeeRange = row['員工規模'] || row['員工人數'] || row['employee_range'] || '';
+        const capital = row['資本額'] || row['capital'] || '';
+        const website = row['網址'] || row['公司網址'] || row['website'] || '';
+        const digitalStage = row['數位化階段'] || row['digital_stage'] || '';
+
+        if (!companyName) {
+          log(`[警告] 第 ${index + 2} 列缺少公司名稱，跳過`);
+          return;
+        }
+
+        // 檢查是否已存在（by 統編或名稱）
+        let existingIndex = -1;
+        if (taxId) {
+          existingIndex = companies.findIndex(c => c.taxId === taxId);
+        }
+        if (existingIndex === -1) {
+          existingIndex = companies.findIndex(c => c.name === companyName);
+        }
+
+        const companyData = {
+          id: existingIndex >= 0 ? companies[existingIndex].id : `company-import-${Date.now()}-${index}`,
+          name: companyName,
+          taxId: taxId,
+          city: city,
+          district: district,
+          address: address,
+          contactPerson: contactPerson,
+          contactPhone: contactPhone,
+          contactEmail: contactEmail,
+          fax: row['傳真'] || row['fax'] || '',
+          website: website,
+          capital: capital,
+          industry: industry,
+          employeeRange: employeeRange,
+          digitalStage: digitalStage || '尚未開始',
+          joinedAt: existingIndex >= 0 ? companies[existingIndex].joinedAt : new Date().toISOString(),
+          createdAt: existingIndex >= 0 ? companies[existingIndex].createdAt : new Date().toISOString(),
+          surveys: existingIndex >= 0 ? companies[existingIndex].surveys : [],
+          guidanceRecords: existingIndex >= 0 ? companies[existingIndex].guidanceRecords : []
+        };
+
+        if (existingIndex >= 0) {
+          companies[existingIndex] = companyData;
+          updatedCount++;
+        } else {
+          companies.push(companyData);
+          addedCount++;
+        }
+      });
+
+      // 儲存
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+      
+      log(`[成功] 公司資料匯入完成：新增 ${addedCount} 筆，更新 ${updatedCount} 筆`);
+      alert(`匯入完成！\n新增：${addedCount} 筆\n更新：${updatedCount} 筆`);
+      
+      refreshStatus();
+    }
+
+    // 匯入輔導紀錄
+    function importGuidanceData() {
+      if (parsedGuidanceData.length === 0) {
+        alert('沒有可匯入的輔導紀錄');
+        return;
+      }
+
+      const companies = loadCompanies();
+      let addedCount = 0;
+      let skippedCount = 0;
+      let notFoundCompanies = new Set();
+
+      // 先顯示欄位資訊方便除錯
+      if (parsedGuidanceData.length > 0) {
+        const fields = Object.keys(parsedGuidanceData[0]);
+        log(`[輔導] 偵測到欄位：${fields.join(', ')}`);
+      }
+
+      // 取得使用者選擇的公司欄位
+      const selectedCompanyField = document.getElementById('guidanceCompanyField')?.value || '';
+      if (selectedCompanyField) {
+        log(`[輔導] 使用手動指定的公司欄位：${selectedCompanyField}`);
+      }
+
+      parsedGuidanceData.forEach((row, index) => {
+        // 嘗試識別公司欄位（擴展更多可能的欄位名稱）
+        let companyName = '';
+        if (selectedCompanyField && row[selectedCompanyField]) {
+          companyName = row[selectedCompanyField];
+        } else {
+          companyName = row['公司名稱'] || row['企業名稱'] || row['受輔企業'] || row['輔導公司'] || 
+                        row['公司'] || row['企業'] || row['受輔導企業'] || row['輔導企業'] ||
+                        row['輔導公司協會'] || row['company_name'] || row['公司/協會'] || '';
+        }
+        const taxId = row['統一編號'] || row['統編'] || row['tax_id'] || row['企業統編'] || '';
+        
+        // 輔導紀錄欄位
+        const date = row['輔導日期'] || row['日期'] || row['date'] || row['訪視日期'] || '';
+        const type = row['輔導類型'] || row['類型'] || row['type'] || row['訪視類型'] || '一般輔導';
+        const status = row['輔導階段'] || row['狀態'] || row['status'] || row['進度'] || '';
+        const title = row['輔導主題'] || row['主題'] || row['title'] || row['議題'] || '';
+        const content = row['輔導內容'] || row['內容'] || row['content'] || row['紀錄'] || row['說明'] || '';
+        const consultant = row['輔導顧問'] || row['顧問'] || row['consultant'] || row['資訊服務業者'] || row['輔導員'] || '';
+        const suggestions = row['建議'] || row['建議事項'] || row['suggestions'] || '';
+        const year = row['輔導年度'] || row['年度'] || '';
+        const tools = row['導入工具'] || row['工具'] || '';
+
+        // 找到對應的公司 - 使用多種策略
+        let companyIndex = -1;
+        let matchMethod = '';
+        
+        // 策略1: 精確統編匹配
+        if (taxId && companyIndex === -1) {
+          const cleanTaxId = String(taxId).replace(/\D/g, '');
+          companyIndex = companies.findIndex(c => {
+            const cTaxId = String(c.taxId || '').replace(/\D/g, '');
+            return cTaxId && cTaxId === cleanTaxId;
+          });
+          if (companyIndex >= 0) matchMethod = '統編匹配';
+        }
+        
+        // 策略2: 精確公司名稱匹配
+        if (companyIndex === -1 && companyName) {
+          const cleanName = String(companyName).trim();
+          companyIndex = companies.findIndex(c => c.name === cleanName);
+          if (companyIndex >= 0) matchMethod = '名稱精確匹配';
+        }
+        
+        // 策略3: 公司名稱包含匹配
+        if (companyIndex === -1 && companyName) {
+          const cleanName = String(companyName).trim();
+          companyIndex = companies.findIndex(c => {
+            const cName = c.name || '';
+            return cName.includes(cleanName) || cleanName.includes(cName);
+          });
+          if (companyIndex >= 0) matchMethod = '名稱模糊匹配';
+        }
+
+        // 策略4: 部分名稱匹配（取前6個字）
+        if (companyIndex === -1 && companyName && companyName.length > 4) {
+          const shortName = String(companyName).trim().substring(0, 6);
+          companyIndex = companies.findIndex(c => {
+            const cName = c.name || '';
+            return cName.includes(shortName) || shortName.includes(cName.substring(0, 6));
+          });
+          if (companyIndex >= 0) matchMethod = '名稱部分匹配';
+        }
+
+        if (companyIndex === -1) {
+          notFoundCompanies.add(companyName || taxId || `第${index + 2}列`);
+          skippedCount++;
+          return;
+        }
+
+        // 解析日期
+        let parsedDate = new Date().toISOString();
+        if (date) {
+          if (typeof date === 'number') {
+            // Excel 日期序號
+            parsedDate = new Date((date - 25569) * 86400 * 1000).toISOString();
+          } else {
+            const d = new Date(date);
+            if (!isNaN(d.getTime())) {
+              parsedDate = d.toISOString();
+            }
+          }
+        }
+
+        // 建立輔導紀錄
+        const guidanceRecord = {
+          id: `guidance-import-${Date.now()}-${index}`,
+          date: parsedDate,
+          type: type || '一般輔導',
+          status: status || '初訪',
+          title: title || (tools ? `導入${tools}` : '輔導紀錄'),
+          content: content || `${year ? `[${year}年] ` : ''}${tools ? `導入工具：${tools}` : ''}`,
+          consultant: consultant,
+          suggestions: suggestions
+        };
+
+        // 檢查是否已存在相同紀錄
+        const existingRecords = companies[companyIndex].guidanceRecords || [];
+        const isDuplicate = existingRecords.some(r => 
+          r.title === guidanceRecord.title && 
+          r.date.substring(0, 10) === parsedDate.substring(0, 10)
+        );
+
+        if (!isDuplicate) {
+          if (!companies[companyIndex].guidanceRecords) {
+            companies[companyIndex].guidanceRecords = [];
+          }
+          companies[companyIndex].guidanceRecords.push(guidanceRecord);
+          addedCount++;
+          
+          if (addedCount <= 3) {
+            log(`[配對成功] ${companyName} -> ${companies[companyIndex].name} (${matchMethod})`);
+          }
+        } else {
+          skippedCount++;
+        }
+      });
+
+      // 儲存
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+      
+      let message = `[成功] 輔導紀錄匯入完成：新增 ${addedCount} 筆，跳過 ${skippedCount} 筆`;
+      if (notFoundCompanies.size > 0) {
+        const samples = [...notFoundCompanies].slice(0, 5);
+        message += `\n[警告] 找不到對應公司：${samples.join(', ')}${notFoundCompanies.size > 5 ? `... 等 ${notFoundCompanies.size} 筆` : ''}`;
+      }
+      log(message);
+      
+      alert(`匯入完成！\n新增：${addedCount} 筆\n跳過：${skippedCount} 筆${notFoundCompanies.size > 0 ? `\n\n找不到對應公司：${notFoundCompanies.size} 筆` : ''}`);
+      
+      refreshStatus();
+    }
+
+    // 載入公司資料
+    function loadCompanies() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // 重新整理狀態
+    function refreshStatus() {
+      const companies = loadCompanies();
+      const totalGuidance = companies.reduce((sum, c) => sum + (c.guidanceRecords || []).length, 0);
+      const totalSurveys = companies.reduce((sum, c) => sum + (c.surveys || []).length, 0);
+
+      document.getElementById('currentCompanyCount').textContent = companies.length;
+      document.getElementById('currentGuidanceCount').textContent = totalGuidance;
+      document.getElementById('currentSurveyCount').textContent = totalSurveys;
+    }
+
+    // 清除所有資料
+    function clearAllData() {
+      if (!confirm('確定要清除所有資料嗎？此操作無法復原！')) {
+        return;
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      log('[警告] 已清除所有資料');
+      refreshStatus();
+      alert('已清除所有資料');
+    }
+
+    // 記錄日誌
+    function log(message) {
+      const logDiv = document.getElementById('importLog');
+      const time = new Date().toLocaleTimeString('zh-TW');
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span class="text-muted">[${time}]</span> ${escapeHtml(message)}`;
+      
+      if (logDiv.querySelector('.text-muted:only-child')) {
+        logDiv.innerHTML = '';
+      }
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 跳脫 HTML
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
