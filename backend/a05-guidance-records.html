@@ -60,7 +60,6 @@
                   <div class="card-body">
                     <div class="display-4 fw-bold text-success" id="statIntroCount">0</div>
                     <div class="text-muted">導入家數</div>
-                    <small class="text-muted">（技術輔導中）</small>
                   </div>
                 </div>
               </div>
@@ -69,7 +68,6 @@
                   <div class="card-body">
                     <div class="display-4 fw-bold text-warning" id="statPromoteCount">0</div>
                     <div class="text-muted">推廣家數</div>
-                    <small class="text-muted">（結案數）</small>
                   </div>
                 </div>
               </div>
@@ -100,10 +98,10 @@
                     </div>
                     <!-- 圖例 -->
                     <div class="mt-3 d-flex justify-content-center gap-3 flex-wrap small">
-                      <span><span class="badge" style="background-color: #e53935;">&nbsp;&nbsp;</span> 高頻（10次以上）</span>
-                      <span><span class="badge" style="background-color: #fb8c00;">&nbsp;&nbsp;</span> 中高頻（5-9次）</span>
-                      <span><span class="badge" style="background-color: #fdd835;">&nbsp;&nbsp;</span> 中頻（3-4次）</span>
-                      <span><span class="badge" style="background-color: #43a047;">&nbsp;&nbsp;</span> 低頻（1-2次）</span>
+                      <span><span class="badge" style="background-color: #e53935;">&nbsp;&nbsp;</span> 1000以上</span>
+                      <span><span class="badge" style="background-color: #fb8c00;">&nbsp;&nbsp;</span> 500-999</span>
+                      <span><span class="badge" style="background-color: #fdd835;">&nbsp;&nbsp;</span> 100-499</span>
+                      <span><span class="badge" style="background-color: #43a047;">&nbsp;&nbsp;</span> &lt;100</span>
                     </div>
                   </div>
                 </div>
@@ -722,10 +720,10 @@
 
     // 取得熱力圖顏色
     function getHeatColor(count) {
-      if (count >= 10) return '#e53935'; // 紅色 - 高頻
-      if (count >= 5) return '#fb8c00';  // 橙色 - 中高頻
-      if (count >= 3) return '#fdd835';  // 黃色 - 中頻
-      return '#43a047';                   // 綠色 - 低頻
+      if (count >= 1000) return '#e53935'; // 紅色 - 1000以上
+      if (count >= 500) return '#fb8c00';  // 橘色 - 500-999
+      if (count >= 100) return '#fdd835';  // 黃色 - 100-499
+      return '#43a047';                   // 綠色 - <100
     }
 
     // 初始化輔導統計圖表

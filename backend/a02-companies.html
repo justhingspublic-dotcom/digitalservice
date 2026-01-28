@@ -45,28 +45,22 @@
           <div class="tab-pane fade show active" id="charts-pane" role="tabpanel" aria-labelledby="charts-tab">
             <!-- 統計概覽卡片 - 簡潔風格 -->
             <div class="row g-3 mb-4">
-              <div class="col-6 col-lg-3">
+              <div class="col-6 col-lg-4">
                 <div class="stat-card-minimal">
                   <div class="stat-value" id="statTotalCompanies">0</div>
                   <div class="stat-label">總公司數</div>
                 </div>
               </div>
-              <div class="col-6 col-lg-3">
+              <div class="col-6 col-lg-4">
                 <div class="stat-card-minimal">
                   <div class="stat-value text-success" id="statTotalCities">0</div>
                   <div class="stat-label">涵蓋縣市</div>
                 </div>
               </div>
-              <div class="col-6 col-lg-3">
+              <div class="col-6 col-lg-4">
                 <div class="stat-card-minimal">
                   <div class="stat-value text-warning" id="statTotalIndustries">0</div>
                   <div class="stat-label">產業類別</div>
-                </div>
-              </div>
-              <div class="col-6 col-lg-3">
-                <div class="stat-card-minimal">
-                  <div class="stat-value text-info" id="statActiveCompanies">0</div>
-                  <div class="stat-label">活躍公司</div>
                 </div>
               </div>
             </div>
@@ -1826,14 +1820,10 @@
         industryCount[industry] = (industryCount[industry] || 0) + 1;
       });
 
-      // 活躍公司（有問卷的）
-      const activeCompanies = companies.filter(c => (c.surveys || []).length > 0).length;
-
       // 更新統計卡片
       document.getElementById('statTotalCompanies').textContent = totalCompanies;
       document.getElementById('statTotalCities').textContent = Object.keys(cityCount).filter(k => k !== '未填寫').length;
       document.getElementById('statTotalIndustries').textContent = Object.keys(industryCount).filter(k => k !== '未填寫').length;
-      document.getElementById('statActiveCompanies').textContent = activeCompanies;
 
       // 更新台灣地圖顏色
       updateTaiwanMap(cityCount);
